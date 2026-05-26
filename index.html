@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SWEATERVISION V5.1 — RD Style</title>
+<title>SWEATERVISION V5.2 — RD Style</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -199,7 +199,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
 .options-label{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;opacity:0.4;margin-bottom:6px;display:block}
 .options-chips{display:flex;flex-wrap:wrap;gap:6px}
 .opt-chip{padding:4px 10px;border:1px solid var(--ink);font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;transition:all 0.2s}
-.opt-chip:hover{background:var(--ink);color:var(--bg)}
+.opt-chip:hover,.opt-chip.active{background:var(--ink);color:var(--bg)}
 
 /* COLOR SETTINGS */
 .color-settings{border:1px solid var(--ink);padding:14px;animation:fadein 0.2s;background:rgba(20,20,20,0.02)}
@@ -438,7 +438,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
     <div>
       <div style="display:flex;align-items:center">
         <span class="logo-title">SWEATERVISION</span>
-        <span class="version-badge" id="versionBadge">V5.1</span>
+        <span class="version-badge" id="versionBadge">V5.2</span>
       </div>
       <div class="logo-sub">Sweater AI Engine By RD Style</div>
     </div>
@@ -1464,7 +1464,7 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '5.1';
+const APP_VERSION = '5.2';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -1473,6 +1473,7 @@ const S={
   activeMode:'render',
   activePresets:[],
   mannequinType:'',  // 'male' | 'female' | 'unisex'
+  selectedFit:'',     // e.g. 'Slim Fit', 'Oversize' etc
   targetPart:'sweater',
   pantone:'',selectedColor:'#000000',useComp:true,wasEyedropped:false,
   referenceImage:null,
@@ -1579,6 +1580,7 @@ function handleImageUpload(b64){
   S.origImg=b64;S.modImg=null;S.currentLabel='';S.currentMetadata={};
   S.history=[];S.versionCounter=0;S.selectedIndices=[];
   S.mannequinType='';  // reset mannequin on new upload
+  S.selectedFit='';    // reset fit selection on new upload
 
   // Show app screen FIRST
   document.getElementById('uploadScreen').classList.add('hidden');
@@ -1632,7 +1634,7 @@ function resetPreviewState(){
 
 function resetApp(){
   S.origImg=null;S.modImg=null;S.history=[];S.selectedIndices=[];
-  S.decisionLog=[];S.appInitialized=false;S.mannequinType='';
+  S.decisionLog=[];S.appInitialized=false;S.mannequinType='';S.selectedFit='';
   document.querySelectorAll('.mannequin-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('uploadScreen').classList.remove('hidden');
   document.getElementById('appScreen').classList.add('hidden');
@@ -1729,7 +1731,8 @@ function renderPresetDetails(){
     } else if(label==='Adjust Fit'||label==='Wash'){
       const div=document.createElement('div');
       div.className='field preset-options';
-      div.innerHTML=`<label class="options-label">${label} Options</label><div class="options-chips">${(preset.options||[]).map(o=>`<button class="opt-chip" onclick="addOption('${label}','${o}')">${o}</button>`).join('')}</div>`;
+      const isfit=label==='Adjust Fit';
+      div.innerHTML=`<label class="options-label">${label} Options</label><div class="options-chips">${(preset.options||[]).map(o=>`<button class="opt-chip${isfit&&S.selectedFit===o?' active':''}" ${isfit?`data-fit="${o}"`:''}  onclick="addOption('${label}','${o}')">${o}</button>`).join('')}</div>`;
       container.appendChild(div);
     } else if(label==='Change Design'){
       const div=document.createElement('div');
@@ -2197,7 +2200,9 @@ function handleSubmit(forceAsIs=false){
       }
     }
     if(S.activePresets.includes('Adjust Fit')){
-      promptParts.push(`adjust the fit of the ${target} to be as described`);metadata.fit='adjusted';
+      const fitDesc=S.selectedFit||'as described';
+      promptParts.push(`adjust the fit of the ${target} to be ${fitDesc.toLowerCase()}`);
+      metadata.fit=S.selectedFit||'adjusted';
     }
     if(S.activePresets.includes('Wash')&&mode!=='sketch'){
       promptParts.push(`apply the wash effect to the ${target}`);
@@ -2708,8 +2713,10 @@ function buildFilename(item){
   const cn = liveColorName || (item.metadata?.colorName||'').trim();
   const cc = liveColorCode || (item.metadata?.colorCode||'').trim();
   const fc = liveFabricContent || (item.metadata?.fabricContent||'').trim();
+  // Fit: from stored metadata (set at generation time — live state may have changed)
+  const ft = (item.metadata?.fit && item.metadata.fit !== 'adjusted' ? item.metadata.fit : '').trim();
 
-  const parts = [style, cn, cc, fc].filter(s => s.length > 0).map(s => s.toUpperCase());
+  const parts = [style, cn, cc, fc, ft].filter(s => s.length > 0).map(s => s.toUpperCase());
   // Sanitize filename: % causes browser to interpret as URL encoding (e.g. 50% COTTON → 50)
   // Replace % with PCT so "50% COTTON 50% ACRYLIC" → "50PCT COTTON 50PCT ACRYLIC"
   const safe = parts.join(' - ').replace(/%/g, 'PCT');
