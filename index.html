@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SWEATERVISION V5.2 — RD Style</title>
+<title>SWEATERVISION V5.3 — RD Style</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -438,7 +438,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
     <div>
       <div style="display:flex;align-items:center">
         <span class="logo-title">SWEATERVISION</span>
-        <span class="version-badge" id="versionBadge">V5.2</span>
+        <span class="version-badge" id="versionBadge">V5.3</span>
       </div>
       <div class="logo-sub">Sweater AI Engine By RD Style</div>
     </div>
@@ -1464,7 +1464,7 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '5.2';
+const APP_VERSION = '5.3';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -2555,6 +2555,56 @@ async function callGemini(prompt,mode,attempt=0){
 // removed. This protects light-colored garments (white, cream, sage, etc.)
 // from being eaten by aggressive threshold matching.
 // ================================================================
+// Belt-and-suspenders bg removal — runs at export time for renders/sketches.
+// Conservative threshold (distance<30 from pure white) protects all reasonable
+// garment colors while catching residual near-white pixels (e.g. 254,254,254)
+// that the primary removeBg sometimes leaves behind when Gemini outputs have
+// JPEG compression noise or subtle background gradients.
+// Edge-seeded flood-fill — interior light pixels (garment highlights) are
+// protected because they cannot be reached from the image border.
+async function safetyBgPass(b64){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=img.width; c.height=img.height;
+      const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0);
+      const id=ctx.getImageData(0,0,c.width,c.height);
+      const d=id.data; const W=c.width, H=c.height;
+      const THR=30;
+      const vis=new Uint8Array(W*H);
+      const queue=new Int32Array(W*H*2);
+      let qHead=0, qTail=0;
+      function check(x,y){
+        const idx=y*W+x;
+        if(vis[idx]) return;
+        const pi=idx*4;
+        if(d[pi+3]<250){vis[idx]=1;queue[qTail++]=x;queue[qTail++]=y;return;}
+        const dr=255-d[pi], dg=255-d[pi+1], db=255-d[pi+2];
+        if(Math.sqrt(dr*dr+dg*dg+db*db)<THR){
+          vis[idx]=1; queue[qTail++]=x; queue[qTail++]=y;
+        }
+      }
+      for(let x=0;x<W;x++){check(x,0);check(x,H-1);}
+      for(let y=1;y<H-1;y++){check(0,y);check(W-1,y);}
+      while(qHead<qTail){
+        const cx=queue[qHead++], cy=queue[qHead++];
+        const neighbors=[[cx-1,cy],[cx+1,cy],[cx,cy-1],[cx,cy+1]];
+        for(const [nx,ny] of neighbors){
+          if(nx<0||ny<0||nx>=W||ny>=H) continue;
+          check(nx,ny);
+        }
+      }
+      for(let i=0;i<W*H;i++){ if(vis[i]) d[i*4+3]=0; }
+      ctx.putImageData(id,0,0);
+      res(c.toDataURL('image/png'));
+    };
+    img.onerror=()=>res(b64);
+    img.src=b64;
+  });
+}
+
 async function removeBg(b64){
   return new Promise(res=>{
     const img=new Image();
@@ -2577,13 +2627,23 @@ async function removeBg(b64){
         return [r/n, g/n, b/n];
       }
       const BS=10;
-      const corners=[
-        sampleBlock(0,0,BS), sampleBlock(W-BS,0,BS),
-        sampleBlock(0,H-BS,BS), sampleBlock(W-BS,H-BS,BS)
+      // 8-point perimeter sample (4 corners + 4 mid-edges). Corner-only sampling
+      // misled the algorithm on Gemini renders with vignettes or noisy edges.
+      const samples=[
+        sampleBlock(0,0,BS),                          sampleBlock(W-BS,0,BS),
+        sampleBlock(0,H-BS,BS),                       sampleBlock(W-BS,H-BS,BS),
+        sampleBlock(Math.floor(W/2)-BS/2,0,BS),
+        sampleBlock(Math.floor(W/2)-BS/2,H-BS,BS),
+        sampleBlock(0,Math.floor(H/2)-BS/2,BS),
+        sampleBlock(W-BS,Math.floor(H/2)-BS/2,BS)
       ];
-      const bgR=corners.reduce((s,c)=>s+c[0],0)/4;
-      const bgG=corners.reduce((s,c)=>s+c[1],0)/4;
-      const bgB=corners.reduce((s,c)=>s+c[2],0)/4;
+      // Use BRIGHTEST sample as bg reference — vignettes darken corners but
+      // the true bg color is the brightest perimeter region.
+      let bgR=0,bgG=0,bgB=0,maxBr=-1;
+      for(const s of samples){
+        const br=(s[0]+s[1]+s[2])/3;
+        if(br>maxBr){maxBr=br;bgR=s[0];bgG=s[1];bgB=s[2];}
+      }
       const bgBr=(bgR+bgG+bgB)/3;
 
       // ── Step 2: Conservative threshold — tight enough to catch BG,
@@ -2901,14 +2961,15 @@ async function exportImage(b64,filename,isRender){
   const img=new Image();
   await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=b64;});
 
-  // Step 1: Background already stripped during generation for renders/sketches
-  // Run again only for edit mode exports which skip the generation-time pass
+  // Step 1: Belt-and-suspenders safety bg-removal pass.
+  // The primary removeBg runs at generation time but can leave near-white
+  // residue (e.g. 254,254,254) when Gemini outputs have JPEG noise or subtle
+  // gradients. This conservative pass (THR=30 from pure white) catches residue
+  // without touching garment colors. Edit mode skips this — edit preserves bg.
   let source=b64;
-  // Edit mode preserves original background — never strip it
-  const needsBgRemoval = false; // BG removal already done at generation time for render/sketch
-  if(needsBgRemoval){
-    try{source=await removeBg(b64);}
-    catch(e){console.warn('BG removal failed, exporting raw',e);}
+  if(isRender){
+    try{source=await safetyBgPass(b64);}
+    catch(e){console.warn('Safety bg pass failed, exporting raw',e);}
   }
 
   // Reload processed source
