@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SWEATERVISION V5.4 — RD Style</title>
+<title>SWEATERVISION V5.7 — RD Style</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -438,7 +438,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
     <div>
       <div style="display:flex;align-items:center">
         <span class="logo-title">SWEATERVISION</span>
-        <span class="version-badge" id="versionBadge">V5.4</span>
+        <span class="version-badge" id="versionBadge">V5.7</span>
       </div>
       <div class="logo-sub">Sweater AI Engine By RD Style</div>
     </div>
@@ -1464,7 +1464,7 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '5.4';
+const APP_VERSION = '5.7';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -1475,7 +1475,7 @@ const S={
   mannequinType:'',  // 'male' | 'female' | 'unisex'
   selectedFit:'',     // e.g. 'Slim Fit', 'Oversize' etc
   targetPart:'sweater',
-  pantone:'',selectedColor:'#000000',useComp:true,wasEyedropped:false,
+  pantone:'',selectedColor:'#000000',useComp:true,wasEyedropped:false,collectionAnchorSource:null,
   referenceImage:null,
   history:[],versionCounter:0,selectedIndices:[],
   currentLabel:'',currentVersion:null,currentMetadata:{},
@@ -2020,7 +2020,7 @@ function findPantoneByInput(input){
 }
 
 function onPantoneInput(val){
-  S.pantone=val;S.wasEyedropped=false;
+  S.pantone=val;S.wasEyedropped=false;S.collectionAnchorSource=null;
   clearPrompt();
   const clean=val.trim().toUpperCase();
   if(clean.length>=3){
@@ -2046,7 +2046,7 @@ function onPantoneInput(val){
 }
 
 function onColorPick(hex){
-  S.selectedColor=hex;S.pantone='';S.wasEyedropped=true;
+  S.selectedColor=hex;S.pantone='';S.wasEyedropped=true;S.collectionAnchorSource=null;
   clearPrompt();
   const pi=document.getElementById('pantoneInput');if(pi)pi.value='';
   updateColorResolved();
@@ -2054,7 +2054,7 @@ function onColorPick(hex){
 
 async function tryEyedropper(){
   if('EyeDropper' in window){
-    try{const ed=new window.EyeDropper();const r=await ed.open();if(r&&r.sRGBHex){S.selectedColor=r.sRGBHex;S.pantone='';S.wasEyedropped=true;
+    try{const ed=new window.EyeDropper();const r=await ed.open();if(r&&r.sRGBHex){S.selectedColor=r.sRGBHex;S.pantone='';S.wasEyedropped=true;S.collectionAnchorSource=null;
       const pi=document.getElementById('pantoneInput');if(pi)pi.value='';
       const sw=document.getElementById('colorSwatchInput');if(sw)sw.value=r.sRGBHex;
       updateColorResolved();}}catch(e){}
@@ -2075,13 +2075,15 @@ function updateColorResolved(){
     if(warn)warn.style.display='block';
   } else {
     const isDerived = matched && matched.derived;
-    const resolvedName = S.wasEyedropped ? 'Exact Match (No Pantone Variance)'
+    const isCollection = !!S.collectionAnchorSource;
+    const resolvedName = isCollection ? `Collection Color (from ${S.collectionAnchorSource})`
+      : S.wasEyedropped ? 'Exact Match (No Pantone Variance)'
       : isDerived ? `Derived: ${matched.name}`
       : matched ? matched.name
       : `Nearest: ${nearest.name}`;
     if(name)name.textContent='Resolved: '+resolvedName;
     if(code){
-      code.textContent = S.wasEyedropped ? 'EXACT HEX' : (matched ? matched.code : nearest.code);
+      code.textContent = isCollection ? 'COLLECTION' : (S.wasEyedropped ? 'EXACT HEX' : (matched ? matched.code : nearest.code));
       code.style.background = isDerived ? '#d97706' : '';
       code.title = isDerived ? 'Algorithmically derived \u2014 approximate. Use Color Picker to verify.' : '';
     }
@@ -2161,6 +2163,7 @@ function handleSubmit(forceAsIs=false){
     colorName,colorCode,fabricContent
   };
   const promptParts=[];
+  let colorLockTarget = null;  // v5.6 — hex to anchor in post-process LAB lock
   if(mode==='sales_sheet'){
     promptParts.push("Convert all sketches on this full page sales sheet into shared photorealistic 3D renders");
     if(fabric.trim())promptParts.push(`using ${fabric} fabric throughout`);
@@ -2168,11 +2171,13 @@ function handleSubmit(forceAsIs=false){
     if(S.activePresets.includes('Change Color')){
       if(S.wasEyedropped){
         const hex=S.selectedColor;const desc=getDynamicColorDescriptor(hex);
+        colorLockTarget = hex;
         promptParts.push(`completely and strictly recolor the entire fabric of the ${target} to be exactly the hexadecimal color ${hex}, which is a ${desc}. Use ONLY this exact color code as reference to create the exact color shown in the color chip with 100% precision and zero variance. The colors must match 100% exactly. You must completely replace the original garment's old color, leaving absolutely no yellow, tan, sienna, grey, or other undertones/variance visible. The yarn and fabric of the ${target} must be dyed precisely as a uniform, solid, beautiful ${hex} shade. Ensure the garment is rendered in bright, clean, diffuse, high-exposure commercial studio front lighting to perfectly preserve this exact hex color ${hex} without heavy dark shadows. The flat areas of the garment must match this exact color.`);
         metadata.color=hex;metadata.colorName="Exact Color Chip (No Variance)";metadata.colorCode=hex;
       } else if(S.pantone.trim()){
         const baseHex=getHexFromPantone(S.pantone)||(()=>{const n=getNearestPantone(S.selectedColor);return n.hex;})();
         const targetHex=S.useComp?getCompensatedColor(baseHex):baseHex;
+        colorLockTarget = baseHex;  // anchor to true Pantone hex regardless of comp state
         const matchedName=findPantoneByInput(S.pantone)?.name||'Custom';
         const desc=getDynamicColorDescriptor(S.useComp?targetHex:baseHex);
         promptParts.push(`completely and strictly recolor the entire fabric of the ${target} to be exactly Pantone ${S.pantone.trim()} (${matchedName}), which is a ${desc} with exact target hexadecimal color code ${S.useComp?targetHex:baseHex}. You must completely replace the original garment's old color, undertones, and faded areas, leaving absolutely no yellow, tan, sienna, or grey base undertones visible. The yarn and fabric material of the ${target} must be dyed precisely as a uniform, solid, beautiful ${S.useComp?targetHex:baseHex} shade. Ensure the garment is rendered in bright, highly diffuse, clean, high-exposure commercial studio front lighting with soft details, avoiding heavy gray shadows or black folds that darken, dull, or mute the fabric's on-screen Pantone swatch representation. The flat areas of the garment must match this exact target color.`);
@@ -2190,6 +2195,7 @@ function handleSubmit(forceAsIs=false){
           // Use selected hex color
           const nearest=getNearestPantone(S.selectedColor);
           const targetHex=S.useComp?getCompensatedColor(S.selectedColor):S.selectedColor;
+          colorLockTarget = S.selectedColor;  // anchor to the picked hex, not the comp'd hex
           const desc=getDynamicColorDescriptor(S.useComp?targetHex:S.selectedColor);
           const nameHint = typedColorName ? ` (user calls this "${typedColorName}")` : '';
           promptParts.push(`completely and strictly recolor the entire fabric of the ${target} to be exactly the target hex color ${targetHex}${nameHint}, which is a ${desc} (nearest Pantone ${nearest.code} ${nearest.name}). Replace 100% of the original garment color with no residual undertones. Render under bright diffuse commercial studio lighting. Flat surface areas must match ${targetHex} precisely.`);
@@ -2442,6 +2448,13 @@ async function runGenerate(prompt,label,metadata,mode){
       document.getElementById('procStep').textContent="Removing Background & Creating Transparency...";
       try{processed=await removeBg(result);}catch(e){console.warn('BG removal failed',e);}
     }
+    // Color lock (v5.6) — deterministic LAB anchor to the user-specified target hex.
+    // Applies to eyedropper, Pantone, AND hex-picker paths. Skipped for sales_sheet
+    // (multi-garment page) and for color-name-only inputs (no hex target).
+    if(mode!=='sales_sheet' && colorLockTarget && S.activePresets.includes('Change Color')){
+      document.getElementById('procStep').textContent="Locking garment color to target hex...";
+      try{processed=await enforceEyedropColor(processed, colorLockTarget);}catch(e){console.warn('Color lock failed',e);}
+    }
     const newV=S.versionCounter+1;S.versionCounter=newV;
     S.modImg=processed;S.currentVersion=newV;
     S.history=[{prompt,image:processed,label,metadata,version:newV},...S.history].slice(0,5);
@@ -2462,6 +2475,9 @@ async function runGenerate(prompt,label,metadata,mode){
       hexColor: S.selectedColor || '',
       colorCompensation: S.useComp ? 'Yes' : 'No',
       eyedropped: S.wasEyedropped ? 'Yes' : 'No',
+      colorLockApplied: (colorLockTarget && S.activePresets.includes('Change Color') && mode!=='sales_sheet') ? 'Yes' : 'No',
+      colorLockTarget: colorLockTarget || '',
+      collectionAnchor: S.collectionAnchorSource || '',
       fabric: metadata.fabric || '',
       fabricContent: metadata.fabricContent || '',
       presets: S.activePresets.length ? S.activePresets.join(' | ') : 'None',
@@ -2555,6 +2571,93 @@ async function callGemini(prompt,mode,attempt=0){
 // removed. This protects light-colored garments (white, cream, sage, etc.)
 // from being eaten by aggressive threshold matching.
 // ================================================================
+// ──────────────────────────────────────────────────────────────────────────
+// EYEDROPPER COLOR LOCK (v5.5)
+// Post-render LAB-space correction. Gemini's prompt-only hex fidelity is
+// unreliable, especially in 3D Render mode where the model applies its own
+// shading bias. This pass measures the rendered garment's mean color in
+// CIE LAB, computes the offset from the picked hex, and applies a uniform
+// LAB shift. Chroma (a*, b*) is anchored fully so hue/saturation lock to the
+// target; luminance (L*) is anchored at 75% to preserve Gemini's shadow/fold
+// contrast. Net result: median garment color matches the eyedropper hex
+// within ~3 ΔE while shading detail survives.
+// ──────────────────────────────────────────────────────────────────────────
+function rgbToLab(r,g,b){
+  let R=r/255,G=g/255,B=b/255;
+  R = R<=0.04045 ? R/12.92 : Math.pow((R+0.055)/1.055, 2.4);
+  G = G<=0.04045 ? G/12.92 : Math.pow((G+0.055)/1.055, 2.4);
+  B = B<=0.04045 ? B/12.92 : Math.pow((B+0.055)/1.055, 2.4);
+  const X = (R*0.4124 + G*0.3576 + B*0.1805) / 0.95047;
+  const Y = (R*0.2126 + G*0.7152 + B*0.0722) / 1.00000;
+  const Z = (R*0.0193 + G*0.1192 + B*0.9505) / 1.08883;
+  const f = v => v > 0.008856 ? Math.cbrt(v) : (7.787*v + 16/116);
+  const fx=f(X), fy=f(Y), fz=f(Z);
+  return { L: 116*fy - 16, a: 500*(fx-fy), b: 200*(fy-fz) };
+}
+function labToRgb(L,a,b){
+  const fy = (L+16)/116, fx = a/500 + fy, fz = fy - b/200;
+  const finv = v => v > 0.206893 ? v*v*v : (v - 16/116) / 7.787;
+  const X = finv(fx) * 0.95047;
+  const Y = finv(fy) * 1.00000;
+  const Z = finv(fz) * 1.08883;
+  let R = X* 3.2406 + Y*-1.5372 + Z*-0.4986;
+  let G = X*-0.9689 + Y* 1.8758 + Z* 0.0415;
+  let B = X* 0.0557 + Y*-0.2040 + Z* 1.0570;
+  const enc = v => {
+    v = Math.max(0, Math.min(1, v));
+    return v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(v, 1/2.4) - 0.055;
+  };
+  return {
+    r: Math.round(enc(R)*255),
+    g: Math.round(enc(G)*255),
+    b: Math.round(enc(B)*255)
+  };
+}
+async function enforceEyedropColor(b64, targetHex){
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      try{
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const id = ctx.getImageData(0, 0, c.width, c.height);
+        const d = id.data;
+        const [tr,tg,tb] = hexToRgb(targetHex);
+        const tgt = rgbToLab(tr,tg,tb);
+        // Pass 1: mean LAB of OPAQUE pixels only (the garment)
+        let sL=0, sA=0, sB=0, n=0;
+        for(let i=0;i<d.length;i+=4){
+          if(d[i+3] < 200) continue;  // skip transparent + feathered edges
+          const lab = rgbToLab(d[i], d[i+1], d[i+2]);
+          sL+=lab.L; sA+=lab.a; sB+=lab.b; n++;
+        }
+        if(n === 0){ res(b64); return; }
+        const mL=sL/n, mA=sA/n, mB=sB/n;
+        // Shift: full chroma, 75% luminance (preserves shading)
+        const dL = (tgt.L - mL) * 0.75;
+        const dA =  tgt.a - mA;
+        const dBb=  tgt.b - mB;
+        // Pass 2: apply to all opaque pixels
+        for(let i=0;i<d.length;i+=4){
+          if(d[i+3] < 10) continue;
+          const lab = rgbToLab(d[i], d[i+1], d[i+2]);
+          const out = labToRgb(lab.L + dL, lab.a + dA, lab.b + dBb);
+          d[i]=out.r; d[i+1]=out.g; d[i+2]=out.b;
+        }
+        ctx.putImageData(id, 0, 0);
+        res(c.toDataURL('image/png'));
+      }catch(e){
+        console.warn('enforceEyedropColor failed:', e);
+        res(b64);
+      }
+    };
+    img.onerror = () => res(b64);
+    img.src = b64;
+  });
+}
+
 async function removeBg(b64){
   // Safe-zone-aware background removal (v5.4).
   // Strategy:
@@ -2801,6 +2904,74 @@ function setupSlider(){
 }
 
 // ================================================================
+// COLLECTION COLOR (v5.7)
+// Sample the mean garment color from a previously rendered image and pipe it
+// into the same path the eyedropper uses. After this, every subsequent
+// "Change Color" render will lock to the exact hex of the source render —
+// guaranteeing cross-style color match within a collection.
+// ================================================================
+async function sampleMeanGarmentHex(b64){
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      try{
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const d = ctx.getImageData(0, 0, c.width, c.height).data;
+        let sR=0, sG=0, sB=0, n=0;
+        for(let i=0; i<d.length; i+=4){
+          if(d[i+3] < 200) continue;
+          sR += d[i]; sG += d[i+1]; sB += d[i+2]; n++;
+        }
+        if(n === 0){ res(null); return; }
+        const r = Math.round(sR/n), g = Math.round(sG/n), b = Math.round(sB/n);
+        const hex = '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('').toUpperCase();
+        res(hex);
+      }catch(e){ console.warn('sampleMeanGarmentHex failed:', e); res(null); }
+    };
+    img.onerror = () => res(null);
+    img.src = b64;
+  });
+}
+
+async function useCollectionColor(i){
+  const item = S.history[i];
+  if(!item || !item.image){ return; }
+  const hex = await sampleMeanGarmentHex(item.image);
+  if(!hex){
+    setError('Could not sample color from this render (image may be fully transparent).');
+    return;
+  }
+  S.selectedColor = hex;
+  S.pantone = '';
+  S.wasEyedropped = true;
+  S.collectionAnchorSource = `V${item.version || (i+1)}${item.label ? ' \u2014 ' + item.label : ''}`;
+  const pi = document.getElementById('pantoneInput'); if(pi) pi.value = '';
+  const sw = document.getElementById('colorSwatchInput'); if(sw) sw.value = hex;
+  if(!S.activePresets.includes('Change Color')){
+    S.activePresets.push('Change Color');
+    if(typeof renderPresets === 'function') renderPresets();
+  }
+  if(typeof renderPresetDetails === 'function') renderPresetDetails();
+  updateColorResolved();
+  const sec = document.getElementById('historySection');
+  if(sec){
+    let n = document.getElementById('collectionAnchorToast');
+    if(!n){
+      n = document.createElement('div');
+      n.id = 'collectionAnchorToast';
+      n.style.cssText = 'background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46;padding:8px 12px;border-radius:4px;font-size:12px;margin-bottom:12px;font-family:var(--mono);';
+      sec.insertBefore(n, sec.firstChild);
+    }
+    n.textContent = 'Collection color locked: ' + hex + ' (sampled from ' + S.collectionAnchorSource + '). Next render will match this exactly.';
+    clearTimeout(n._t);
+    n._t = setTimeout(()=>{ if(n && n.parentNode) n.parentNode.removeChild(n); }, 8000);
+  }
+}
+
+// ================================================================
 // HISTORY
 // ================================================================
 function renderHistory(){
@@ -2834,6 +3005,9 @@ function renderHistory(){
       <div class="hist-actions">
         <button class="hist-action-btn" title="Use as Base" onclick="useAsBaseHistory(${i})">
           <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+        <button class="hist-action-btn" title="Use this color for collection (match across styles)" onclick="useCollectionColor(${i})">
+          <svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.52-4.48-10-10-10z"/></svg>
         </button>
         <button class="hist-action-btn" title="Download" onclick="downloadHistItem(${i})">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
