@@ -444,7 +444,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
     <div>
       <div style="display:flex;align-items:center">
         <span class="logo-title">SWEATERVISION</span>
-        <span class="version-badge" id="versionBadge">V5.12</span>
+        <span class="version-badge" id="versionBadge">V5.13</span>
       </div>
       <div class="logo-sub">Sweater AI Engine By RD Style</div>
     </div>
@@ -677,7 +677,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
         <!-- Target Part -->
         <div class="field" id="targetField">
           <label class="field-label">Target Garment / Part</label>
-          <input type="text" id="targetInput" class="text-input" value="sweater" placeholder="e.g. sweater, top, sleeves, neckline"/>
+          <input type="text" id="targetInput" class="text-input" value="Full Garment" placeholder="e.g. Full Garment, Sleeve, Neckline, Collar"/>
         </div>
 
         <!-- Mode Tabs -->
@@ -1470,7 +1470,7 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '5.12';
+const APP_VERSION = '5.13';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -1480,7 +1480,7 @@ const S={
   activePresets:[],
   mannequinType:'',  // 'male' | 'female' | 'unisex'
   selectedFit:'',     // e.g. 'Slim Fit', 'Oversize' etc
-  targetPart:'sweater',
+  targetPart:'Full Garment',
   pantone:'',selectedColor:'#000000',useComp:true,wasEyedropped:false,collectionAnchorSource:null,
   referenceImage:null,
   history:[],versionCounter:0,selectedIndices:[],
@@ -1715,7 +1715,8 @@ function setMode(mode,btn){
   const mSel = document.getElementById('mannequinSelector');
   if(mSel) mSel.style.display = isRender ? 'block' : 'none';
   document.getElementById('presetsSection').classList.toggle('hidden',isSales);
-  document.getElementById('refSection').classList.toggle('hidden',isSales);
+  // v5.13 — Style Reference section now gated on Change Design preset, not just mode.
+  updateRefSectionVisibility();
   if(isRender||isSales){
     document.getElementById('fabricInput').placeholder=isSales?"Unified fabric style for sheet...":"e.g. Chunky cable knit, tech-fleece...";
     document.getElementById('fabricNote').textContent=isSales?"All sketches on this page will be rendered into 3D using this fabric definition.":"Describe the material weight, texture, or weave for the 3D render.";
@@ -1760,6 +1761,21 @@ function togglePreset(label,id){
   }
   renderPresets();
   renderPresetDetails();
+  // v5.13 — Style Reference visibility tracks Change Design.
+  if(label==='Change Design') updateRefSectionVisibility();
+}
+
+// v5.13 — Style Reference Upload is only relevant when Change Design is active.
+// Hides the section in any other context and clears an attached reference so it
+// can't silently leak into the next render.
+function updateRefSectionVisibility(){
+  const section=document.getElementById('refSection');
+  if(!section) return;
+  const shouldShow = S.activeMode!=='sales_sheet' && S.activePresets.includes('Change Design');
+  section.classList.toggle('hidden', !shouldShow);
+  if(!shouldShow && S.referenceImage){
+    removeRef();
+  }
 }
 
 function renderPresetDetails(){
@@ -1795,7 +1811,7 @@ function renderPresetDetails(){
 
 function addOption(label,opt){
   const prompt=document.getElementById('promptInput');
-  const target=document.getElementById('targetInput')?.value.trim()||S.targetPart||'sweater';
+  const target=document.getElementById('targetInput')?.value.trim()||S.targetPart||'Full Garment';
   const base=label==='Adjust Fit'?`Adjust the fit of the ${target} to be ${opt.toLowerCase()}`:`Apply a ${opt.toLowerCase()} effect to the ${target}`;
   prompt.value=prompt.value?`${prompt.value}, and ${base}`:base;
 }
@@ -2253,7 +2269,7 @@ function handleSubmit(forceAsIs=false){
   }
   if(S.isProcessing)return;
   const prompt=document.getElementById('promptInput').value;
-  const target=document.getElementById('targetInput').value||'sweater';
+  const target=document.getElementById('targetInput').value||'Full Garment';
   const fabric=document.getElementById('fabricInput').value;
   const colorName=document.getElementById('colorNameInput').value.trim();
   const colorCode=document.getElementById('colorCodeInput').value.trim();
@@ -2420,7 +2436,7 @@ function handleSalesConvert(){handleSubmit(true);}
 // Gemini instruction with exact Pantone/hex language
 // ================================================================
 async function buildClaudePrompt(localPrompt, metadata, mode){
-  const target = document.getElementById('targetInput')?.value || 'sweater';
+  const target = document.getElementById('targetInput')?.value || 'Full Garment';
   const fabric = document.getElementById('fabricInput')?.value || '';
   const modeDesc = {
     edit:        'Edit mode — model shot, preserve background and model, only modify garment',
@@ -2579,7 +2595,7 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null){
       styleName: label || '',
       mode: metadata.renderMode || mode,
       mannequinType: S.mannequinType || '—',
-      targetPart: document.getElementById('targetInput')?.value || 'sweater',
+      targetPart: document.getElementById('targetInput')?.value || 'Full Garment',
       colorName: metadata.colorName || '',
       colorCode: metadata.colorCode || '',
       pantoneCode: S.pantone || '',
