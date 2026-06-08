@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SWEATERVISION V5.11 — RD Style</title>
+<title>SWEATERVISION V5.12 — RD Style</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -221,7 +221,13 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
 .calibrate-title{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin-bottom:2px}
 .calibrate-desc{font-size:10px;color:rgba(20,20,20,0.55);line-height:1.5;display:block}
 .color-resolved{margin-top:10px;padding-top:10px;border-top:1px solid rgba(20,20,20,0.1);display:flex;flex-direction:column;gap:6px;background:rgba(20,20,20,0.04);padding:8px;border-radius:4px}
-@media(min-width:450px){.color-resolved{flex-direction:row;align-items:center;justify-content:space-between}}
+@media(min-width:450px){.color-resolved{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap}}
+.resolved-add-btn{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 10px;border:1px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer;transition:all 0.15s;border-radius:3px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.resolved-add-btn:hover{background:var(--ink);color:#fff}
+.resolved-add-btn:active{transform:scale(0.97)}
+.resolved-add-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
+.resolved-add-btn.flash{animation:flashSave 0.6s ease-out}
+@keyframes flashSave{0%{background:var(--accent);color:#fff;border-color:var(--accent)}100%{background:#fff;color:var(--ink);border-color:var(--ink)}}
 .resolved-left{display:flex;align-items:center;gap:8px}
 .resolved-dot{width:16px;height:16px;border-radius:50%;border:1px solid rgba(20,20,20,0.2);flex-shrink:0}
 .resolved-name{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700}
@@ -438,7 +444,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
     <div>
       <div style="display:flex;align-items:center">
         <span class="logo-title">SWEATERVISION</span>
-        <span class="version-badge" id="versionBadge">V5.11</span>
+        <span class="version-badge" id="versionBadge">V5.12</span>
       </div>
       <div class="logo-sub">Sweater AI Engine By RD Style</div>
     </div>
@@ -1464,7 +1470,7 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '5.11';
+const APP_VERSION = '5.12';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -1848,6 +1854,10 @@ function buildColorUI(){
           <span class="resolved-code">${resolvedCode}</span>
           <span class="resolved-hex">${S.selectedColor.toUpperCase()}</span>
         </div>
+        <button class="resolved-add-btn" id="resolvedAddBtn" onclick="addResolvedColorToLibrary()" title="Pre-fill the Custom Pantone Library with this color so you can save it">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Save to Library
+        </button>
       </div>
     </div>
     ${buildCustomLibraryHTML()}`;
@@ -1882,7 +1892,7 @@ function buildCustomLibraryHTML(){
         <div class="cpl-add-row">
           <div>
             <span class="cpl-add-label">Pantone Code</span>
-            <input type="text" id="cplCodeInput" class="cpl-input" placeholder="e.g. 13-0210 TCX"/>
+            <input type="text" id="cplCodeInput" class="cpl-input" placeholder="e.g. 13-0210 TCX" onkeydown="if(event.key==='Enter'){event.preventDefault();saveCustomPantone();}"/>
           </div>
           <div>
             <span class="cpl-add-label">Hex / Pick</span>
@@ -1915,6 +1925,59 @@ function toggleCustomLib(){
   if(!body) return;
   const open = body.classList.toggle('open');
   if(icon) icon.style.transform = open ? 'rotate(180deg)' : '';
+}
+
+// v5.12 — Pre-fill the Custom Pantone Library form with the currently resolved color.
+// Derives a sensible code string based on how the color was set:
+//   • Pantone match    → the actual Pantone code (e.g. "13-4308 TCX")
+//   • Collection anchor → "COLLECTION <source>"  (e.g. "COLLECTION V1 — 58MT400")
+//   • Eyedropper        → "EYEDROP #DCDBD8"
+//   • User-typed Pantone that didn't match → the typed code, as-is
+//   • Plain hex picker  → nearest Pantone code, falling back to "CUSTOM #DCDBD8"
+// Opens the library if collapsed, scrolls the form into view, focuses & selects
+// the code input so the user can confirm/edit and press Enter (or click Save) to commit.
+function addResolvedColorToLibrary(){
+  const hex = (S.selectedColor || '#000000').toUpperCase();
+  const matched = (typeof findPantoneByInput === 'function' && S.pantone) ? findPantoneByInput(S.pantone) : null;
+  let suggestedCode;
+  if(matched && matched.code){
+    suggestedCode = matched.code;
+  } else if(S.collectionAnchorSource){
+    suggestedCode = 'COLLECTION ' + S.collectionAnchorSource;
+  } else if(S.wasEyedropped){
+    suggestedCode = 'EYEDROP ' + hex;
+  } else if(S.pantone && S.pantone.trim()){
+    suggestedCode = S.pantone.trim();
+  } else {
+    try{
+      const nearest = getNearestPantone(S.selectedColor);
+      suggestedCode = (nearest && nearest.code) ? nearest.code : ('CUSTOM ' + hex);
+    }catch(e){ suggestedCode = 'CUSTOM ' + hex; }
+  }
+
+  // Expand library if collapsed
+  const body = document.getElementById('cplBody');
+  const icon = document.getElementById('cplToggleIcon');
+  if(body && !body.classList.contains('open')){
+    body.classList.add('open');
+    if(icon) icon.style.transform = 'rotate(180deg)';
+  }
+
+  // Pre-fill code + color
+  const codeEl = document.getElementById('cplCodeInput');
+  const colorEl = document.getElementById('cplColorInput');
+  if(codeEl) codeEl.value = suggestedCode;
+  if(colorEl) colorEl.value = S.selectedColor || '#000000';
+
+  // Visual feedback on the trigger button
+  const btn = document.getElementById('resolvedAddBtn');
+  if(btn){ btn.classList.remove('flash'); void btn.offsetWidth; btn.classList.add('flash'); }
+
+  // Scroll + focus + select so Enter commits
+  if(codeEl){
+    codeEl.scrollIntoView({behavior:'smooth', block:'center'});
+    setTimeout(()=>{ try{ codeEl.focus(); codeEl.select(); }catch(e){} }, 300);
+  }
 }
 
 function saveCustomPantone(){
