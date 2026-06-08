@@ -444,7 +444,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
     <div>
       <div style="display:flex;align-items:center">
         <span class="logo-title">SWEATERVISION</span>
-        <span class="version-badge" id="versionBadge">V5.13</span>
+        <span class="version-badge" id="versionBadge">V5.14</span>
       </div>
       <div class="logo-sub">Sweater AI Engine By RD Style</div>
     </div>
@@ -1470,7 +1470,7 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '5.13';
+const APP_VERSION = '5.14';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -2413,7 +2413,7 @@ function handleRenderAsIs(){
   const fabricLine = fabric ? `The garment fabric is ${fabric}.` : '';
   const renderAsIsPrompt =
     `Perform a professional 3D ${S.mannequinType||'unisex'} TRUE GHOST mannequin e-commerce render of this ${target}. ` +
-    `MANNEQUIN: ${S.mannequinType==='male'?'Male torso proportions — broad shoulders, straight chest.':S.mannequinType==='female'?'Female torso proportions — narrower shoulders, curved chest.':'Unisex neutral torso.'} CRITICAL: The mannequin must be 100% invisible — absolutely no visible neck post, neck cylinder, torso outline, stand, base, or any mannequin component. Only the garment is visible. ` + +
+    `MANNEQUIN: ${S.mannequinType==='male'?'Male torso proportions — broad shoulders, straight chest.':S.mannequinType==='female'?'Female torso proportions — narrower shoulders, curved chest.':'Unisex neutral torso.'} CRITICAL: The mannequin must be 100% invisible — absolutely no visible neck post, neck cylinder, torso outline, stand, base, or any mannequin component. Only the garment is visible. ` +
     `CRITICAL COLOR RULE: Before rendering, carefully analyze and identify the exact color of the ${target} in the original image — ` +
     `note its precise hue, saturation, lightness, and any texture or pattern. ` +
     `Reproduce that exact color with 100% fidelity in the render. Do NOT lighten, whiten, gray out, or shift the color in any way. ` +
@@ -2425,7 +2425,7 @@ function handleRenderAsIs(){
     `Render under bright, diffuse, high-exposure commercial studio front lighting that preserves true color without darkening. ` +
     `Soft natural folds only — no heavy shadows that mute or shift the garment color.`;
 
-  runGenerate(renderAsIsPrompt, styleName, metadata, 'render');
+  runGenerate(renderAsIsPrompt, styleName, metadata, 'render', null, true);
 }
 
 function handleSalesConvert(){handleSubmit(true);}
@@ -2544,8 +2544,12 @@ function updateClaudeBadge(){
 // ================================================================
 const STEPS=["Analyzing Original Garment...","Interpreting Style Selection...","Building 3D Mesh...","Generating Studio Render...","Refining Textures & Lighting...","Removing Tags & Labels...","Finishing Up..."];
 
-async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null){
+async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,renderAsIs=false){
   if(!S.apiKey){showSettings();return;}
+  // v5.14 — Render As Is is a pristine pass: regardless of session state
+  // (active Change Color preset, lingering pantone/hex from a prior style),
+  // do NOT apply any color lock and report neutral color metadata in the log.
+  if(renderAsIs) colorLockTarget = null;
   S.isProcessing=true;
   S.currentLabel=label;S.currentMetadata=metadata;S.currentVersion=undefined;
   setProcessing(true);clearError();
@@ -2598,16 +2602,16 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null){
       targetPart: document.getElementById('targetInput')?.value || 'Full Garment',
       colorName: metadata.colorName || '',
       colorCode: metadata.colorCode || '',
-      pantoneCode: S.pantone || '',
-      hexColor: S.selectedColor || '',
-      colorCompensation: S.useComp ? 'Yes' : 'No',
-      eyedropped: S.wasEyedropped ? 'Yes' : 'No',
+      pantoneCode: renderAsIs ? '' : (S.pantone || ''),
+      hexColor: renderAsIs ? '' : (S.selectedColor || ''),
+      colorCompensation: renderAsIs ? 'N/A' : (S.useComp ? 'Yes' : 'No'),
+      eyedropped: renderAsIs ? 'No' : (S.wasEyedropped ? 'Yes' : 'No'),
       colorLockApplied: (colorLockTarget && S.activePresets.includes('Change Color') && mode!=='sales_sheet') ? 'Yes' : 'No',
       colorLockTarget: colorLockTarget || '',
-      collectionAnchor: S.collectionAnchorSource || '',
+      collectionAnchor: renderAsIs ? '' : (S.collectionAnchorSource || ''),
       fabric: metadata.fabric || '',
       fabricContent: metadata.fabricContent || '',
-      presets: S.activePresets.length ? S.activePresets.join(' | ') : 'None',
+      presets: renderAsIs ? 'Render As Is' : (S.activePresets.length ? S.activePresets.join(' | ') : 'None'),
       promptSent: finalPrompt||prompt,
       claudeUsed: (S.anthropicKey && finalPrompt !== prompt) ? 'Yes' : 'No',
       referenceAttached: S.referenceImage ? 'Yes' : 'No',
