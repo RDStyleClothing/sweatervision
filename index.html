@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SWEATERVISION V5.10 — RD Style</title>
+<title>SWEATERVISION V5.11 — RD Style</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -438,7 +438,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
     <div>
       <div style="display:flex;align-items:center">
         <span class="logo-title">SWEATERVISION</span>
-        <span class="version-badge" id="versionBadge">V5.10</span>
+        <span class="version-badge" id="versionBadge">V5.11</span>
       </div>
       <div class="logo-sub">Sweater AI Engine By RD Style</div>
     </div>
@@ -446,7 +446,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
   <div class="header-actions">
     <input type="file" id="headerFileInput" class="hidden" accept="image/*,.heic,.heif"/>
     <input type="file" id="headerCameraInput" class="hidden" accept="image/*" capture="environment"/>
-    <button class="hbtn hidden" id="uploadNewBtn" onclick="document.getElementById('headerFileInput').click()">
+    <button class="hbtn hidden" id="uploadNewBtn" onclick="document.getElementById('headerFileInput').click()" title="Swap in a new reference image — session history, log, and settings are preserved. Use Reset Session to clear everything.">
       <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
       <span>Upload New</span>
     </button>
@@ -462,9 +462,9 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       <span>Log <span id="logBadge" style="background:var(--accent);color:#fff;font-size:8px;padding:1px 5px;border-radius:8px;margin-left:2px;display:none">0</span></span>
     </button>
-    <button class="hbtn accent hidden" id="resetBtn" onclick="resetApp()">
+    <button class="hbtn accent hidden" id="resetBtn" onclick="resetApp()" title="Wipe the session: clears the reference image, all history, and the decision log">
       <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-      <span>Reset</span>
+      <span>Reset Session</span>
     </button>
   </div>
 </header>
@@ -1464,7 +1464,7 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '5.10';
+const APP_VERSION = '5.11';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -1534,7 +1534,12 @@ function handleFileSelect(input, type){
   reader.onload = function(e){
     if(type === 'upload') handleImageUpload(e.target.result);
     else if(type === 'ref') setRefImage(e.target.result);
-    else if(type === 'header') handleImageUpload(e.target.result);
+    else if(type === 'header'){
+      // v5.11 — Header "Upload New" swaps the source image without resetting the session.
+      // First-time upload (somehow routed through header) still falls back to full init.
+      if(S.appInitialized && S.origImg) swapSourceImage(e.target.result);
+      else handleImageUpload(e.target.result);
+    }
     // Reset input so the same file can be picked again
     setTimeout(function(){ try{ input.value=''; }catch(err){} }, 100);
   };
@@ -1632,7 +1637,39 @@ function resetPreviewState(){
   setView('grid');
 }
 
+// v5.11 — Swap the source image without touching session state.
+// Preserves: history, decisionLog, versionCounter, mannequinType, selectedFit,
+// activePresets, form inputs (style name / color / fabric / target), API keys.
+// Clears only: the current generation preview pane (since it belonged to the old source).
+function swapSourceImage(b64){
+  S.origImg = b64;
+  S.modImg = null;
+  S.currentLabel = '';
+  S.currentMetadata = {};
+  S.currentVersion = null;
+  S.selectedIndices = [];
+  const oi = document.getElementById('origImg'); if(oi) oi.src = b64;
+  const so = document.getElementById('sliderOrigImg'); if(so) so.src = b64;
+  resetPreviewState();
+  clearError();
+  // Hide comparison view if it was open — it referenced the prior source's renders
+  const cv = document.getElementById('comparisonView'); if(cv) cv.classList.add('hidden');
+}
+
 function resetApp(){
+  // v5.11 — Guard the destructive wipe behind an explicit confirmation.
+  // Lists exactly what's being cleared so the user can't fire it by accident.
+  const ok = confirm(
+    'Reset Session — are you sure?\n\n' +
+    'This will clear:\n' +
+    '  • The reference image\n' +
+    '  • All session history (' + (S.history?.length||0) + ' render' + ((S.history?.length||0)===1?'':'s') + ')\n' +
+    '  • The decision log (' + (S.decisionLog?.length||0) + ' entr' + ((S.decisionLog?.length||0)===1?'y':'ies') + ')\n' +
+    '  • Mannequin and fit selections\n\n' +
+    'API keys and custom Pantone library are kept.\n' +
+    'This cannot be undone.'
+  );
+  if(!ok) return;
   S.origImg=null;S.modImg=null;S.history=[];S.selectedIndices=[];
   S.decisionLog=[];S.appInitialized=false;S.mannequinType='';S.selectedFit='';
   document.querySelectorAll('.mannequin-opt').forEach(b=>b.classList.remove('active'));
