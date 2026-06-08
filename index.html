@@ -444,7 +444,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
     <div>
       <div style="display:flex;align-items:center">
         <span class="logo-title">SWEATERVISION</span>
-        <span class="version-badge" id="versionBadge">V5.14</span>
+        <span class="version-badge" id="versionBadge">V5.16</span>
       </div>
       <div class="logo-sub">Sweater AI Engine By RD Style</div>
     </div>
@@ -2413,7 +2413,8 @@ function handleRenderAsIs(){
   const fabricLine = fabric ? `The garment fabric is ${fabric}.` : '';
   const renderAsIsPrompt =
     `Perform a professional 3D ${S.mannequinType||'unisex'} TRUE GHOST mannequin e-commerce render of this ${target}. ` +
-    `MANNEQUIN: ${S.mannequinType==='male'?'Male torso proportions — broad shoulders, straight chest.':S.mannequinType==='female'?'Female torso proportions — narrower shoulders, curved chest.':'Unisex neutral torso.'} CRITICAL: The mannequin must be 100% invisible — absolutely no visible neck post, neck cylinder, torso outline, stand, base, or any mannequin component. Only the garment is visible. ` +
+    `MANNEQUIN: ${S.mannequinType==='male'?'Male torso proportions — broad shoulders, straight chest.':S.mannequinType==='female'?'Female torso proportions — narrower shoulders, curved chest.':'Unisex neutral torso.'} CRITICAL: The mannequin must be 100% invisible — absolutely no visible neck post, neck cylinder, plastic bust, torso outline, wireframe shoulders, sketched body lines, stand, base, or any mannequin component. Only the garment fabric is visible. ` +
+    `EXPOSED-AREA RULE: If this garment is strapless, sleeveless, off-shoulder, cropped, backless, or low-cut, the empty space where a body would normally show through MUST be rendered as the identical pure white background as the rest of the image — NOT plastic mannequin, NOT skin, NOT a wireframe outline, NOT a sketched torso. The garment silhouette terminates exactly at the edge of the garment fabric, with nothing protruding above a strapless neckline or beyond a sleeveless armhole. ` +
     `CRITICAL COLOR RULE: Before rendering, carefully analyze and identify the exact color of the ${target} in the original image — ` +
     `note its precise hue, saturation, lightness, and any texture or pattern. ` +
     `Reproduce that exact color with 100% fidelity in the render. Do NOT lighten, whiten, gray out, or shift the color in any way. ` +
@@ -2421,7 +2422,7 @@ function handleRenderAsIs(){
     `The finished render color must match the original garment color exactly as photographed. ` +
     `${fabricLine} ` +
     `Maintain all original design details, seams, stitching, and construction exactly as shown. ` +
-    `Place the garment on a strictly 100% PURE FLAT SOLID WHITE (#FFFFFF) background — exact RGB (255,255,255), zero gradients, zero shadows, zero vignette — so the background can be removed to full transparency after rendering. ` +
+    `Place the garment on a strictly 100% PURE FLAT SOLID WHITE (#FFFFFF) background — exact RGB (255,255,255), zero gradients, zero shadows, zero vignette, zero drop shadow under the hem, zero ambient occlusion — so the background can be removed to full transparency after rendering. ` +
     `Render under bright, diffuse, high-exposure commercial studio front lighting that preserves true color without darkening. ` +
     `Soft natural folds only — no heavy shadows that mute or shift the garment color.`;
 
@@ -2665,16 +2666,38 @@ async function callGemini(prompt,mode,attempt=0){
   if(S.referenceImage){const rm=S.referenceImage.match(/^data:(image\/[^;]+)/)?.[1]||'image/png';parts.push({inline_data:{data:S.referenceImage.split(',')[1],mime_type:rm}});}
   parts.push({text:`AI FASHION EDITOR: ${focusText} 
     REQUEST: "${prompt}". 
-    ${S.referenceImage && S.activePresets.includes('Change Design') ? "IMPORTANT: The SECOND image is the design reference. Study it carefully — extract its exact pattern, stripe layout, colors, and all visual details. Apply them precisely to the garment." : S.referenceImage ? "The SECOND image is a style reference — use its pattern and texture details as a guide." : ""}
+    ${S.referenceImage && S.activePresets.includes('Change Design') ? "STYLE REFERENCE IMAGE — STRICT USAGE: The SECOND image is a PATTERN / PRINT reference ONLY. From it, extract ONLY the print artwork itself: the pattern motif (stripes, plaid, floral, graphic, etc.), the colors of the pattern, the scale and orientation of the print, and the design lines. DO NOT copy ANY other property of the reference image. Specifically: DO NOT copy the reference's background color, lighting, photographic atmosphere, color cast, framing, shadows, or any environmental context surrounding the reference artwork. The reference's background is to be COMPLETELY IGNORED — if the reference sits on a black, gray, colored, or textured background, that background must have ZERO influence on the output. The output background is governed exclusively by rule #1 (pure white #FFFFFF). Apply only the extracted print/pattern to the requested garment area; the rest of the rendering — background, mannequin, lighting, framing — follows the rules below, not the reference." : S.referenceImage ? "The SECOND image is a style reference — use ONLY its pattern, texture, and design details as a guide. DO NOT copy the reference's background, lighting, atmosphere, or color cast. The output background follows rule #1 (pure white #FFFFFF), independent of whatever background appears in the reference." : ""}
+    ${treatAsRender?`
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    TOP PRIORITY — GHOST MANNEQUIN ENFORCEMENT (READ BEFORE GENERATING):
+    This is a ghost mannequin e-commerce product render. Three absolute
+    requirements override every other consideration:
+      (A) ZERO visible mannequin form ANYWHERE in the image. No plastic
+          bust, no neck, no shoulders, no head, no wireframe outline, no
+          sketched body lines, no faint torso silhouette. The garment
+          fabric is the ONLY physical content in the image.
+      (B) PURE WHITE #FFFFFF background at every non-garment pixel. Zero
+          shadows of any kind — no drop shadow under the hem, no soft
+          floor shadow, no ambient occlusion at the base, no gradient.
+      (C) If the garment is strapless, sleeveless, off-shoulder, cropped,
+          backless, or low-cut, the empty space where a body would
+          normally show through MUST be pure white background, identical
+          to the rest of the background — NOT filled with mannequin form,
+          NOT filled with skin, NOT drawn as a wireframe, NOT sketched
+          as a body outline. The visible silhouette terminates exactly
+          at the edge of the garment fabric.
+    Failing any of these three is a render failure regardless of how
+    well the rest of the rules are satisfied.
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`:''}
     
     CRITICAL RULES (ABSOLUTE COMPLIANCE REQUIRED - NO EXCEPTIONS):
     1. ${bgRule}
-    2. FORCE TRUE GHOST MANNEQUIN — ZERO VISIBLE MANNEQUIN PARTS: The garment MUST appear as if worn by a completely invisible ghost. CRITICAL — there must be absolutely ZERO visible mannequin components: no neck post, no neck stand, no gray/white plastic cylinder, no torso form outline, no shoulder supports, no base, no clips, no rods. The ONLY thing visible must be the garment fabric itself floating in 3D space. The neck opening must be wide, fully open, and hollow showing only the inside back collar fabric. The body must have natural 3D volume and chest depth from the invisible ghost form underneath — but the form itself is 100% invisible. If you are considering showing any part of a mannequin body, stand, or support — DO NOT. Render ONLY the garment.
+    2. FORCE TRUE GHOST MANNEQUIN — ZERO VISIBLE MANNEQUIN PARTS: The garment MUST appear as if worn by a completely invisible ghost. CRITICAL — there must be absolutely ZERO visible mannequin components: no neck post, no neck stand, no gray/white plastic cylinder, no torso form outline, no shoulder supports, no base, no clips, no rods, no wireframe shoulders, no sketched torso lines, no faint body silhouette of any kind. The ONLY thing visible must be the garment fabric itself floating in 3D space. The neck opening must be wide, fully open, and hollow showing only the inside back collar fabric. The body must have natural 3D volume and chest depth from the invisible ghost form underneath — but the form itself is 100% invisible. FAILURE EXAMPLES TO AVOID: a visible plastic mannequin bust rising above a strapless top; a faint wireframe drawing of shoulders and neck above the garment; a translucent torso outline; a pencil-sketched body shape; any continuation of a body form beyond the garment's fabric edge. EXPOSED-AREA RULE: For strapless, sleeveless, off-shoulder, crop, backless, or low-cut garments, anywhere a mannequin body would normally be visible (above a strapless neckline, outside sleeveless armholes, below a crop hem) must be rendered as the IDENTICAL pure white background as elsewhere in the image — NOT plastic, NOT skin, NOT a wireframe, NOT a sketch, NOT any body content. If you are considering showing any part of a mannequin body, stand, support, or even a faint outline of one — DO NOT. Render ONLY the garment fabric.
     3. FORCE PERFECT FRONT-FACING CAMERA ANGLE: The garment must ALWAYS be captured from a perfectly flat, straight, level, direct front-facing point of view, centered and perpendicular to the camera. Never render any three-quarter angle, profile, back view, skewed perspective, or rotated/tilted posture. Symmetrical alignment is mandatory.
     4. ABSOLUTELY NO HANGERS OR TAGS: Completely remove any hangers, hooks, wires, price tags, barcode tags, sizing tags, cords, background items, or apparel labels (internal or external). The garment must float cleanly on its own.
-    5. NO SHADOWS AT ALL: There must be absolutely NO flooring, ambient shadows, drop shadows, or shadow halos under hemlines, cords, or collars. The background must be flat, pure, sterile solid white (#FFFFFF).
+    5. NO SHADOWS AT ALL: There must be absolutely NO flooring, ambient shadows, drop shadows, or shadow halos under hemlines, cords, or collars. NO soft cast shadow beneath the garment. NO faint floor shadow. NO ambient occlusion darkening at the base of the garment. NO gradient darkening of any kind around the garment edge or under the hem. The background must be flat, pure, sterile solid white (#FFFFFF) — exactly RGB(255,255,255) — at every single pixel that is not part of the garment fabric itself.
     6. ${styleRule}
-    7. NO MODEL OR HUMAN PARTS — ABSOLUTELY NO MANNEQUIN HEAD: No human faces, skin, arms, legs, models, or mannequin heads. The neck opening of the garment must show only the hollow interior fabric — there must be NO gray plastic neck post, NO mannequin head form, NO bust form visible above the collar.
+    7. NO MODEL OR HUMAN PARTS — ABSOLUTELY NO MANNEQUIN HEAD OR BUST: No human faces, skin, arms, legs, models, or mannequin heads. The neck opening of the garment must show only the hollow interior fabric — there must be NO gray plastic neck post, NO mannequin head form, NO bust form visible above the collar or above a strapless neckline, NO chest form, NO shoulder form, and NO wireframe or sketched outline of any of these. Above a strapless garment, the area where a bust would normally sit is PURE WHITE BACKGROUND — nothing else.
     8. DIMENSIONS: Strictly align to a 3:4 portrait aspect ratio (1200px width, 1600px height). The garment must be beautifully centered with a comfortable 15% margin from all borders to prevent clipping.
     9. ABSOLUTE COLOR FIDELITY: If the request includes changing the color/recoloring (e.g., mentions changing color, paint, hex code, or Pantone), you MUST completely overrule and throw away the old, original base colors and undertones of the garment. Do not tint or blend the old color into the new one. Paint the entire garment's fabric cleanly, evenly, and precisely with the requested target hex or Pantone shade as a fresh new dye. Keep the fabric rendered under bright, diffuse, high-key commercial advertising studio lighting. Folds and shading must be extremely soft, subtle, and natural; under no circumstances allow heavy gray, black, or muddy shadows to darken or mute the garment's overall fabric color below the requested target swatch value. The main body/flat surface colors of the garment must match the user's requested swatch color perfectly.`});
 
@@ -2946,6 +2969,21 @@ async function removeBg(b64){
       }
 
       for(let i=0;i<W*H;i++) d[i*4+3]=Math.round(alpha[i]*255);
+
+      // v5.16 — Perimeter-opacity diagnostic. If more than 25% of perimeter
+      // pixels are still highly opaque after processing, bg removal effectively
+      // failed (likely because Gemini produced a non-white bg that the safe-zone
+      // algorithm couldn't strip cleanly — e.g. dark bg leaking from a Style
+      // Reference image). Log a warning so the failure is visible; do NOT
+      // attempt aggressive fallback since that risks eating garment pixels
+      // (plaid black squares, dark prints) that look like the bg.
+      let opaquePerim=0, totalPerim=0;
+      for(let x=0;x<W;x++){ if(d[(0*W+x)*4+3]>200)opaquePerim++; if(d[((H-1)*W+x)*4+3]>200)opaquePerim++; totalPerim+=2; }
+      for(let y=1;y<H-1;y++){ if(d[(y*W+0)*4+3]>200)opaquePerim++; if(d[(y*W+W-1)*4+3]>200)opaquePerim++; totalPerim+=2; }
+      const opaqueFrac = opaquePerim/totalPerim;
+      if(opaqueFrac>0.25){
+        console.warn(`[removeBg] Perimeter still ${(opaqueFrac*100).toFixed(0)}% opaque after processing — likely non-white bg from Gemini (bg color sampled as RGB(${bgR|0},${bgG|0},${bgB|0})). Check prompt for reference-image bg leak.`);
+      }
 
       ctx.putImageData(id,0,0);
       res(c.toDataURL('image/png'));
