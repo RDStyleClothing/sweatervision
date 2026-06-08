@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SWEATERVISION V5.8 — RD Style</title>
+<title>SWEATERVISION V5.10 — RD Style</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -438,7 +438,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
     <div>
       <div style="display:flex;align-items:center">
         <span class="logo-title">SWEATERVISION</span>
-        <span class="version-badge" id="versionBadge">V5.8</span>
+        <span class="version-badge" id="versionBadge">V5.10</span>
       </div>
       <div class="logo-sub">Sweater AI Engine By RD Style</div>
     </div>
@@ -1464,7 +1464,7 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '5.8';
+const APP_VERSION = '5.10';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -2242,7 +2242,12 @@ function handleSubmit(forceAsIs=false){
         setProcessing(false); S.isProcessing=false; return;
       }
     }
-    if(mode==='render'){
+    // v5.9 — Render-extras also apply to Edit + any garment-modifying preset.
+    // (fabric input is only visible in render mode, so fabric.trim() is empty in edit;
+    //  pattern preservation still matters — it stops Gemini inventing new patterns.)
+    const MODIFYING_PRESETS=['Change Color','Change Design','Adjust Fit','Wash'];
+    const editWithModify = mode==='edit' && S.activePresets.some(p=>MODIFYING_PRESETS.includes(p));
+    if(mode==='render' || editWithModify){
       if(fabric.trim()){metadata.fabric=fabric;promptParts.push(`render using ${fabric} fabric texture`);}
       if(!S.activePresets.includes('Change Design'))promptParts.push(`strictly maintain the exact same original pattern and print details of the ${target}`);
     }
@@ -2444,7 +2449,13 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null){
     }
     const result=await callGemini(finalPrompt,mode);
     let processed=result;
-    if(mode!=='sales_sheet'&&mode!=='edit'){
+    // v5.9 — bg removal mirrors the render-rule promotion: Edit mode runs removeBg
+    // whenever any garment-modifying preset is active (Change Color, Change Design,
+    // Adjust Fit, Wash). Pure prompt-only Edit still skips removal to preserve model context.
+    const MODIFYING_PRESETS=['Change Color','Change Design','Adjust Fit','Wash'];
+    const editWithModify = mode==='edit' && S.activePresets.some(p=>MODIFYING_PRESETS.includes(p));
+    const shouldRemoveBg = mode!=='sales_sheet' && (mode!=='edit' || editWithModify);
+    if(shouldRemoveBg){
       document.getElementById('procStep').textContent="Removing Background & Creating Transparency...";
       try{processed=await removeBg(result);}catch(e){console.warn('BG removal failed',e);}
     }
@@ -2511,17 +2522,23 @@ async function callGemini(prompt,mode,attempt=0){
   const b64=S.origImg.split(',')[1];
   const isRender=mode==='render',isSketch=mode==='sketch',isSales=mode==='sales_sheet';
 
+  // v5.9 — Any garment-modifying preset in Edit mode promotes the output to a render.
+  // Edit mode without a preset stays as a literal edit (preserve background/model).
+  const MODIFYING_PRESETS=['Change Color','Change Design','Adjust Fit','Wash'];
+  const editWithModify = mode==='edit' && S.activePresets.some(p=>MODIFYING_PRESETS.includes(p));
+  const treatAsRender = isRender || editWithModify;
+
   const focusText=isSales?"FOCUS: Process the entire image (Sales Sheet). Identify all garment sketches and render them individually."
     :`FOCUS: Only modify the "${document.getElementById('targetInput').value||'garment'}".`;
 
   const bgRule=isSales?"SALES SHEET: Maintain the overall layout of the page. Each garment should be rendered in place. The background of the sheet should be clean and professional."
-    :isRender?"GHOST MANNEQUIN BACKGROUND: CRITICAL — The garment MUST float on a 100% PURE FLAT SOLID WHITE background, hex #FFFFFF. NOT off-white, NOT light gray, NOT cream. Exact RGB (255,255,255). ZERO shadows of any kind — no drop shadows, no floor shadows, no ambient occlusion, no vignette, no gradient. The background must be a single uniform flat #FFFFFF value so that automated background removal can extract the garment cleanly. Any deviation from pure white in the background will cause extraction failure."
+    :treatAsRender?"GHOST MANNEQUIN BACKGROUND: CRITICAL — The garment MUST float on a 100% PURE FLAT SOLID WHITE background, hex #FFFFFF. NOT off-white, NOT light gray, NOT cream. Exact RGB (255,255,255). ZERO shadows of any kind — no drop shadows, no floor shadows, no ambient occlusion, no vignette, no gradient. The background must be a single uniform flat #FFFFFF value so that automated background removal can extract the garment cleanly. Any deviation from pure white in the background will cause extraction failure. The background must NEVER be tinted with the garment color — keep it strictly pure white regardless of what color the garment is being changed to."
     :isSketch?"FLAT SKETCH BACKGROUND: Output on a strictly 100% SOLID PURE WHITE (#FFFFFF) background with zero shadows and zero background elements."
     :"EDIT MODE: PRESERVE the exact original background, environment, and model. Only modify the requested garment element. Do NOT alter the background.";
 
   const styleRule=isSales?"STYLE: 3D Product Render. Convert every colored sketch on this sales sheet into highly realistic 3D rendered garments. Maintain colors from the original sketches. Add realistic fabric textures, shadows, and depth to each item on the page. All garments must be front-facing."
     :isSketch?"STYLE: Technical Flat Sketch. High-contrast black lines on a white background. No shading, clear construction lines. Symmetrical, front-facing."
-    :isRender?`STYLE: High-resolution photorealistic 3D E-commerce Ghost Mannequin Product Shot. MANNEQUIN TYPE: ${S.mannequinType==='male'?'MALE — broad shoulders, straight chest, male torso proportions. Do not use female curves or silhouette.':S.mannequinType==='female'?'FEMALE — narrower shoulders, curved chest, female torso proportions and silhouette.':'UNISEX — neutral straight torso, equal shoulder width, androgynous proportions.'}. The garment must look natural with realistic folds and weight. The mannequin form underneath gives it 3D volume but is 100% invisible — only the garment fabric is visible. CRITICAL: No neck post, no visible torso form, no mannequin stand. The neck opening must be a clean open hollow circle showing only the inside back collar. Reconstruct with 3D volume, rounded shoulders, natural chest contour. If input is a flat sketch, convert to photorealistic finished garment with high-fidelity texture. Straight direct front-facing camera, symmetrical, centered.`
+    :treatAsRender?`STYLE: High-resolution photorealistic 3D E-commerce Ghost Mannequin Product Shot. MANNEQUIN TYPE: ${S.mannequinType==='male'?'MALE — broad shoulders, straight chest, male torso proportions. Do not use female curves or silhouette.':S.mannequinType==='female'?'FEMALE — narrower shoulders, curved chest, female torso proportions and silhouette.':'UNISEX — neutral straight torso, equal shoulder width, androgynous proportions.'}. The garment must look natural with realistic folds and weight. The mannequin form underneath gives it 3D volume but is 100% invisible — only the garment fabric is visible. CRITICAL: No neck post, no visible torso form, no mannequin stand. The neck opening must be a clean open hollow circle showing only the inside back collar. Reconstruct with 3D volume, rounded shoulders, natural chest contour. If input is a flat sketch, convert to photorealistic finished garment with high-fidelity texture. Straight direct front-facing camera, symmetrical, centered.`
     :"MAINTAIN STYLE & STRUCTURE (WITH GHOST BUST ENFORCEMENT): Keep the essential yarn texture, patterns, and colors of the garment consistent with requested modifications. However, you MUST reshape the garment to fit a 3D hollow ghost mannequin torso shape. Do NOT retain pinched shoulders, flat-lay shapes, or hanger-draped droop from the input image. Reconstruct the garment with full 3-dimensional body volume, rounded natural shoulders, an open circular hollow neck, and a direct front-facing orientation.";
 
   const parts=[{inline_data:{data:b64,mime_type:mime}}];
@@ -2541,10 +2558,18 @@ async function callGemini(prompt,mode,attempt=0){
     8. DIMENSIONS: Strictly align to a 3:4 portrait aspect ratio (1200px width, 1600px height). The garment must be beautifully centered with a comfortable 15% margin from all borders to prevent clipping.
     9. ABSOLUTE COLOR FIDELITY: If the request includes changing the color/recoloring (e.g., mentions changing color, paint, hex code, or Pantone), you MUST completely overrule and throw away the old, original base colors and undertones of the garment. Do not tint or blend the old color into the new one. Paint the entire garment's fabric cleanly, evenly, and precisely with the requested target hex or Pantone shade as a fresh new dye. Keep the fabric rendered under bright, diffuse, high-key commercial advertising studio lighting. Folds and shading must be extremely soft, subtle, and natural; under no circumstances allow heavy gray, black, or muddy shadows to darken or mute the garment's overall fabric color below the requested target swatch value. The main body/flat surface colors of the garment must match the user's requested swatch color perfectly.`});
 
+  // v5.10 — Designated aspect ratio per mode, sent as a structured Gemini param.
+  // Without imageConfig.aspectRatio, Gemini Flash Image silently defaults to 1:1
+  // regardless of any "3:4 portrait" rule in the prompt prose.
+  // Sales sheet stays unset — the input image IS the page layout, let Gemini follow it.
+  const aspectRatio = mode==='sales_sheet' ? null : '3:4';
+  const generationConfig = { responseModalities:['IMAGE','TEXT'] };
+  if(aspectRatio) generationConfig.imageConfig = { aspectRatio };
+
   const delays=[2000,4000,8000];
   const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${S.apiKey}`,{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({contents:{parts},generationConfig:{responseModalities:['IMAGE','TEXT']}})
+    body:JSON.stringify({contents:{parts},generationConfig})
   });
 
   if(resp.status===429){
