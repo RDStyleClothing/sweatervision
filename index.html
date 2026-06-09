@@ -1464,7 +1464,12 @@ function getDynamicColorDescriptor(hex){
   if(s<6)sd="neutral, near-gray";else if(s<18)sd="soft, muted gray-undertoned";else if(s<40)sd="subtle, clean";else if(s<65)sd="beautiful, clear";else if(s<85)sd="vibrant, rich";else sd="exceedingly intense, highly saturated, vivid";
   let hd="color";
   if(h>=345||h<15)hd="red";else if(h<45)hd=s<25?"warm beige/brown earth-tone":"orange";else if(h<68)hd="yellow";else if(h<155)hd="green";else if(h<192)hd="cyan/turquoise";else if(h<255)hd="blue";else if(h<290)hd="purple/violet";else hd=s<30?"soft rose-mauve":"rose/pink/magenta";
-  if(s<5){if(l<15)return"solid flat jet black";if(l>85)return"ultra-clean, bright pure white";return`${ld} neutral ash gray`;}
+  // v5.21 — Widened neutral-detection band from s<5 to s<12. Faintly-tinted
+  // near-grays like #E4E3E0 (s=7, h=45) were leaking into the yellow/orange
+  // hue branches and getting descriptors like "near-white yellow" — which
+  // Gemini interpreted as cream/beige. Below s<12 the hue is perceptually
+  // meaningless and the color should be described as neutral.
+  if(s<12){if(l<15)return"solid flat jet black";if(l>85)return"ultra-clean, bright pure white-neutral";return`${ld} neutral ash gray`;}
   return`${sd} ${ld} ${hd}`;
 }
 
@@ -1476,7 +1481,7 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '5.18';
+const APP_VERSION = '5.23';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -2449,6 +2454,27 @@ function handleRefDrop(e){
 // ================================================================
 // SUBMIT
 // ================================================================
+
+// v5.22 — Normalize target for whole-garment render flows. Partial targets
+// (e.g. "Sleeves Only", "Neckline", "Collar") are a deliberate feature for
+// MODIFYING operations: Change Color, Change Design, Adjust Fit, Wash —
+// the user IS scoping the modification to that part. But for WHOLE-GARMENT
+// render flows (Render As Is, Sales Sheet conversion, fallback render
+// when no preset is active), inlining a partial target into the prompt
+// causes Gemini to treat that part as a focused subject and freelance on
+// it. v5.13–v5.21 had a latent bug here: Render As Is + "Sleeves Only"
+// produced green sleeves on a light blue body because Gemini interpreted
+// "render this Sleeves Only" as a directive to differentiate the sleeves.
+// This helper internally normalizes partial values to "garment" while
+// leaving the user's UI field untouched — partial targets continue to
+// work for the modifying flows where they belong.
+function targetForWholeGarmentRender(rawTarget){
+  const t = (rawTarget || '').trim();
+  const lc = t.toLowerCase();
+  const isFullGarment = !t || lc === 'full garment' || lc === 'garment';
+  return isFullGarment ? (t || 'garment') : 'garment';
+}
+
 function handleSubmit(forceAsIs=false){
   // Declare mode FIRST — used in all validations below
   const mode=S.activeMode;
@@ -2570,13 +2596,22 @@ function handleSubmit(forceAsIs=false){
       if(!S.activePresets.includes('Change Design'))promptParts.push(`strictly maintain the exact same original pattern and print details of the ${target}`);
     }
   } else {
-    promptParts.push(`strictly render the ${target} as is with the exact same original pattern, print, and colors`);
+    // v5.22 — forceAsIs (Sales Sheet conversion / handleSalesConvert) is a
+    // whole-garment render flow. Normalize partial targets so the prompt
+    // doesn't accidentally focus Gemini on a single garment part.
+    const renderTarget = targetForWholeGarmentRender(target);
+    promptParts.push(`strictly render the ${renderTarget} as is with the exact same original pattern, print, and colors`);
   }
   // Append any remaining user prompt not already included (for non-design presets)
   if(!S.activePresets.includes('Change Design') && prompt.trim() && !promptParts.some(p=>p.includes(prompt.trim()))){
     if(!forceAsIs) promptParts.push(prompt.trim());
   }
-  const finalPrompt=promptParts.length>0?promptParts.join(', ').charAt(0).toUpperCase()+promptParts.join(', ').slice(1):prompt||(mode==='render'?`Render the ${target} strictly as is with the exact same pattern and texture`:`Modify the ${target}`);
+  // v5.22 — Final fallback prompt. Render branch is a whole-garment flow;
+  // normalize partial targets for the same reason as the forceAsIs branch
+  // above. Edit branch keeps the user's target as-typed since "Modify the
+  // Sleeves Only" is a legitimate Edit-mode use case.
+  const fallbackRenderTarget = targetForWholeGarmentRender(target);
+  const finalPrompt=promptParts.length>0?promptParts.join(', ').charAt(0).toUpperCase()+promptParts.join(', ').slice(1):prompt||(mode==='render'?`Render the ${fallbackRenderTarget} strictly as is with the exact same pattern and texture`:`Modify the ${target}`);
   runGenerate(finalPrompt,styleName,metadata,mode,colorLockTarget);
 }
 
@@ -2600,7 +2635,12 @@ function handleRenderAsIs(){
     document.getElementById('fabricSection').scrollIntoView({behavior:'smooth',block:'nearest'});
     return;
   }
-  const target = document.getElementById('targetInput').value.trim() || 'garment';
+  // v5.22 — Normalize partial targets for Render As Is. This is a whole-garment
+  // flow ("render the entire thing exactly as it is") — a partial target like
+  // "Sleeves Only" in the prompt template causes Gemini to focus on that part
+  // as the subject and freelance on its color (the green-sleeve bug). The
+  // user's UI field is left untouched; this is purely prompt-rendering normalization.
+  const target = targetForWholeGarmentRender(document.getElementById('targetInput').value);
   const fabric = document.getElementById('fabricInput').value.trim();
   const colorName = document.getElementById('colorNameInput').value.trim();
   const colorCode = document.getElementById('colorCodeInput').value.trim();
@@ -2615,7 +2655,7 @@ function handleRenderAsIs(){
   const fabricLine = fabric ? `The garment fabric is ${fabric}.` : '';
   const renderAsIsPrompt =
     `Perform a professional 3D ${S.mannequinType||'unisex'} TRUE GHOST mannequin e-commerce render of this ${target}. ` +
-    `MANNEQUIN: ${S.mannequinType==='male'?'Male torso proportions — broad shoulders, straight chest.':S.mannequinType==='female'?'Female torso proportions — narrower shoulders, curved chest.':'Unisex neutral torso.'} CRITICAL: The mannequin must be 100% invisible — absolutely no visible neck post, neck cylinder, torso outline, stand, base, or any mannequin component. Only the garment is visible. ` +
+    `MANNEQUIN: ${S.mannequinType==='male'?'Male torso proportions — broad shoulders, straight chest.':S.mannequinType==='female'?'Female torso proportions — narrower shoulders, curved chest.':'Unisex neutral torso.'} CRITICAL — ZERO VISIBLE MANNEQUIN OR DRESS FORM OF ANY COLOR: The mannequin must be 100% invisible. Absolutely no visible neck post, neck cylinder, torso outline, stand, base, plastic mannequin parts, fabric-covered dress form, tailor's bust, dressmaker's mannequin, or any human-body-shaped object — including white/cream/beige fabric forms that match the garment color. For strapless, sleeveless, off-shoulder, crop, backless, tube, bustier, or low-cut garments: the area above the neckline, beside bare shoulders, or above any exposed body region MUST be pure #FFFFFF background — identical to the empty space around the garment. NOT a fabric form, NOT a translucent shape, NOT skin, NOT a shadow. Only the garment fabric itself is visible — everything else is empty pure white. ` +
     `CRITICAL COLOR RULE: Before rendering, carefully analyze and identify the exact color of the ${target} in the original image — ` +
     `note its precise hue, saturation, lightness, and any texture or pattern. ` +
     `Reproduce that exact color with 100% fidelity in the render. Do NOT lighten, whiten, gray out, or shift the color in any way. ` +
@@ -2650,12 +2690,25 @@ async function buildClaudePrompt(localPrompt, metadata, mode){
   // Build structured color context for Claude
   const colorContext = buildColorContext();
 
+  // v5.21 — Target-aware color-change scoping. When the user specifies a
+  // partial target (e.g. "Sleeves Only", "Neckline"), the Claude-built prompt
+  // must scope the recolor to that part. Previously the system prompt said
+  // "the ENTIRE garment fabric must be uniformly recolored" unconditionally,
+  // which Claude faithfully encoded into Gemini's instruction regardless of
+  // the target field — causing the body to also get recolored.
+  const targetTrimmed = (target || '').trim();
+  const targetLc = targetTrimmed.toLowerCase();
+  const isFullGarmentTgt = !targetTrimmed || targetLc==='full garment' || targetLc==='garment';
+  const colorScopeRule = isFullGarmentTgt
+    ? `- For color changes: the ENTIRE garment fabric must be uniformly recolored with zero residual undertones from the original.`
+    : `- For color changes: ONLY the "${targetTrimmed}" portion of the garment must be recolored. ALL other areas (body, collar, trims, panels, etc.) MUST be left completely untouched at their original color. Be explicit in the Gemini instruction that the recolor is strictly scoped to "${targetTrimmed}" and that no other garment region may shift color, even subtly.`;
+
   const systemPrompt = `You are an expert fashion AI prompt engineer specialising in garment color reproduction for e-commerce and sales materials. Your job is to write a single, highly precise image generation instruction for Google Gemini that produces photorealistic garment renders with exact color fidelity.
 
 Rules:
 - Write ONE paragraph only. No bullet points, no headers, no line breaks.
 - Be extremely specific about color: always include hex code, Pantone code if available, and a plain-English descriptor.
-- For color changes: the ENTIRE garment fabric must be uniformly recolored with zero residual undertones from the original.
+${colorScopeRule}
 - Always specify: bright, diffuse, high-exposure commercial studio front lighting.
 - Soft fold shadows only — no heavy dark shadows that mute the target color.
 - Maximum 130 words. Dense and precise beats verbose.`;
@@ -2779,12 +2832,33 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
     const shouldRemoveBg = mode!=='sales_sheet' && (mode!=='edit' || editWithModify);
     if(shouldRemoveBg){
       document.getElementById('procStep').textContent="Removing Background & Creating Transparency...";
-      try{processed=await removeBg(result);}catch(e){console.warn('BG removal failed',e);}
+      // v5.20 — Prior-alpha persistence on serial edits. When the input
+      // already has a transparent background (a prior render fed back in)
+      // AND the active operation should preserve silhouette, pass the prior
+      // alpha mask to removeBg as a ceiling. Halos cannot exist outside the
+      // dilated prior silhouette. Skipped for Adjust Fit / Change Design,
+      // which intentionally alter the silhouette.
+      const SILHOUETTE_CHANGING=['Adjust Fit','Change Design'];
+      const silhouetteWillChange = S.activePresets.some(p=>SILHOUETTE_CHANGING.includes(p));
+      let priorAlpha=null;
+      if(!silhouetteWillChange){
+        try{priorAlpha=await extractAlphaMask(S.origImg);}catch(e){priorAlpha=null;}
+      }
+      try{processed=await removeBg(result, priorAlpha);}catch(e){console.warn('BG removal failed',e);}
     }
     // Color lock (v5.6) — deterministic LAB anchor to the user-specified target hex.
     // Applies to eyedropper, Pantone, AND hex-picker paths. Skipped for sales_sheet
     // (multi-garment page) and for color-name-only inputs (no hex target).
-    if(mode!=='sales_sheet' && colorLockTarget && S.activePresets.includes('Change Color')){
+    // v5.21 — Gated to Full Garment targets only. The LAB lock computes a mean-color
+    // shift from ALL opaque pixels and applies it uniformly, which contaminates
+    // non-target areas on partial targets (e.g. "Sleeves Only" was dragging the
+    // body color toward the sleeve target). Latent bug since the partial-target
+    // field shipped in v5.13. On partial targets we now trust Gemini's prompt-driven
+    // recoloring; color fidelity may be slightly lower but the wrong region won't
+    // get recolored. Full segmentation-aware locking is a v6.x architectural lift.
+    const targetForLock=(document.getElementById('targetInput')?.value||'').trim().toLowerCase();
+    const isFullGarmentTarget = !targetForLock || targetForLock==='full garment' || targetForLock==='garment';
+    if(mode!=='sales_sheet' && colorLockTarget && S.activePresets.includes('Change Color') && isFullGarmentTarget){
       document.getElementById('procStep').textContent="Locking garment color to target hex...";
       try{processed=await enforceEyedropColor(processed, colorLockTarget);}catch(e){console.warn('Color lock failed',e);}
     }
@@ -2864,20 +2938,79 @@ async function callGemini(prompt,mode,attempt=0){
     :treatAsRender?`STYLE: High-resolution photorealistic 3D E-commerce Ghost Mannequin Product Shot. MANNEQUIN TYPE: ${S.mannequinType==='male'?'MALE — broad shoulders, straight chest, male torso proportions. Do not use female curves or silhouette.':S.mannequinType==='female'?'FEMALE — narrower shoulders, curved chest, female torso proportions and silhouette.':'UNISEX — neutral straight torso, equal shoulder width, androgynous proportions.'}. The garment must look natural with realistic folds and weight. The mannequin form underneath gives it 3D volume but is 100% invisible — only the garment fabric is visible. CRITICAL: No neck post, no visible torso form, no mannequin stand. The neck opening must be a clean open hollow circle showing only the inside back collar. Reconstruct with 3D volume, rounded shoulders, natural chest contour. If input is a flat sketch, convert to photorealistic finished garment with high-fidelity texture. Straight direct front-facing camera, symmetrical, centered.`
     :"MAINTAIN STYLE & STRUCTURE (WITH GHOST BUST ENFORCEMENT): Keep the essential yarn texture, patterns, and colors of the garment consistent with requested modifications. However, you MUST reshape the garment to fit a 3D hollow ghost mannequin torso shape. Do NOT retain pinched shoulders, flat-lay shapes, or hanger-draped droop from the input image. Reconstruct the garment with full 3-dimensional body volume, rounded natural shoulders, an open circular hollow neck, and a direct front-facing orientation.";
 
+  // v5.23 — Restored + extended strapless / dress-form enforcement.
+  // v5.15 was supposed to add this prose but never made it into the shipped
+  // file. Live test on a strapless bustier surfaced a white fabric-covered
+  // dress-form bust rising above the neckline — exactly the failure mode the
+  // v5.15 work was designed to prevent. Three changes here, fired only for
+  // treatAsRender (render mode or Edit + any garment-modifying preset):
+  //   (1) TOP PRIORITY anchor block before the numbered rules, written in
+  //       heavy visual separators so Gemini's attention can't drift past it.
+  //       Includes the EXPOSED-AREA POSITIVE INSTRUCTION (state what the
+  //       pixels MUST be — pure white background — not just what they must
+  //       not be). Positive instructions are more actionable for the model.
+  //   (2) Expanded Rule 2 with FAILURE EXAMPLES TO AVOID, naming the exact
+  //       failure modes seen in live tests (white/cream dress form, fabric-
+  //       covered bust, tailor's mannequin, semi-transparent ghosted torso,
+  //       fabric continuing upward as if worn).
+  //   (3) Expanded Rule 7 to explicitly cover the bust form above a
+  //       strapless neckline (the old "no head/no skin" rule didn't capture
+  //       the dress-form-bust mode).
+  // For non-render flows (Edit without preset, pure prompt-only Edit,
+  // Sketch, Sales Sheet) the anchor block is empty and rules stay as-is.
+  const topPriorityBlock = treatAsRender ? `
+    ═══════════════════════════════════════════════════════════════
+    TOP PRIORITY — NON-NEGOTIABLE ABSOLUTE REQUIREMENTS:
+    ═══════════════════════════════════════════════════════════════
+    ► ZERO MANNEQUIN FORM OF ANY KIND OR COLOR: There must be NO
+      visible mannequin, dress form, tailor's bust, fabric-covered
+      torso, plastic neck post, dummy, dressmaker's form, or any
+      human-body-shaped object in the output — including white,
+      cream, beige, or fabric-textured ones that visually blend
+      with the garment color. The garment fabric is the ONLY thing
+      that should be visible. A fabric-covered bust form is NOT a
+      ghost mannequin — it is a visible mannequin and is forbidden.
+
+    ► EVERY NON-GARMENT PIXEL = PURE WHITE #FFFFFF (POSITIVE RULE):
+      For any strapless, sleeveless, off-shoulder, crop, backless,
+      tube, bustier, or low-cut garment, the area ABOVE the neckline,
+      BESIDE the bare shoulders, or above any exposed body region
+      must be 100% PURE WHITE BACKGROUND (#FFFFFF), exactly the same
+      flat white as the surrounding empty space. NOT a fabric-covered
+      form. NOT a flesh tone. NOT a translucent mannequin shape. NOT
+      a darker shadow region. Just empty pure white background pixels,
+      indistinguishable from the surrounding negative space.
+
+    ► FAILING ANY OF THE ABOVE = RENDER FAILURE regardless of how well
+      every other rule is satisfied.
+    ═══════════════════════════════════════════════════════════════
+    ` : '';
+
   const parts=[{inline_data:{data:b64,mime_type:mime}}];
   if(S.referenceImage){const rm=S.referenceImage.match(/^data:(image\/[^;]+)/)?.[1]||'image/png';parts.push({inline_data:{data:S.referenceImage.split(',')[1],mime_type:rm}});}
   parts.push({text:`AI FASHION EDITOR: ${focusText} 
     REQUEST: "${prompt}". 
     ${S.referenceImage && S.activePresets.includes('Change Design') ? "IMPORTANT: The SECOND image is the design reference. Study it carefully — extract its exact pattern, stripe layout, colors, and all visual details. Apply them precisely to the garment." : S.referenceImage ? "The SECOND image is a style reference — use its pattern and texture details as a guide." : ""}
-    
+    ${topPriorityBlock}
     CRITICAL RULES (ABSOLUTE COMPLIANCE REQUIRED - NO EXCEPTIONS):
     1. ${bgRule}
-    2. FORCE TRUE GHOST MANNEQUIN — ZERO VISIBLE MANNEQUIN PARTS: The garment MUST appear as if worn by a completely invisible ghost. CRITICAL — there must be absolutely ZERO visible mannequin components: no neck post, no neck stand, no gray/white plastic cylinder, no torso form outline, no shoulder supports, no base, no clips, no rods. The ONLY thing visible must be the garment fabric itself floating in 3D space. The neck opening must be wide, fully open, and hollow showing only the inside back collar fabric. The body must have natural 3D volume and chest depth from the invisible ghost form underneath — but the form itself is 100% invisible. If you are considering showing any part of a mannequin body, stand, or support — DO NOT. Render ONLY the garment.
+    2. FORCE TRUE GHOST MANNEQUIN — ZERO VISIBLE MANNEQUIN PARTS: The garment MUST appear as if worn by a completely invisible ghost. CRITICAL — there must be absolutely ZERO visible mannequin components: no neck post, no neck stand, no gray/white plastic cylinder, no torso form outline, no shoulder supports, no base, no clips, no rods, no fabric-covered dressmaker's form, no tailor's bust, no dress form of any color. The ONLY thing visible must be the garment fabric itself floating in 3D space. The neck opening must be wide, fully open, and hollow showing only the inside back collar fabric. The body must have natural 3D volume and chest depth from the invisible ghost form underneath — but the form itself is 100% invisible. If you are considering showing any part of a mannequin body, stand, or support — DO NOT. Render ONLY the garment.
+
+    FAILURE EXAMPLES TO AVOID (each of these is a render failure — DO NOT produce any of them):
+    ✗ A visible white, cream, or beige fabric-covered dress form / tailor's bust / dressmaker's mannequin rising above a strapless or sleeveless garment
+    ✗ A solid colored neck cylinder (gray, white, or otherwise) protruding from the collar opening
+    ✗ A visible plastic mannequin head, neck, or shoulders above any garment neckline
+    ✗ A faint wireframe, pencil-sketched, or line-drawn outline of a torso, shoulders, or neck
+    ✗ A semi-transparent, ghosted, or "see-through" human body shape behind or inside the garment
+    ✗ Fabric texture continuing UP from a strapless neckline as if a body or form is wearing the garment
+    ✗ A flesh-toned, skin-toned, or translucent shape filling the area above a strapless neckline
+
+    EXPOSED-AREA RULE: For strapless, sleeveless, off-shoulder, crop, backless, tube, bustier, or low-cut garments, the area outside the garment's actual fabric (above neckline, beside bare shoulders, above any exposed body region) MUST be pure #FFFFFF background — identical to the empty space surrounding the garment. There is no mannequin, no form, no body, no skin, no shadow in that area. Just empty white background.
     3. FORCE PERFECT FRONT-FACING CAMERA ANGLE: The garment must ALWAYS be captured from a perfectly flat, straight, level, direct front-facing point of view, centered and perpendicular to the camera. Never render any three-quarter angle, profile, back view, skewed perspective, or rotated/tilted posture. Symmetrical alignment is mandatory.
     4. ABSOLUTELY NO HANGERS OR TAGS: Completely remove any hangers, hooks, wires, price tags, barcode tags, sizing tags, cords, background items, or apparel labels (internal or external). The garment must float cleanly on its own.
-    5. NO SHADOWS AT ALL: There must be absolutely NO flooring, ambient shadows, drop shadows, or shadow halos under hemlines, cords, or collars. The background must be flat, pure, sterile solid white (#FFFFFF).
+    5. NO SHADOWS AT ALL: There must be absolutely NO drop shadows under the hem, NO floor shadows, NO soft ambient occlusion at the base of the garment, NO gradient darkening around the silhouette, NO shadow halos under hemlines, cords, or collars. Every single pixel that is not part of the garment fabric itself must be flat, pure, sterile solid white (#FFFFFF).
     6. ${styleRule}
-    7. NO MODEL OR HUMAN PARTS — ABSOLUTELY NO MANNEQUIN HEAD: No human faces, skin, arms, legs, models, or mannequin heads. The neck opening of the garment must show only the hollow interior fabric — there must be NO gray plastic neck post, NO mannequin head form, NO bust form visible above the collar.
+    7. NO MODEL, HUMAN PARTS, MANNEQUIN HEAD, OR BUST FORM: No human faces, skin, arms, legs, models, or mannequin heads anywhere in the image. The neck opening of the garment must show only the hollow interior fabric — NO gray plastic neck post, NO mannequin head form, NO bust form visible above the collar. For strapless/sleeveless/crop/backless/bustier garments: NO fabric dress form, NO tailor's mannequin, NO dressmaker's bust above the neckline — that area must be pure #FFFFFF background only.
     8. DIMENSIONS: Strictly align to a 3:4 portrait aspect ratio (1200px width, 1600px height). The garment must be beautifully centered with a comfortable 15% margin from all borders to prevent clipping.
     9. ABSOLUTE COLOR FIDELITY: If the request includes changing the color/recoloring (e.g., mentions changing color, paint, hex code, or Pantone), you MUST completely overrule and throw away the old, original base colors and undertones of the garment. Do not tint or blend the old color into the new one. Paint the entire garment's fabric cleanly, evenly, and precisely with the requested target hex or Pantone shade as a fresh new dye. Keep the fabric rendered under bright, diffuse, high-key commercial advertising studio lighting. Folds and shading must be extremely soft, subtle, and natural; under no circumstances allow heavy gray, black, or muddy shadows to darken or mute the garment's overall fabric color below the requested target swatch value. The main body/flat surface colors of the garment must match the user's requested swatch color perfectly.`});
 
@@ -3006,18 +3139,58 @@ async function enforceEyedropColor(b64, targetHex){
   });
 }
 
-async function removeBg(b64){
-  // Safe-zone-aware background removal (v5.4).
-  // Strategy:
-  //   1. Sample bg color from 8 perimeter points; use brightest as reference.
-  //   2. Build "anchor" mask = pixels clearly not bg-colored (distance > THR).
-  //   3. Expand a "safe zone" via unbounded BFS from anchors, propagating only
-  //      through non-bg-like pixels (distance > PROP_THR). This protects the
-  //      garment interior — including near-white interior regions like the
-  //      white stripes of a striped polo — without leaking into the bg ring,
-  //      because the bg ring's clean white pixels are below PROP_THR.
-  //   4. Edge-seeded flood-fill marks bg pixels, but SKIPS the safe zone.
-  //   5. Soft 1-pixel feathering at the bg/garment boundary.
+// v5.20 — Extract alpha mask from an image data URL.
+// Returns {data: Uint8Array, width, height} when the image has meaningful
+// transparency (i.e. is a prior render), or null otherwise. Used by
+// removeBg's prior-alpha persistence pass.
+async function extractAlphaMask(b64){
+  return new Promise((res)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=img.width; c.height=img.height;
+      const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0);
+      const id=ctx.getImageData(0,0,c.width,c.height);
+      const d=id.data;
+      const N=c.width*c.height;
+      const alpha=new Uint8Array(N);
+      let transparentCount=0;
+      for(let i=0;i<N;i++){
+        alpha[i]=d[i*4+3];
+        if(d[i*4+3]<250) transparentCount++;
+      }
+      // Require at least 5% transparent pixels to consider the image
+      // a "prior render" — guards against incidental JPEG-encoded alpha
+      // or near-edge artifacts being misread as a usable mask.
+      if(transparentCount < N*0.05){res(null); return;}
+      res({data:alpha, width:c.width, height:c.height});
+    };
+    img.onerror=()=>res(null);
+    img.src=b64;
+  });
+}
+
+async function removeBg(b64, priorAlpha=null){
+  // Safe-zone-aware background removal.
+  // v5.4: anchor + safe-zone BFS to protect interior near-bg regions.
+  // v5.20 adds two post-passes after the core alpha is computed:
+  //   6a. Prior-alpha persistence — when `priorAlpha` is supplied (input
+  //       was a prior render), use its dilated silhouette as a ceiling on
+  //       the new alpha. Halos cannot exist outside the dilated prior
+  //       silhouette. Dilation tolerance is 6px to allow for minor pose
+  //       drift the model may introduce.
+  //   6b. Edge-band chroma suppression — colorless, near-white pixels
+  //       within 3px of a transparent region are halo artifacts (legit
+  //       garment edges have chroma). Faded to transparent. Auto-skipped
+  //       when the garment itself is predominantly white (would eat edges).
+  //
+  // Core strategy (unchanged from v5.4):
+  //   1. Sample bg color from 8 perimeter points; brightest = bgRGB.
+  //   2. Anchor mask = pixels clearly not bg-colored (distance > THR).
+  //   3. Safe zone = BFS from anchors, blocked by bg-like pixels.
+  //   4. Edge-seeded flood-fill marks bg, skipping the safe zone.
+  //   5. Soft 1-pixel feathering at bg/garment boundary.
   return new Promise(res=>{
     const img=new Image();
     img.onload=()=>{
@@ -3145,6 +3318,99 @@ async function removeBg(b64){
               alpha[i]=Math.max(0,Math.min(1,(dist-(THR*0.6))/(THR*0.4)));
             }
           }
+        }
+      }
+
+      // ── v5.20 Step 6a: Prior-alpha persistence ──────────────────────
+      // When the input image already had a transparent background (i.e.,
+      // it was a prior render fed back in for a serial edit), use its
+      // silhouette as a ceiling on the new alpha. Dilated by 6px to tolerate
+      // minor pose drift the model may introduce between iterations.
+      // Halos outside the dilated prior silhouette are forced transparent.
+      if(priorAlpha && priorAlpha.width===W && priorAlpha.height===H){
+        const DIL=6;
+        // Separable horizontal max-dilation of the prior opaque mask
+        const horiz=new Uint8Array(W*H);
+        for(let y=0;y<H;y++){
+          const row=y*W;
+          for(let x=0;x<W;x++){
+            const x0=Math.max(0,x-DIL), x1=Math.min(W-1,x+DIL);
+            let on=0;
+            for(let xx=x0;xx<=x1;xx++){ if(priorAlpha.data[row+xx]>128){on=1; break;} }
+            horiz[row+x]=on;
+          }
+        }
+        // Then vertical max-dilation
+        const dilated=new Uint8Array(W*H);
+        for(let x=0;x<W;x++){
+          for(let y=0;y<H;y++){
+            const y0=Math.max(0,y-DIL), y1=Math.min(H-1,y+DIL);
+            let on=0;
+            for(let yy=y0;yy<=y1;yy++){ if(horiz[yy*W+x]){on=1; break;} }
+            dilated[y*W+x]=on;
+          }
+        }
+        // Apply ceiling — pixels outside the dilated prior silhouette → 0
+        for(let i=0;i<W*H;i++){ if(!dilated[i]) alpha[i]=0; }
+      }
+
+      // ── v5.20 Step 6b: Edge-band chroma suppression ─────────────────
+      // Halos surviving the BFS classifier are colorless by construction
+      // (anti-aliased non-garment-color, not garment color). Walk the band
+      // of opaque pixels within 3px of a transparent region; fade any that
+      // are both near-white AND chroma-less. Skip entirely when the garment
+      // itself is predominantly white (would eat its edges).
+      const CHROMA_THR=12, LUMA_THR=232, BAND_PX=3;
+
+      // First: detect if the garment is "white-ish" — if so, abort the pass.
+      // Sample every Nth opaque pixel to keep this O(W*H/sampleStride).
+      let whiteCount=0, opaqueCount=0;
+      const sampleStride=4;
+      for(let i=0;i<W*H;i+=sampleStride){
+        if(alpha[i]>=0.5){
+          opaqueCount++;
+          const pi=i*4;
+          const r=d[pi], g=d[pi+1], b=d[pi+2];
+          const luma=(r+g+b)/3;
+          const chroma=Math.max(r,g,b)-Math.min(r,g,b);
+          if(chroma<CHROMA_THR && luma>LUMA_THR) whiteCount++;
+        }
+      }
+      const whiteRatio = opaqueCount>0 ? whiteCount/opaqueCount : 0;
+
+      if(whiteRatio < 0.35){
+        // Build transparent mask
+        const trans=new Uint8Array(W*H);
+        for(let i=0;i<W*H;i++){ if(alpha[i]<0.1) trans[i]=1; }
+        // Separable horizontal dilation of transparent mask
+        const transH=new Uint8Array(W*H);
+        for(let y=0;y<H;y++){
+          const row=y*W;
+          for(let x=0;x<W;x++){
+            const x0=Math.max(0,x-BAND_PX), x1=Math.min(W-1,x+BAND_PX);
+            let on=0;
+            for(let xx=x0;xx<=x1;xx++){ if(trans[row+xx]){on=1; break;} }
+            transH[row+x]=on;
+          }
+        }
+        // Vertical dilation
+        const transBand=new Uint8Array(W*H);
+        for(let x=0;x<W;x++){
+          for(let y=0;y<H;y++){
+            const y0=Math.max(0,y-BAND_PX), y1=Math.min(H-1,y+BAND_PX);
+            let on=0;
+            for(let yy=y0;yy<=y1;yy++){ if(transH[yy*W+x]){on=1; break;} }
+            transBand[y*W+x]=on;
+          }
+        }
+        // Fade opaque pixels in the band that match the halo signature
+        for(let i=0;i<W*H;i++){
+          if(alpha[i]<0.1 || !transBand[i]) continue;
+          const pi=i*4;
+          const r=d[pi], g=d[pi+1], b=d[pi+2];
+          const luma=(r+g+b)/3;
+          const chroma=Math.max(r,g,b)-Math.min(r,g,b);
+          if(chroma<CHROMA_THR && luma>LUMA_THR) alpha[i]=0;
         }
       }
 
