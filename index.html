@@ -141,6 +141,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
 .hist-action-btn{padding:12px;transition:all 0.2s;border-bottom:1px solid rgba(20,20,20,0.1)}
 .hist-action-btn:last-child{border-bottom:none}
 .hist-action-btn:hover{background:var(--ink);color:#fff}
+.hist-action-btn.delete:hover{background:#dc2626;color:#fff}
 .hist-action-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;display:block}
 
 /* MULTI COMPARISON */
@@ -149,6 +150,9 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
 .comparison-title{font-family:var(--font-display);font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:-0.02em}
 .comparison-grid{display:grid;gap:16px}
 .comp-item{position:relative}
+.comp-del{position:absolute;top:6px;right:6px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.92);border:1px solid rgba(20,20,20,0.15);border-radius:6px;transition:all 0.15s;z-index:2}
+.comp-del:hover{background:#dc2626;border-color:#dc2626;color:#fff}
+.comp-del svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;display:block}
 .comp-item img{width:100%;aspect-ratio:3/4;object-fit:contain;border:1px solid rgba(20,20,20,0.1);background:#fff;display:block;border-radius:8px}
 .comp-item.checker img{background-image:linear-gradient(45deg,#efefef 25%,transparent 25%),linear-gradient(-45deg,#efefef 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#efefef 75%),linear-gradient(-45deg,transparent 75%,#efefef 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0;background-color:#fff}
 .comp-label{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;margin-top:8px;opacity:0.6}
@@ -1481,7 +1485,7 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '5.25';
+const APP_VERSION = '6.0';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -1866,14 +1870,6 @@ function swapSourceImage(b64){
 function resetApp(){
   // v5.11 — Guard the destructive wipe behind an explicit confirmation.
   // Lists exactly what's being cleared so the user can't fire it by accident.
-  // v5.25 — Reset is now a true reset-to-fresh-launch: all S state fields and
-  // all form input DOM values return to their defaults. Previously several
-  // state fields (activeMode, targetPart, pantone, selectedColor, useComp,
-  // wasEyedropped, collectionAnchorSource, referenceImage, pantoneNotFound,
-  // isProcessing, timer*) and every text input survived a reset, so the next
-  // upload would inherit stale values from the prior session.
-  // Preserved (matching the confirm-dialog contract): apiKey, anthropicKey,
-  // customPantones, and the showTimer user preference (localStorage'd).
   const ok = confirm(
     'Reset Session — are you sure?\n\n' +
     'This will clear:\n' +
@@ -1881,60 +1877,22 @@ function resetApp(){
     '  • All session history (' + (S.history?.length||0) + ' render' + ((S.history?.length||0)===1?'':'s') + ')\n' +
     '  • The decision log (' + (S.decisionLog?.length||0) + ' entr' + ((S.decisionLog?.length||0)===1?'y':'ies') + ')\n' +
     '  • Mannequin and fit selections\n' +
-    '  • All form fields (style name, color, target, fabric, etc.)\n' +
-    '  • Mode tabs and preset selections\n' +
     '  • The persisted session (will not return on reload)\n\n' +
     'API keys and custom Pantone library are kept.\n' +
     'This cannot be undone.'
   );
   if(!ok) return;
-
-  // --- S state: full reset to constructor defaults ---
-  S.origImg=null;S.modImg=null;
-  S.isProcessing=false;
-  S.activeMode='render';
+  S.origImg=null;S.modImg=null;S.history=[];S.selectedIndices=[];
+  S.decisionLog=[];S.appInitialized=false;S.mannequinType='';S.selectedFit='';
+  S.versionCounter=0;S.currentVersion=null;S.currentLabel='';S.currentMetadata={};
   S.activePresets=[];
-  S.mannequinType='';S.selectedFit='';
-  S.targetPart='Full Garment';
-  S.pantone='';S.selectedColor='#000000';S.useComp=true;S.wasEyedropped=false;
-  S.collectionAnchorSource=null;
-  S.referenceImage=null;
-  S.history=[];S.versionCounter=0;S.selectedIndices=[];
-  S.currentLabel='';S.currentVersion=null;S.currentMetadata={};
-  if(S.timerInterval){clearInterval(S.timerInterval);S.timerInterval=null;}
-  S.timerSeconds=0;
-  S.appInitialized=false;
-  S.pantoneNotFound=false;
-  S.decisionLog=[];
-
-  // --- DOM: clear every form input back to empty / default ---
-  const clearVal = (id, val='') => { const el=document.getElementById(id); if(el) el.value=val; };
-  clearVal('styleNameInput');
-  clearVal('colorNameInput');
-  clearVal('colorCodeInput');
-  clearVal('fabricContentInput');
-  clearVal('fabricInput');
-  clearVal('pantoneInput');
-  clearVal('promptInput');
-  clearVal('targetInput','Full Garment');
-  clearVal('colorSwatchInput','#000000');
-
-  // --- DOM: drop active state from mode tabs, preset buttons, mannequin opts ---
-  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.preset-btn.active').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.mannequin-opt').forEach(b=>b.classList.remove('active'));
-
-  // --- DOM: clear reference image cleanly via existing helper ---
-  try { removeRef(); } catch(e) { /* ref section may not be in DOM yet */ }
-
-  // --- DOM: switch back to upload screen, hide session-only chrome ---
   document.getElementById('uploadScreen').classList.remove('hidden');
   document.getElementById('appScreen').classList.add('hidden');
   document.getElementById('uploadNewBtn').classList.add('hidden');
   document.getElementById('resetBtn').classList.add('hidden');
   document.getElementById('historySection').classList.add('hidden');
   document.getElementById('comparisonView').classList.add('hidden');
-
   // v5.18 — wipe the persisted IndexedDB session so reload doesn't bring it back
   idbClear();
   updateLogBadge();
@@ -2635,20 +2593,11 @@ function handleSubmit(forceAsIs=false){
     // v5.9 — Render-extras also apply to Edit + any garment-modifying preset.
     // (fabric input is only visible in render mode, so fabric.trim() is empty in edit;
     //  pattern preservation still matters — it stops Gemini inventing new patterns.)
-    // v5.24 — Silhouette/construction preservation clause added alongside the
-    // existing pattern clause. Gated on SILHOUETTE_CHANGING (Adjust Fit and
-    // Change Design intentionally alter structure; Change Color and Wash must not).
-    // Live test on a white denim top → Lt Blue Change Color landed correct
-    // color but rounded the neckline and softened the silhouette — Gemini
-    // was freelancing on structure with no explicit anchor.
     const MODIFYING_PRESETS=['Change Color','Change Design','Adjust Fit','Wash'];
-    const SILHOUETTE_CHANGING_PRESETS=['Adjust Fit','Change Design'];
     const editWithModify = mode==='edit' && S.activePresets.some(p=>MODIFYING_PRESETS.includes(p));
-    const silhouetteMustHold = !S.activePresets.some(p=>SILHOUETTE_CHANGING_PRESETS.includes(p));
     if(mode==='render' || editWithModify){
       if(fabric.trim()){metadata.fabric=fabric;promptParts.push(`render using ${fabric} fabric texture`);}
       if(!S.activePresets.includes('Change Design'))promptParts.push(`strictly maintain the exact same original pattern and print details of the ${target}`);
-      if(silhouetteMustHold)promptParts.push(`strictly preserve the exact original silhouette, neckline shape, collar style, sleeve length and shape, hem shape, button count and placement, closure type, seam lines, dart placement, and overall garment proportions of the ${target} — the ONLY permitted change is the requested color/wash; do not modify any structural or design element`);
     }
   } else {
     // v5.22 — forceAsIs (Sales Sheet conversion / handleSalesConvert) is a
@@ -3041,42 +2990,12 @@ async function callGemini(prompt,mode,attempt=0){
     ═══════════════════════════════════════════════════════════════
     ` : '';
 
-  // v5.24 — Silhouette/construction preservation block, fired for
-  // treatAsRender flows that should NOT alter structure (Change Color,
-  // Wash, plain Render — anything except Adjust Fit / Change Design).
-  // Live test surfaced Change Color landing correct color but with a
-  // rounded/softened neckline and altered silhouette vs the reference.
-  // Pattern matches v5.23's TOP PRIORITY anchor: heavy visual separators,
-  // positive rules (state what MUST hold), explicit concrete example
-  // (button-count anchor) to give the model a specific structural target.
-  const silhouetteMustHold_cg = !S.activePresets.some(p=>['Adjust Fit','Change Design'].includes(p));
-  const preserveSilhouetteBlock = (treatAsRender && silhouetteMustHold_cg) ? `
-    ═══════════════════════════════════════════════════════════════
-    SILHOUETTE LOCK — NON-NEGOTIABLE STRUCTURAL PRESERVATION:
-    ═══════════════════════════════════════════════════════════════
-    ► The input image's garment silhouette, neckline curve, collar
-      shape, sleeve length and cut, shoulder line, hem shape, button
-      count, button placement, closure type, seam lines, dart
-      placement, pocket placement, and overall proportions MUST be
-      preserved EXACTLY. Pixel-for-pixel structural match to the input.
-    ► The ONLY permitted modification is the requested color/wash
-      change. Every structural and design element is frozen.
-    ► If the input has a square crew neckline with 8 buttons in two
-      rows, the output MUST have the same square crew neckline with
-      the same 8 buttons in the same two rows. No rounding, no
-      softening, no re-styling.
-    ► FAILING SILHOUETTE LOCK = RENDER FAILURE regardless of how well
-      the color change is executed.
-    ═══════════════════════════════════════════════════════════════
-    ` : '';
-
   const parts=[{inline_data:{data:b64,mime_type:mime}}];
   if(S.referenceImage){const rm=S.referenceImage.match(/^data:(image\/[^;]+)/)?.[1]||'image/png';parts.push({inline_data:{data:S.referenceImage.split(',')[1],mime_type:rm}});}
   parts.push({text:`AI FASHION EDITOR: ${focusText} 
     REQUEST: "${prompt}". 
     ${S.referenceImage && S.activePresets.includes('Change Design') ? "IMPORTANT: The SECOND image is the design reference. Study it carefully — extract its exact pattern, stripe layout, colors, and all visual details. Apply them precisely to the garment." : S.referenceImage ? "The SECOND image is a style reference — use its pattern and texture details as a guide." : ""}
     ${topPriorityBlock}
-    ${preserveSilhouetteBlock}
     CRITICAL RULES (ABSOLUTE COMPLIANCE REQUIRED - NO EXCEPTIONS):
     1. ${bgRule}
     2. FORCE TRUE GHOST MANNEQUIN — ZERO VISIBLE MANNEQUIN PARTS: The garment MUST appear as if worn by a completely invisible ghost. CRITICAL — there must be absolutely ZERO visible mannequin components: no neck post, no neck stand, no gray/white plastic cylinder, no torso form outline, no shoulder supports, no base, no clips, no rods, no fabric-covered dressmaker's form, no tailor's bust, no dress form of any color. The ONLY thing visible must be the garment fabric itself floating in 3D space. The neck opening must be wide, fully open, and hollow showing only the inside back collar fabric. The body must have natural 3D volume and chest depth from the invisible ghost form underneath — but the form itself is 100% invisible. If you are considering showing any part of a mannequin body, stand, or support — DO NOT. Render ONLY the garment.
@@ -3711,6 +3630,9 @@ function renderHistory(){
         <button class="hist-action-btn" title="Download" onclick="downloadHistItem(${i})">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
         </button>
+        <button class="hist-action-btn delete" title="Delete this render" onclick="deleteHistoryItem(${i})">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
       </div>
     </div>`).join('');
 }
@@ -3719,6 +3641,61 @@ function toggleSelect(i){
   if(S.selectedIndices.includes(i)){S.selectedIndices=S.selectedIndices.filter(x=>x!==i);}
   else if(S.selectedIndices.length<4){S.selectedIndices.push(i);}
   renderHistory();
+}
+
+// v6.0 — Per-render delete. Distinct from Reset Session (full wipe): this
+// removes a single item. Both are destructive and confirm-gated.
+// removeHistoryAt() is the ONLY place that splices history for a delete; it
+// also repairs S.selectedIndices, because deleting index i shifts every
+// later index down by one — without the fixup, compare-mode selection
+// silently points at the wrong renders (or off the end of the array).
+function removeHistoryAt(i){
+  if(i<0||i>=S.history.length)return;
+  S.history.splice(i,1);
+  S.selectedIndices=S.selectedIndices
+    .filter(x=>x!==i)
+    .map(x=>x>i?x-1:x);
+  persistSession();
+}
+
+function deleteHistoryItem(i){
+  const item=S.history[i];if(!item)return;
+  const tag=buildLabel(item)||('V'+(item.version||(i+1)));
+  const ok=confirm(
+    'Delete render — are you sure?\n\n'+
+    'This will permanently remove:\n'+
+    '  \u2022 '+tag+'\n\n'+
+    'Removed from session history and the persisted session.\n'+
+    'Other renders and the decision log are kept.\n'+
+    'This cannot be undone.'
+  );
+  if(!ok)return;
+  removeHistoryAt(i);
+  renderHistory();
+  // Keep an open comparison in sync; close it if fewer than 2 remain selected.
+  const cv=document.getElementById('comparisonView');
+  if(cv&&!cv.classList.contains('hidden')){
+    if(S.selectedIndices.length>=2)showComparison();
+    else closeComparison();
+  }
+}
+
+function deleteFromComparison(slot){
+  const i=S.selectedIndices[slot];
+  const item=S.history[i];if(!item)return;
+  const tag=buildLabel(item)||('V'+(i+1));
+  const ok=confirm(
+    'Delete render — are you sure?\n\n'+
+    'This will permanently remove:\n'+
+    '  \u2022 '+tag+'\n\n'+
+    'Removed from the comparison, session history, and the persisted session.\n'+
+    'This cannot be undone.'
+  );
+  if(!ok)return;
+  removeHistoryAt(i);
+  renderHistory();
+  if(S.selectedIndices.length>=2)showComparison();
+  else closeComparison();
 }
 
 function loadHistoryItem(i){
@@ -3760,6 +3737,9 @@ function showComparison(){
   grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
   grid.innerHTML=items.map((item,i)=>`
     <div class="comp-item ${item.metadata?.renderMode!=='Sales Sheet Render'?'checker':''}">
+      <button class="comp-del" title="Delete this render" onclick="deleteFromComparison(${i})">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      </button>
       <img src="${item.image}" alt=""/>
       <div class="comp-label">${buildLabel(item)||'V'+(S.selectedIndices[i]+1)}</div>
     </div>`).join('');
