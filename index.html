@@ -1493,7 +1493,7 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '1.6.2';
+const APP_VERSION = '1.6.3';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -3467,6 +3467,73 @@ async function removeBg(b64, priorAlpha=null){
           const luma=(r+g+b)/3;
           const chroma=Math.max(r,g,b)-Math.min(r,g,b);
           if(chroma<CHROMA_THR && luma>LUMA_THR) alpha[i]=0;
+        }
+      }
+
+      // ── v1.6.3 Step 6c: Detached-island removal (connected-component) ──
+      // A ghost-mannequin render is, by definition, a SINGLE connected
+      // garment silhouette. Any opaque island NOT connected to the main
+      // blob is an artifact — a stray shadow/smudge/reflection fragment the
+      // model dropped into a corner (observed: a light-gray blob in the
+      // top-left of striped renders). Steps 5/6a/6b can't catch it: it is
+      // detached from the bg flood-fill frontier, the safe-zone BFS protects
+      // its opaque core as an "anchor", and its core survives 6b chroma
+      // suppression (opaque, not near-white). Fix: label all opaque
+      // components (8-connectivity), keep the largest plus any that are a
+      // meaningful fraction of it, and zero everything else — which also
+      // sweeps the sub-OP haze fringing a removed island.
+      {
+        const ISLAND_KEEP_FRAC = 0.03;  // keep secondary parts >=3% of main blob
+        const OP = 0.02;                // opaque cutoff for connectivity (~5/255);
+                                        // low enough to keep the garment's feather
+                                        // in one component, so feather is preserved.
+        const label = new Int32Array(W*H);   // 0 = unlabeled
+        const stack = new Int32Array(W*H);
+        const sizes = [0];                    // sizes[0] unused
+        let nextLabel = 0;
+        for(let s=0;s<W*H;s++){
+          if(label[s] || alpha[s] < OP) continue;
+          nextLabel++;
+          let count=0, sp=0;
+          stack[sp++]=s; label[s]=nextLabel;
+          while(sp>0){
+            const idx=stack[--sp];
+            count++;
+            const x=idx%W, y=(idx/W)|0;
+            for(let dy=-1;dy<=1;dy++){
+              const ny=y+dy; if(ny<0||ny>=H) continue;
+              for(let dx=-1;dx<=1;dx++){
+                if(dx===0&&dy===0) continue;
+                const nx=x+dx; if(nx<0||nx>=W) continue;
+                const ni=ny*W+nx;
+                if(label[ni] || alpha[ni] < OP) continue;
+                label[ni]=nextLabel;
+                stack[sp++]=ni;
+              }
+            }
+          }
+          sizes.push(count);
+        }
+        // Only act when there is a real garment AND >=2 components.
+        if(nextLabel>1){
+          let maxLabel=1, maxSize=sizes[1];
+          for(let l=2;l<=nextLabel;l++){ if(sizes[l]>maxSize){ maxSize=sizes[l]; maxLabel=l; } }
+          // Guard: if the biggest "garment" is itself tiny (<1% of frame),
+          // removeBg likely failed upstream — bail rather than risk erasing
+          // a real (if degenerate) render.
+          if(maxSize >= W*H*0.01){
+            const keepThresh = maxSize * ISLAND_KEEP_FRAC;
+            const keep = new Uint8Array(nextLabel+1);
+            let kept=0;
+            for(let l=1;l<=nextLabel;l++){ if(l===maxLabel || sizes[l] >= keepThresh){ keep[l]=1; kept++; } }
+            if(kept < nextLabel){
+              let removed=0;
+              for(let i=0;i<W*H;i++){
+                if(alpha[i] > 0 && !keep[label[i]]){ alpha[i]=0; removed++; }
+              }
+              if(removed) console.log('[removeBg 6c] removed '+removed+'px across '+(nextLabel-kept)+' detached island(s)');
+            }
+          }
         }
       }
 
