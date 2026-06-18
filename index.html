@@ -64,11 +64,15 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
 .pane.checker{background-color:#fff;background-image:linear-gradient(45deg,#efefef 25%,transparent 25%),linear-gradient(-45deg,#efefef 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#efefef 75%),linear-gradient(-45deg,transparent 75%,#efefef 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
 .pane-label{position:absolute;top:12px;left:12px;background:rgba(20,20,20,0.12);backdrop-filter:blur(8px);color:var(--ink);padding:4px 12px;border-radius:20px;font-family:var(--font-display);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em}
 .pane-label.ai{background:var(--accent);color:#fff}
-.pane-actions{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px;opacity:0;transition:opacity 0.2s}
+.pane-actions{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px;opacity:0;transition:opacity 0.2s;z-index:10}
 .pane:hover .pane-actions{opacity:1}
 .pane-btn{width:34px;height:34px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,0.12);border:1px solid rgba(20,20,20,0.08);transition:all 0.2s}
 .pane-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 .pane-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+.pane-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+#modPane.magnify-on{cursor:crosshair}
+.magnify-lens{position:absolute;width:170px;height:170px;border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 8px 28px rgba(0,0,0,0.30);pointer-events:none;z-index:9;background-color:#fff;background-image:linear-gradient(45deg,#efefef 25%,transparent 25%),linear-gradient(-45deg,#efefef 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#efefef 75%),linear-gradient(-45deg,transparent 75%,#efefef 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
+.magnify-lens img{position:absolute;display:block;max-width:none;width:auto;height:auto;object-fit:fill;image-rendering:auto;border-radius:0}
 .standby{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px;height:100%;opacity:0.18}
 .standby-ring{width:48px;height:48px;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center}
 .standby p{font-family:var(--font-display);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em}
@@ -590,7 +594,11 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
                 <button class="pane-btn" title="Download Comparison" onclick="downloadCurrentComparison()">
                   <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="18"/></svg>
                 </button>
+                <button class="pane-btn" id="magnifyBtn" title="Magnify — hover render to inspect" onclick="toggleMagnify()">
+                  <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/><line x1="11" y1="8.2" x2="11" y2="13.8"/><line x1="8.2" y1="11" x2="13.8" y2="11"/></svg>
+                </button>
               </div>
+              <div class="magnify-lens hidden" id="magnifyLens"><img id="magnifyImg" alt=""/></div>
             </div>
           </div>
 
@@ -1485,7 +1493,7 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '6.0';
+const APP_VERSION = '6.2';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -1637,6 +1645,7 @@ async function restoreSession(){
     S.appInitialized = true;
     try{ renderPresets(); }catch(e){ console.error(e); }
     try{ setupSlider(); }catch(e){ console.error(e); }
+    try{ setupMagnifier(); }catch(e){ console.error(e); }
     try{ updateClaudeBadge(); }catch(e){ console.error(e); }
     const gk = document.getElementById('geminiKeyInput');
     if(gk) gk.value = S.apiKey || '';
@@ -1805,6 +1814,7 @@ function handleImageUpload(b64){
     S.appInitialized=true;
     try{ renderPresets(); }catch(e){ console.error('renderPresets failed:',e); }
     try{ setupSlider(); }catch(e){ console.error('setupSlider failed:',e); }
+    try{ setupMagnifier(); }catch(e){ console.error('setupMagnifier failed:',e); }
     try{ updateClaudeBadge(); }catch(e){ console.error('updateClaudeBadge failed:',e); }
     // Apply default render mode UI state
     try{
@@ -1837,6 +1847,7 @@ function clearPrompt(){
 }
 
 function resetPreviewState(){
+  disableMagnify();
   document.getElementById('standbyState').classList.remove('hidden');
   document.getElementById('processingState').classList.add('hidden');
   document.getElementById('modImg').classList.add('hidden');
@@ -1852,6 +1863,7 @@ function resetPreviewState(){
 // activePresets, form inputs (style name / color / fabric / target), API keys.
 // Clears only: the current generation preview pane (since it belonged to the old source).
 function swapSourceImage(b64){
+  disableMagnify();
   S.origImg = b64;
   S.modImg = null;
   S.currentLabel = '';
@@ -2597,7 +2609,10 @@ function handleSubmit(forceAsIs=false){
     const editWithModify = mode==='edit' && S.activePresets.some(p=>MODIFYING_PRESETS.includes(p));
     if(mode==='render' || editWithModify){
       if(fabric.trim()){metadata.fabric=fabric;promptParts.push(`render using ${fabric} fabric texture`);}
-      if(!S.activePresets.includes('Change Design'))promptParts.push(`strictly maintain the exact same original pattern and print details of the ${target}`);
+      if(!S.activePresets.includes('Change Design')){
+        promptParts.push(`strictly maintain the exact same original pattern and print details of the ${target}`);
+        promptParts.push(`keep the ${target}'s original construction identical — same closure and full placket with the same buttons, same collar/neckline style, same pockets, same sleeve length; do NOT turn a button-front garment into a pullover or polo`);
+      }
     }
   } else {
     // v5.22 — forceAsIs (Sales Sheet conversion / handleSalesConvert) is a
@@ -2939,7 +2954,7 @@ async function callGemini(prompt,mode,attempt=0){
 
   const styleRule=isSales?"STYLE: 3D Product Render. Convert every colored sketch on this sales sheet into highly realistic 3D rendered garments. Maintain colors from the original sketches. Add realistic fabric textures, shadows, and depth to each item on the page. All garments must be front-facing."
     :isSketch?"STYLE: Technical Flat Sketch. High-contrast black lines on a white background. No shading, clear construction lines. Symmetrical, front-facing."
-    :treatAsRender?`STYLE: High-resolution photorealistic 3D E-commerce Ghost Mannequin Product Shot. MANNEQUIN TYPE: ${S.mannequinType==='male'?'MALE — broad shoulders, straight chest, male torso proportions. Do not use female curves or silhouette.':S.mannequinType==='female'?'FEMALE — narrower shoulders, curved chest, female torso proportions and silhouette.':'UNISEX — neutral straight torso, equal shoulder width, androgynous proportions.'}. The garment must look natural with realistic folds and weight. The mannequin form underneath gives it 3D volume but is 100% invisible — only the garment fabric is visible. CRITICAL: No neck post, no visible torso form, no mannequin stand. The neck opening must be a clean open hollow circle showing only the inside back collar. Reconstruct with 3D volume, rounded shoulders, natural chest contour. If input is a flat sketch, convert to photorealistic finished garment with high-fidelity texture. Straight direct front-facing camera, symmetrical, centered.`
+    :treatAsRender?`STYLE: High-resolution photorealistic 3D E-commerce Ghost Mannequin Product Shot. MANNEQUIN TYPE: ${S.mannequinType==='male'?'MALE — broad shoulders, straight chest, male torso proportions. Do not use female curves or silhouette.':S.mannequinType==='female'?'FEMALE — narrower shoulders, curved chest, female torso proportions and silhouette.':'UNISEX — neutral straight torso, equal shoulder width, androgynous proportions.'}. The garment must look natural with realistic folds and weight. The mannequin form underneath gives it 3D volume but is 100% invisible — only the garment fabric is visible. CRITICAL: No neck post, no visible torso form, no mannequin stand. The neck opening must be a clean open hollow circle showing only the inside back collar. Reconstruct with 3D volume, rounded shoulders, natural chest contour. Reconstruction adds 3D body volume and drape ONLY — it must NOT change the garment's closure type, collar/neckline style, button count, plackets, or pockets; those are reproduced exactly from the input. If input is a flat sketch, convert to photorealistic finished garment with high-fidelity texture. Straight direct front-facing camera, symmetrical, centered.`
     :"MAINTAIN STYLE & STRUCTURE (WITH GHOST BUST ENFORCEMENT): Keep the essential yarn texture, patterns, and colors of the garment consistent with requested modifications. However, you MUST reshape the garment to fit a 3D hollow ghost mannequin torso shape. Do NOT retain pinched shoulders, flat-lay shapes, or hanger-draped droop from the input image. Reconstruct the garment with full 3-dimensional body volume, rounded natural shoulders, an open circular hollow neck, and a direct front-facing orientation.";
 
   // v5.23 — Restored + extended strapless / dress-form enforcement.
@@ -2990,12 +3005,49 @@ async function callGemini(prompt,mode,attempt=0){
     ═══════════════════════════════════════════════════════════════
     ` : '';
 
+  // v6.1 — Garment-identity (construction) lock. Root cause of the
+  // "button-front shirt rendered as a pullover polo" failure: the render
+  // prompt had thorough ghost-mannequin / color / shadow rules but NO
+  // positive instruction preserving the garment's structural identity, so
+  // Gemini was free to "normalize" a full button placket into a polo
+  // placket when paired with an Adjust-Fit instruction. Pattern/print was
+  // locked (stripes survived) but closure/collar/buttons were not.
+  // Positive "pixels MUST be" framing, same as the ghost-bust fix.
+  // GATED OFF for Change Design — that preset legitimately changes
+  // neckline / buttons / pockets, so the lock must not fight it.
+  const lockGarmentIdentity = treatAsRender && !S.activePresets.includes('Change Design');
+  const garmentIdentityBlock = lockGarmentIdentity ? `
+    ═══════════════════════════════════════════════════════════════
+    PRESERVE GARMENT IDENTITY — DO NOT REDESIGN THE STYLE:
+    ═══════════════════════════════════════════════════════════════
+    ► The output MUST be the SAME garment style as the input, only
+      rendered on the ghost mannequin (and with any explicitly
+      requested fit/color/wash change applied). You may change 3D
+      volume, drape, and fit — you may NOT change what the garment IS.
+    ► PRESERVE EXACTLY, pixel-for-pixel in type and count:
+      • Closure/front opening — if the original has a FULL button
+        placket running the entire front with buttons, the render MUST
+        show that same full placket with the SAME number of buttons.
+        Do NOT convert a button-front shirt into a pullover or polo.
+        Do NOT remove, add, or relocate buttons, snaps, zips, or plackets.
+      • Collar / neckline style (camp/Cuban, polo, crew, V-neck, etc.) —
+        keep identical. Do NOT swap one collar type for another.
+      • Pockets — same presence, count, and placement.
+      • Sleeve length and cuff/hem finish — keep identical unless the
+        request explicitly changes them.
+    ► If you are tempted to "tidy up" or "normalize" the garment into a
+      more typical style, DO NOT. Faithfully reproduce the original
+      construction. Only the explicitly requested modification may differ.
+    ═══════════════════════════════════════════════════════════════
+    ` : '';
+
   const parts=[{inline_data:{data:b64,mime_type:mime}}];
   if(S.referenceImage){const rm=S.referenceImage.match(/^data:(image\/[^;]+)/)?.[1]||'image/png';parts.push({inline_data:{data:S.referenceImage.split(',')[1],mime_type:rm}});}
   parts.push({text:`AI FASHION EDITOR: ${focusText} 
     REQUEST: "${prompt}". 
     ${S.referenceImage && S.activePresets.includes('Change Design') ? "IMPORTANT: The SECOND image is the design reference. Study it carefully — extract its exact pattern, stripe layout, colors, and all visual details. Apply them precisely to the garment." : S.referenceImage ? "The SECOND image is a style reference — use its pattern and texture details as a guide." : ""}
     ${topPriorityBlock}
+    ${garmentIdentityBlock}
     CRITICAL RULES (ABSOLUTE COMPLIANCE REQUIRED - NO EXCEPTIONS):
     1. ${bgRule}
     2. FORCE TRUE GHOST MANNEQUIN — ZERO VISIBLE MANNEQUIN PARTS: The garment MUST appear as if worn by a completely invisible ghost. CRITICAL — there must be absolutely ZERO visible mannequin components: no neck post, no neck stand, no gray/white plastic cylinder, no torso form outline, no shoulder supports, no base, no clips, no rods, no fabric-covered dressmaker's form, no tailor's bust, no dress form of any color. The ONLY thing visible must be the garment fabric itself floating in 3D space. The neck opening must be wide, fully open, and hollow showing only the inside back collar fabric. The body must have natural 3D volume and chest depth from the invisible ghost form underneath — but the form itself is 100% invisible. If you are considering showing any part of a mannequin body, stand, or support — DO NOT. Render ONLY the garment.
@@ -3497,6 +3549,81 @@ function setView(v){
   document.getElementById('sliderViewBtn').classList.toggle('active',v==='slider');
   document.getElementById('gridView').classList.toggle('hidden',v!=='grid');
   document.getElementById('sliderView').classList.toggle('hidden',v!=='slider');
+  // Leaving grid view removes the loupe target — hide the lens (state preserved).
+  if(v!=='grid') hideMagnifyLens();
+}
+
+// ================================================================
+// MAGNIFIER (v6.2) — cursor-as-loupe inspection of the active render.
+// Toggled from the render pane (button below Download Comparison).
+// Replicates object-fit:cover geometry so the magnified point tracks
+// exactly under the cursor regardless of the render's native aspect
+// ratio. Transient UI state only — never persisted to S.
+// ================================================================
+let magnifyActive=false;
+const MAGNIFY_ZOOM=2.4;   // additional zoom on top of the on-screen cover scale
+const MAGNIFY_LENS=170;   // lens diameter in px — keep in sync with .magnify-lens
+
+function toggleMagnify(){
+  const modImg=document.getElementById('modImg');
+  // Nothing to inspect until a render exists.
+  if(!S.modImg||!modImg||modImg.classList.contains('hidden'))return;
+  magnifyActive=!magnifyActive;
+  document.getElementById('magnifyBtn').classList.toggle('active',magnifyActive);
+  document.getElementById('modPane').classList.toggle('magnify-on',magnifyActive);
+  if(!magnifyActive)hideMagnifyLens();
+}
+
+function hideMagnifyLens(){
+  const lens=document.getElementById('magnifyLens');
+  if(lens)lens.classList.add('hidden');
+}
+
+// Fully disable the loupe — used on reset / source swap, where the render clears.
+function disableMagnify(){
+  magnifyActive=false;
+  const btn=document.getElementById('magnifyBtn');if(btn)btn.classList.remove('active');
+  const pane=document.getElementById('modPane');if(pane)pane.classList.remove('magnify-on');
+  hideMagnifyLens();
+}
+
+function moveMagnifyLens(e){
+  if(!magnifyActive)return;
+  const modImg=document.getElementById('modImg');
+  if(!modImg||modImg.classList.contains('hidden')||!modImg.naturalWidth){hideMagnifyLens();return;}
+  const pane=document.getElementById('modPane');
+  const lens=document.getElementById('magnifyLens');
+  const lensImg=document.getElementById('magnifyImg');
+  const rect=pane.getBoundingClientRect();
+  const cx=e.clientX-rect.left, cy=e.clientY-rect.top;
+  if(cx<0||cy<0||cx>rect.width||cy>rect.height){hideMagnifyLens();return;}
+
+  // object-fit:cover geometry — how modImg is actually painted in the pane.
+  const nW=modImg.naturalWidth, nH=modImg.naturalHeight;
+  const coverScale=Math.max(rect.width/nW, rect.height/nH);
+  const dispW=nW*coverScale, dispH=nH*coverScale;
+  const offX=(rect.width-dispW)/2, offY=(rect.height-dispH)/2;
+
+  // Cursor position inside the painted (cover) image.
+  const imgX=cx-offX, imgY=cy-offY;
+
+  if(lensImg.src!==modImg.src)lensImg.src=modImg.src;
+  lensImg.style.width=(dispW*MAGNIFY_ZOOM)+'px';
+  lensImg.style.height=(dispH*MAGNIFY_ZOOM)+'px';
+  lensImg.style.left=(MAGNIFY_LENS/2 - imgX*MAGNIFY_ZOOM)+'px';
+  lensImg.style.top=(MAGNIFY_LENS/2 - imgY*MAGNIFY_ZOOM)+'px';
+
+  lens.style.left=(cx-MAGNIFY_LENS/2)+'px';
+  lens.style.top=(cy-MAGNIFY_LENS/2)+'px';
+  lens.classList.remove('hidden');
+}
+
+function setupMagnifier(){
+  const pane=document.getElementById('modPane');
+  if(!pane||pane.dataset.magBound)return;
+  pane.dataset.magBound='1';
+  pane.addEventListener('mousemove',moveMagnifyLens);
+  pane.addEventListener('mouseleave',hideMagnifyLens);
 }
 
 // ================================================================
