@@ -148,6 +148,60 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
 .hist-action-btn.delete:hover{background:#dc2626;color:#fff}
 .hist-action-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;display:block}
 
+/* v1.7.0 GROUPED HISTORY (Style > Color > Angle) */
+.gh-group{border:1px solid rgba(20,20,20,0.12);background:#fff;border-radius:4px;margin-bottom:12px;overflow:hidden}
+.gh-group:last-child{margin-bottom:0}
+.gh-group-head{width:100%;display:flex;align-items:center;gap:10px;padding:11px 13px;background:rgba(20,20,20,0.02);transition:background 0.15s;text-align:left}
+.gh-group-head:hover{background:rgba(20,20,20,0.05)}
+.gh-chev{flex-shrink:0;transition:transform 0.15s}
+.gh-chev svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;display:block}
+.gh-folder svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;display:block;opacity:0.55}
+.gh-style{font-family:var(--font-mono);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+.gh-swatches{display:flex;gap:3px;margin-left:2px}
+.gh-sw{width:11px;height:11px;border-radius:3px;border:1px solid rgba(20,20,20,0.2)}
+.gh-count{margin-left:auto;font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.45}
+.gh-group-body{padding:4px 13px 13px}
+.gh-color{padding-top:11px;margin-top:7px;border-top:1px dashed rgba(20,20,20,0.1)}
+.gh-color:first-child{border-top:none;margin-top:0;padding-top:8px}
+.gh-color-head{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.gh-color-name{font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
+.gh-color-meta{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.4}
+.gh-angle-grid{display:grid;grid-template-columns:repeat(auto-fill,150px);gap:10px;justify-content:start}
+.gh-cell{border:1px solid rgba(20,20,20,0.1);border-radius:4px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.gh-cell.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.gh-thumb-wrap{position:relative;aspect-ratio:1/1;background-image:linear-gradient(45deg,#efefef 25%,transparent 25%),linear-gradient(-45deg,#efefef 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#efefef 75%),linear-gradient(-45deg,transparent 75%,#efefef 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;background-color:#fff;cursor:pointer}
+.gh-thumb-wrap.sheet{background:#fff}
+.gh-thumb-wrap img{width:100%;height:100%;object-fit:contain;display:block}
+.gh-vbadge{position:absolute;top:0;left:0;background:var(--ink);color:#fff;font-family:var(--font-mono);font-size:8px;font-weight:700;padding:2px 5px;border-radius:0 0 3px 0;letter-spacing:0.04em}
+.gh-guess{position:absolute;bottom:5px;left:5px;background:rgba(245,158,11,0.92);color:#5b3a05;font-family:var(--font-mono);font-size:7px;font-weight:700;padding:2px 5px;border-radius:3px;letter-spacing:0.06em}
+.gh-warn{position:absolute;bottom:5px;right:5px;background:rgba(239,68,68,0.92);color:#fff;font-family:var(--font-mono);font-size:7px;font-weight:700;padding:2px 5px;border-radius:3px;letter-spacing:0.06em}
+.gh-pick{position:absolute;top:5px;right:5px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.92);border:1px solid rgba(20,20,20,0.2);border-radius:4px;transition:all 0.15s}
+.gh-pick.checked{background:var(--ink);border-color:var(--ink);color:#fff}
+.gh-pick svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.4;display:block}
+.gh-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:7px 8px;border-top:1px solid rgba(20,20,20,0.08)}
+.gh-view{font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+.gh-mini{margin-left:auto;display:flex;gap:2px}
+.gh-mini-btn{padding:5px;border:1px solid rgba(20,20,20,0.15);border-radius:4px;transition:all 0.15s;display:flex;align-items:center;justify-content:center}
+.gh-mini-btn:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.gh-mini-btn.danger:hover{background:#dc2626;border-color:#dc2626}
+.gh-mini-btn.redo:hover{background:var(--accent);border-color:var(--accent)}
+.gh-mini-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;display:block}
+.gh-mini-btn[disabled]{opacity:0.4;pointer-events:none}
+.gh-spin{animation:ghspin 0.7s linear infinite}
+@keyframes ghspin{to{transform:rotate(360deg)}}
+.gh-hist-toggle{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.07em;padding:6px 8px;border-top:1px solid rgba(20,20,20,0.08);display:flex;align-items:center;gap:5px;opacity:0.65;transition:opacity 0.15s}
+.gh-hist-toggle:hover{opacity:1}
+.gh-hist-toggle svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
+.gh-hist-list{padding:2px 8px 8px;display:flex;flex-direction:column;gap:5px}
+.gh-hrow{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:4px 6px;border:1px solid rgba(20,20,20,0.08);border-radius:4px;background:rgba(20,20,20,0.015)}
+.gh-hrow img{width:30px;height:30px;object-fit:contain;border:1px solid rgba(20,20,20,0.1);border-radius:3px;background:#fff;cursor:pointer;flex-shrink:0}
+.gh-hver{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:0.03em}
+.gh-hmeta{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.4}
+.gh-hrow .gh-mini{margin-left:auto;flex-basis:100%;flex-wrap:wrap}
+.gh-make-current{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.06em;padding:4px 8px;border:1px solid rgba(20,20,20,0.2);border-radius:4px;display:flex;align-items:center;gap:4px;transition:all 0.15s;white-space:nowrap}
+.gh-make-current:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.gh-make-current svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
+
 /* MULTI COMPARISON */
 .comparison-wrap{space-y:16px}
 .comparison-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
@@ -335,6 +389,12 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
 .mannequin-opt.active{background:var(--ink);color:#fff;opacity:1}
 .mannequin-opt svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5}
 .mannequin-required-warn{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.08em;color:#ef4444;margin-top:4px;display:none}
+.angle-selector{margin-bottom:12px}
+.angle-note{font-family:var(--font-mono);font-size:8px;line-height:1.6;text-transform:uppercase;letter-spacing:0.05em;color:rgba(20,20,20,0.5);margin:0 0 8px}
+.angle-note strong{color:var(--ink);font-weight:700}
+.angle-options{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--ink)}
+.mannequin-opt.shake{animation:shake 0.4s both}
+.angle-guess-warn{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.07em;line-height:1.5;color:#b45309;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);padding:6px 8px;margin:8px 0 0}
 
 /* CUSTOM PANTONE LIBRARY */
 .custom-pantone-library{border:1px solid rgba(20,20,20,0.15);background:rgba(255,255,255,0.6);margin-top:10px;overflow:hidden}
@@ -563,7 +623,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
           <div id="gridView" class="preview-grid">
             <div class="pane" id="origPane">
               <img id="origImg" src="" alt="Original"/>
-              <div class="pane-label">Reference</div>
+              <div class="pane-label">Front Reference</div>
             </div>
             <div class="pane checker" id="modPane">
               <div class="standby" id="standbyState">
@@ -732,6 +792,76 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
                 </button>
               </div>
               <p class="mannequin-required-warn" id="mannequinWarn">Please select a mannequin type before rendering</p>
+            </div>
+
+            <!-- v1.6.13 — Render Angles (Render mode only). Front toggle, on by default. -->
+            <div class="angle-selector" id="renderAngleSection">
+              <div class="mannequin-label">Render Angles</div>
+              <p class="angle-note"><strong>Front</strong> is on by default and renders from your <strong>Front Reference</strong>. Add a <strong>Side</strong> or <strong>Back</strong> angle below — each needs a raw side/back photo of the same garment, or that angle is a guess rotated from the front. Turn Front off to render only Side and/or Back.</p>
+              <div class="angle-options">
+                <button type="button" class="mannequin-opt active" data-view="front" onclick="toggleRenderView('front',this)">
+                  <svg viewBox="0 0 24 24"><path d="M8 5L6 7v13M8 5h8M16 5l2 2v13M9 5c0 1.7 1.3 3 3 3s3-1.3 3-3M12 8v12"/></svg>
+                  Front
+                </button>
+                <button type="button" class="mannequin-opt" data-view="side" onclick="toggleRenderView('side',this)">
+                  <svg viewBox="0 0 24 24"><path d="M9.5 4c-1.6 1-2.6 3-2.6 6.5V20M9.5 4l3.5 1 2.5 3M13 5v15M15.5 8l1.6 1v11"/></svg>
+                  Side
+                </button>
+                <button type="button" class="mannequin-opt" data-view="back" onclick="toggleRenderView('back',this)">
+                  <svg viewBox="0 0 24 24"><path d="M7.5 6.5L6 8v12M7.5 6.5h9M16.5 6.5L18 8v12M9 6.5c0 1.8 1.4 3 3 3s3-1.2 3-3"/></svg>
+                  Back
+                </button>
+              </div>
+
+              <!-- Side Reference — revealed when Side is selected -->
+              <div class="field hidden" id="sideRefSection" style="margin-top:10px">
+                <div class="ref-section">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                    <label class="ref-label" style="margin:0">Side Reference</label>
+                    <button class="ref-remove hidden" id="sideRefRemoveBtn" onclick="removeViewRef('side')">Remove</button>
+                  </div>
+                  <div id="sideRefDrop" class="ref-drop" onclick="document.getElementById('sideRefFileInput').click()"
+                    ondragover="event.preventDefault()" ondrop="handleViewRefDrop(event,'side')">
+                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                    <p>Upload Side Photo</p>
+                    <small>Drag &amp; Drop or Click</small>
+                  </div>
+                  <div id="sideRefAttached" class="ref-attached hidden">
+                    <img id="sideRefThumb" src="" alt=""/>
+                    <div class="ref-attached-info">
+                      <span class="ref-attached-title">Side Reference Attached</span>
+                      <span class="ref-attached-sub">The side render will be built from this photo.</span>
+                    </div>
+                  </div>
+                  <p class="angle-guess-warn hidden" id="sideGuessWarn">No side photo — this render will be a guess based on the front.</p>
+                  <input type="file" id="sideRefFileInput" style="display:none" accept="image/*,.heic,.heif" onchange="handleFileSelect(this,'side')"/>
+                </div>
+              </div>
+
+              <!-- Back Reference — revealed when Back is selected -->
+              <div class="field hidden" id="backRefSection" style="margin-top:10px">
+                <div class="ref-section">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                    <label class="ref-label" style="margin:0">Back Reference</label>
+                    <button class="ref-remove hidden" id="backRefRemoveBtn" onclick="removeViewRef('back')">Remove</button>
+                  </div>
+                  <div id="backRefDrop" class="ref-drop" onclick="document.getElementById('backRefFileInput').click()"
+                    ondragover="event.preventDefault()" ondrop="handleViewRefDrop(event,'back')">
+                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                    <p>Upload Back Photo</p>
+                    <small>Drag &amp; Drop or Click</small>
+                  </div>
+                  <div id="backRefAttached" class="ref-attached hidden">
+                    <img id="backRefThumb" src="" alt=""/>
+                    <div class="ref-attached-info">
+                      <span class="ref-attached-title">Back Reference Attached</span>
+                      <span class="ref-attached-sub">The back render will be built from this photo.</span>
+                    </div>
+                  </div>
+                  <p class="angle-guess-warn hidden" id="backGuessWarn">No back photo — this render will be a guess based on the front.</p>
+                  <input type="file" id="backRefFileInput" style="display:none" accept="image/*,.heic,.heif" onchange="handleFileSelect(this,'back')"/>
+                </div>
+              </div>
             </div>
             <label class="fabric-label">Global Fabric/Texture</label>
             <input type="text" id="fabricInput" class="text-input" placeholder="e.g. Chunky cable knit, tech-fleece..."/>
@@ -1493,7 +1623,133 @@ function getDynamicColorDescriptor(hex){
 // Minor update (bug fix, tweak): bump patch e.g. 2.1 → 2.2
 // Major update (new feature, rebuild): bump major e.g. 2.x → 3.0
 // ================================================================
-const APP_VERSION = '1.6.3';
+// V1.6.4 (2026-06-29) — Extra render angles (Side / Back).
+//   • Main source image relabeled "Front Reference" (it is always the
+//     front render). The Change Design "Style Reference" is unchanged.
+//   • New render-mode-only "Extra Render Angles" selector: Side and/or
+//     Back. Selecting one reveals its own raw-photo upload slot
+//     (Side Reference / Back Reference).
+//   • One Generate fans out into a sequential, rate-limit-aware batch:
+//     Front (from Front Reference) + each selected extra (from its own
+//     photo). Each view gets its own version bump, history entry,
+//     decision-log row, and _SIDE / _BACK filename suffix.
+//   • The strict ghost-mannequin "bust rules" (no form, pure #FFFFFF,
+//     no shadows, single connected component, construction-identity
+//     lock) fire UNCHANGED on every view. Only the camera orientation,
+//     symmetry mandate, and neck-opening clause swap per view.
+//   • Missing extra photo: the angle still renders, rotated from the
+//     Front Reference, and is flagged a "guess" (UI warning + label +
+//     decision-log) — colours/construction on the hidden side inferred.
+//   • Batch fan-out applies to the main Generate and Render As Is.
+//     Sales Sheet and Edit are unaffected (single render).
+// ================================================================
+// V1.6.13 (2026-06-29) — Front is now a toggle (on by default).
+//   • The render-angle selector gained a FRONT button alongside Side
+//     and Back. It starts selected, so default behaviour is unchanged.
+//   • Turning Front off lets the user render Side and/or Back alone.
+//   • At least one angle must stay selected — deselecting the last one
+//     is blocked (the button shakes instead).
+//   • Batch orchestrator now builds its job list from renderViews
+//     rather than forcing a Front pass. Front, when on, still runs
+//     first from the Front Reference. Legacy saved sessions with no
+//     stored "front" flag default it to on.
+// ================================================================
+// V1.7.0 (2026-06-30) — History grouped by Style › Color › Angle,
+//   plus per-angle faithful re-roll (Front included).
+//   • Session History is now grouped: top level = Style (label), then
+//     Color nested inside, then the Front/Side/Back angle set. Grouping
+//     is presentation-only — S.history stays a flat versioned list; the
+//     tree is derived at render time. No schema migration.
+//   • "Current" for an angle = the highest version, unless the user has
+//     pinned an older roll via "Make current" (S.anglePick override).
+//   • Re-roll (Redo) on any angle — Front too — re-runs the EXACT job
+//     that produced that render (captured finalPrompt, view, guess,
+//     source image, color-lock decision), so it's a pure Gemini sample
+//     of the same render, not a fresh render from current form state.
+//   • Each history entry now captures replay fields: finalPrompt, mode,
+//     colorLockTarget, lockColor, view, guess, src. Legacy entries lack
+//     them and gracefully fall back to current settings on re-roll.
+//   • A2: Front no longer force-resets on every Render-mode entry. A new
+//     garment / swapped source still turns Front on; an in-session
+//     "Front off" choice now persists across mode switches.
+// ================================================================
+// V1.7.1 (2026-06-30) — Re-roll source fix + clearer icon.
+//   • Re-roll source resolution hardened: prefer the source captured with
+//     the render, then the MATCHING live slot (Side→Side, Back→Back), and
+//     NEVER fall back to the front reference for a side/back angle. Fixes a
+//     back re-roll rendering off the front reference when an entry had no
+//     captured source. If a side/back source is unavailable, the re-roll
+//     now blocks with a clear message instead of rendering from the wrong
+//     photo. Added a [reroll] console line reporting which source was used.
+//   • Re-roll button icon changed to a die (re-roll metaphor) so it no
+//     longer reads like the "Use as Base" rotate icon beside it.
+// ================================================================
+// ================================================================
+// V1.7.2 (2026-06-30) — 6d smooth-garment guard + history thumbnail sizing.
+//   • Step 6d (achromatic halo peel) now measures the garment's own
+//     interior 3×3 luma-variance and SKIPS the peel when the median is
+//     below SMOOTH_VAR. 6d's sole garment protector is the variance gate,
+//     which assumes a textured (knit) surface; on a smooth jersey garment
+//     the surface is as smooth/pale/low-chroma as the halo, so the grow
+//     walked off the halo into the shoulder and carved a wedge out of it
+//     (regression first seen on 78MT400 front — impossible pre-6d/V1.6.3).
+//     Knit renders are unaffected; smooth garments now fail safe (halo left
+//     for manual retry rather than damaging the garment). Median is logged.
+//   • Session-history thumbnails: fixed 150px tiles (auto-fill) instead of
+//     auto-fit+1fr stretch, so 1/2/3 renders stay the same small size and
+//     wrap. Cell footer and expanded-version rows now wrap so controls are
+//     never clipped at the narrower width.
+// ================================================================
+// ================================================================
+// V1.7.3 (2026-06-30) — New render always becomes its cell's current.
+//   • A normal (non-re-roll) render now sets anglePick for its
+//     (style,color,view) cell to the new version, so the freshly rendered
+//     image always shows as the Session-History tile. Previously a stale
+//     pin (left by an earlier Make-current or re-roll on an older version)
+//     persisted, so an OLD render stayed as the cell thumbnail while the new
+//     one was buried under "History" — seen as the broken 78MT400 V18 tile
+//     remaining after the clean V22 re-render. Mirrors the re-roll path.
+// ================================================================
+// V1.8.0 (2026-07-07) — Prompt diet + lean extra-view regime + form gate.
+//   Review vs v1.6.3 (near-perfect front renders) found the prompt builder
+//   grew ~2.2k → ~4k words with 41 "mannequin" mentions; every defect since
+//   was patched with more prohibition text. Two mechanisms drove regression:
+//   attention dilution (rule mass degrades compliance) and semantic priming
+//   (negative text is a weak positive in image models). Three changes:
+//   • FRONT PROMPT DIET: front render prompt restored to the proven v1.6.3
+//     text. V1.7.8 neck additions removed; CRITICAL CONSTRUCTION RULE
+//     condensed to one sentence; polo failure example condensed into the
+//     identity block; Rule 7b condensed. One line ADDED to the identity
+//     block: trim colors locked (no invented white hem/cuffs) + add-nothing
+//     rule (fixes the v1.7.8 trim-invention failure on 56MS307 green).
+//   • LEAN EXTRA-VIEW PROMPT: Side/Back renders no longer use the shared
+//     front prompt + viewBlock. They get a purpose-written ~450-word prompt:
+//     positive "hollow garment worn by someone invisible" framing, zero
+//     "mannequin" mentions, hard constraint in final position. Render-As-Is
+//     boilerplate and Claude-built prompts are condensed/sanitized before
+//     embedding.
+//   • RESIDUAL-FORM GATE (code-level, per "enforce in code not prompts"):
+//     after removeBg on Side/Back renders, detectResidualForm() scans
+//     per-row silhouette widths for a narrow stalk (neck/head/bust) at the
+//     top; on detection, one automatic faithful re-roll; if still suspect,
+//     keep the cleaner render and flag the entry with an amber "Check"
+//     badge. Thresholds in FORM_GATE, metrics logged for live tuning.
+// V1.7.8 (2026-07-07) — Prompt hardening (SUPERSEDED by V1.8.0 diet):
+//   inner-neck positive rules + profile-mannequin prohibitions. Live test
+//   showed more prohibitions made the side render WORSE (fuller mannequin) —
+//   confirming the priming mechanism the v1.8.0 restructure addresses.
+// V2.0 (2026-07-07) — LAUNCH RELEASE. Identical code to V1.8.1; major
+//   version bump marks the first build shipped to users. Ships with:
+//   v1.6.3-proven front prompt regime, lean zero-priming extra-view prompt,
+//   code-level residual-form gate with auto re-roll + "Check" badge, and
+//   case-insensitive Session History grouping.
+// V1.8.1 (2026-07-07) — Case-insensitive history grouping.
+//   styleKeyOf / colorKeyOf now uppercase their keys. Root cause of the
+//   duplicate "56MS373" folder: keys were case-sensitive while .gh-style /
+//   .gh-color-name display text-transform:uppercase, so differently-cased
+//   labels rendered identically but grouped separately. Retroactive merge
+//   at next paint; no data migration; 'Original' sentinel untouched.
+const APP_VERSION = '2.0';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -1503,10 +1759,27 @@ const S={
   activePresets:[],
   mannequinType:'',  // 'male' | 'female' | 'unisex'
   selectedFit:'',     // e.g. 'Slim Fit', 'Oversize' etc
+  // v1.6.13 — Render angles. Front is selected by default and renders from
+  // origImg / Front Reference. side/back are opt-in extras, each with its own
+  // raw source photo. Missing photo => guess rotated from front. Front can be
+  // turned off to render only Side and/or Back.
+  renderViews:{front:true,side:false,back:false},
+  sideImg:null, backImg:null,
+  _batchInfo:null,      // {index,total} during a multi-view batch (transient)
+  _lastRenderOK:true,   // batch orchestrator stops if a job fails (transient)
   targetPart:'Full Garment',
   pantone:'',selectedColor:'#000000',useComp:true,wasEyedropped:false,collectionAnchorSource:null,
   referenceImage:null,
   history:[],versionCounter:0,selectedIndices:[],
+  // v1.7.0 — grouped-history state. anglePick pins which version is "current"
+  // for a Style∥Color∥Angle cell. v1.7.5 — it is set ONLY by "Make current";
+  // a normal render or re-roll CLEARS the cell's pin, so absent => latest
+  // version wins. This guarantees the newest render is always the default
+  // thumbnail and stale pins self-heal on the next render. histOpenStyle /
+  // histExpandCells are transient UI collapse flags (not persisted).
+  // v1.7.4 — histOpenStyle holds the ONE expanded style folder (accordion);
+  // null lets renderHistory default the top/newest style open.
+  anglePick:{}, histOpenStyle:null, histExpandCells:{},
   currentLabel:'',currentVersion:null,currentMetadata:{},
   timerInterval:null,timerSeconds:0,appInitialized:false,pantoneNotFound:false,
   customPantones:[],
@@ -1596,6 +1869,7 @@ function persistSession(){
       origImg: S.origImg,
       modImg: S.modImg,
       history: S.history,
+      anglePick: S.anglePick,
       versionCounter: S.versionCounter,
       currentVersion: S.currentVersion,
       currentLabel: S.currentLabel,
@@ -1603,6 +1877,9 @@ function persistSession(){
       decisionLog: S.decisionLog,
       mannequinType: S.mannequinType,
       selectedFit: S.selectedFit,
+      renderViews: S.renderViews,
+      sideImg: S.sideImg,
+      backImg: S.backImg,
       activePresets: S.activePresets,
       activeMode: S.activeMode,
       form: {
@@ -1625,6 +1902,7 @@ async function restoreSession(){
   S.origImg = data.origImg;
   S.modImg = data.modImg || null;
   S.history = Array.isArray(data.history) ? data.history.slice(0, MAX_HISTORY) : [];
+  S.anglePick = (data.anglePick && typeof data.anglePick==='object') ? data.anglePick : {};
   S.versionCounter = data.versionCounter || 0;
   S.currentVersion = data.currentVersion || null;
   S.currentLabel = data.currentLabel || '';
@@ -1632,6 +1910,11 @@ async function restoreSession(){
   S.decisionLog = Array.isArray(data.decisionLog) ? data.decisionLog : [];
   S.mannequinType = data.mannequinType || '';
   S.selectedFit = data.selectedFit || '';
+  S.renderViews = (data.renderViews && typeof data.renderViews==='object')
+    ? {front:(data.renderViews.front===undefined ? true : !!data.renderViews.front), side:!!data.renderViews.side, back:!!data.renderViews.back}
+    : {front:true, side:false, back:false};
+  S.sideImg = data.sideImg || null;
+  S.backImg = data.backImg || null;
   S.activePresets = Array.isArray(data.activePresets) ? data.activePresets : [];
   S.activeMode = data.activeMode || 'render';
 
@@ -1669,6 +1952,8 @@ async function restoreSession(){
       if(b.dataset.mannequin === S.mannequinType) b.classList.add('active');
     });
   }
+  // v1.6.4 — rebuild the extra-angle selector + reference slots from state
+  try{ syncRenderAngleUI(); }catch(e){ console.error(e); }
 
   // Restore form inputs
   const f = data.form || {};
@@ -1750,6 +2035,8 @@ function handleFileSelect(input, type){
   reader.onload = function(e){
     if(type === 'upload') handleImageUpload(e.target.result);
     else if(type === 'ref') setRefImage(e.target.result);
+    else if(type === 'side') setViewRefImage('side', e.target.result);
+    else if(type === 'back') setViewRefImage('back', e.target.result);
     else if(type === 'header'){
       // v5.11 — Header "Upload New" swaps the source image without resetting the session.
       // First-time upload (somehow routed through header) still falls back to full init.
@@ -1802,6 +2089,8 @@ function handleImageUpload(b64){
   S.history=[];S.versionCounter=0;S.selectedIndices=[];
   S.mannequinType='';  // reset mannequin on new upload
   S.selectedFit='';    // reset fit selection on new upload
+  // v1.6.4 — new garment => drop any extra-angle selections + their photos
+  S.renderViews={front:true,side:false,back:false}; S.sideImg=null; S.backImg=null;
 
   // Show app screen FIRST
   document.getElementById('uploadScreen').classList.add('hidden');
@@ -1836,6 +2125,8 @@ function handleImageUpload(b64){
   document.querySelectorAll('.mannequin-opt').forEach(b=>b.classList.remove('active'));
   const mw=document.getElementById('mannequinWarn');
   if(mw) mw.style.display='none';
+  // v1.6.4 — reflect the cleared extra-angle state in the DOM
+  try{ syncRenderAngleUI(); }catch(e){ console.error('syncRenderAngleUI failed:',e); }
   // v5.18 — wire input persistence and snapshot the new session
   wirePersistOnFormInputs();
   persistSession();
@@ -1870,6 +2161,10 @@ function swapSourceImage(b64){
   S.currentMetadata = {};
   S.currentVersion = null;
   S.selectedIndices = [];
+  // v1.6.4 — the swapped-in image is a new Front Reference; its old side/back
+  // photos no longer match. Clear them so a stale angle can't leak into a render.
+  S.renderViews = {front:true,side:false,back:false}; S.sideImg = null; S.backImg = null;
+  try{ syncRenderAngleUI(); }catch(e){ console.error(e); }
   const oi = document.getElementById('origImg'); if(oi) oi.src = b64;
   const so = document.getElementById('sliderOrigImg'); if(so) so.src = b64;
   resetPreviewState();
@@ -1889,6 +2184,7 @@ function resetApp(){
     '  • All session history (' + (S.history?.length||0) + ' render' + ((S.history?.length||0)===1?'':'s') + ')\n' +
     '  • The decision log (' + (S.decisionLog?.length||0) + ' entr' + ((S.decisionLog?.length||0)===1?'y':'ies') + ')\n' +
     '  • Mannequin and fit selections\n' +
+    '  • Extra render angles (Side / Back) and their photos\n' +
     '  • The persisted session (will not return on reload)\n\n' +
     'API keys and custom Pantone library are kept.\n' +
     'This cannot be undone.'
@@ -1898,6 +2194,7 @@ function resetApp(){
   S.decisionLog=[];S.appInitialized=false;S.mannequinType='';S.selectedFit='';
   S.versionCounter=0;S.currentVersion=null;S.currentLabel='';S.currentMetadata={};
   S.activePresets=[];
+  S.renderViews={front:true,side:false,back:false};S.sideImg=null;S.backImg=null;
   document.querySelectorAll('.mannequin-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('uploadScreen').classList.remove('hidden');
   document.getElementById('appScreen').classList.add('hidden');
@@ -1924,6 +2221,99 @@ function setMannequin(type, btn){
   persistSession();
 }
 
+// ================================================================
+// v1.6.4 — EXTRA RENDER ANGLES (Side / Back)
+// Front is implicit (always rendered from origImg / Front Reference).
+// Side and Back are opt-in extras, each with its own raw source photo.
+// A selected angle with no photo still renders, rotated from the front,
+// flagged as a "guess".
+// ================================================================
+function toggleRenderView(view, btn){
+  if(view!=='front' && view!=='side' && view!=='back') return;
+  const next = !S.renderViews[view];
+  // Don't let the user deselect the last remaining angle — at least one
+  // angle must stay on or there's nothing to render.
+  if(!next){
+    const others = ['front','side','back'].filter(v=>v!==view && S.renderViews[v]);
+    if(others.length===0){
+      if(btn){ btn.classList.add('shake'); setTimeout(()=>btn.classList.remove('shake'),400); }
+      return;
+    }
+  }
+  S.renderViews[view] = next;
+  if(btn) btn.classList.toggle('active', next);
+  // Front has no dedicated reference slot (it uses the Front Reference / origImg).
+  const sec = document.getElementById(view+'RefSection');
+  if(sec) sec.classList.toggle('hidden', !next);
+  updateViewGuessWarn(view);
+  persistSession();
+}
+
+function setViewRefImage(view, b64){
+  if(view==='side') S.sideImg = b64;
+  else if(view==='back') S.backImg = b64;
+  else return;
+  const thumb = document.getElementById(view+'RefThumb'); if(thumb) thumb.src = b64;
+  document.getElementById(view+'RefDrop')?.classList.add('hidden');
+  document.getElementById(view+'RefAttached')?.classList.remove('hidden');
+  document.getElementById(view+'RefRemoveBtn')?.classList.remove('hidden');
+  updateViewGuessWarn(view);
+  persistSession();
+}
+
+function removeViewRef(view){
+  if(view==='side') S.sideImg = null;
+  else if(view==='back') S.backImg = null;
+  else return;
+  document.getElementById(view+'RefDrop')?.classList.remove('hidden');
+  document.getElementById(view+'RefAttached')?.classList.add('hidden');
+  document.getElementById(view+'RefRemoveBtn')?.classList.add('hidden');
+  const thumb = document.getElementById(view+'RefThumb'); if(thumb) thumb.src = '';
+  updateViewGuessWarn(view);
+  persistSession();
+}
+
+function handleViewRefDrop(e, view){
+  e.preventDefault();
+  const f = e.dataTransfer.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev => setViewRefImage(view, ev.target.result);
+  r.onerror = () => alert('Could not read file. Please try again.');
+  r.readAsDataURL(f);
+}
+
+// Show the amber "this render will be a guess" warning only when the angle
+// is selected AND no dedicated photo has been supplied for it.
+function updateViewGuessWarn(view){
+  const w = document.getElementById(view+'GuessWarn');
+  if(!w) return;
+  const img = view==='side' ? S.sideImg : S.backImg;
+  w.classList.toggle('hidden', !(S.renderViews[view] && !img));
+}
+
+// Rebuild the angle-selector DOM from S (used on restore and on entering
+// Render mode). Idempotent — safe to call any time appScreen is visible.
+function syncRenderAngleUI(){
+  // Front button has no reference slot — just reflect its on/off state.
+  const fbtn = document.querySelector('.mannequin-opt[data-view="front"]');
+  if(fbtn) fbtn.classList.toggle('active', !!S.renderViews.front);
+  ['side','back'].forEach(view=>{
+    const on = !!S.renderViews[view];
+    const btn = document.querySelector('.mannequin-opt[data-view="'+view+'"]');
+    if(btn) btn.classList.toggle('active', on);
+    const sec = document.getElementById(view+'RefSection');
+    if(sec) sec.classList.toggle('hidden', !on);
+    const img = view==='side' ? S.sideImg : S.backImg;
+    const drop = document.getElementById(view+'RefDrop');
+    const att = document.getElementById(view+'RefAttached');
+    const rm = document.getElementById(view+'RefRemoveBtn');
+    const thumb = document.getElementById(view+'RefThumb');
+    if(img){ if(thumb) thumb.src = img; drop?.classList.add('hidden'); att?.classList.remove('hidden'); rm?.classList.remove('hidden'); }
+    else { drop?.classList.remove('hidden'); att?.classList.add('hidden'); rm?.classList.add('hidden'); if(thumb) thumb.src=''; }
+    updateViewGuessWarn(view);
+  });
+}
+
 function setMode(mode,btn){
   S.activeMode=mode;
   document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
@@ -1937,6 +2327,13 @@ function setMode(mode,btn){
   // Mannequin selector only shown in Render mode (not Sales Sheet)
   const mSel = document.getElementById('mannequinSelector');
   if(mSel) mSel.style.display = isRender ? 'block' : 'none';
+  // v1.6.4 — Extra Render Angles selector is Render-mode only.
+  const aSel = document.getElementById('renderAngleSection');
+  if(aSel) aSel.style.display = isRender ? 'block' : 'none';
+  // v1.7.0 — Front no longer force-resets on every Render-mode entry. A new
+  // garment (handleImageUpload) or swapped source (swapSourceImage) sets Front
+  // on; an in-session "Front off" choice now persists across mode switches.
+  if(isRender){ syncRenderAngleUI(); }
   document.getElementById('presetsSection').classList.toggle('hidden',isSales);
   // v5.13 — Style Reference section now gated on Change Design preset, not just mode.
   updateRefSectionVisibility();
@@ -2631,7 +3028,38 @@ function handleSubmit(forceAsIs=false){
   // Sleeves Only" is a legitimate Edit-mode use case.
   const fallbackRenderTarget = targetForWholeGarmentRender(target);
   const finalPrompt=promptParts.length>0?promptParts.join(', ').charAt(0).toUpperCase()+promptParts.join(', ').slice(1):prompt||(mode==='render'?`Render the ${fallbackRenderTarget} strictly as is with the exact same pattern and texture`:`Modify the ${target}`);
-  runGenerate(finalPrompt,styleName,metadata,mode,colorLockTarget);
+  runRenderBatch(finalPrompt,styleName,metadata,mode,colorLockTarget);
+}
+
+// ================================================================
+// v1.6.4 — RENDER BATCH ORCHESTRATOR
+// Fans a single Generate out into Front + any selected extra angles
+// (Side / Back), run sequentially so we don't spike Gemini 429s.
+// Only Render mode fans out; every other mode is a single front render.
+// Each job is a full runGenerate pass: its own version, history entry,
+// decision-log row, and filename suffix. The batch stops early if a job
+// fails (e.g. a hard rate-limit) so we don't burn the remaining angles.
+// ================================================================
+async function runRenderBatch(prompt,label,metadata,mode,colorLockTarget=null,renderAsIs=false){
+  const jobs=[];
+  if(mode==='render'){
+    // Front first (if selected), then any extra angles. Front always renders
+    // from the Front Reference (origImg); side/back use their own photo or
+    // fall back to a guess rotated from the front.
+    if(S.renderViews.front) jobs.push({view:'front', src:null, guess:false});
+    if(S.renderViews.side)  jobs.push({view:'side', src:S.sideImg, guess:!S.sideImg});
+    if(S.renderViews.back)  jobs.push({view:'back', src:S.backImg, guess:!S.backImg});
+  }
+  // Safety: every non-render mode (and any render with nothing selected) is a
+  // single front pass.
+  if(jobs.length===0) jobs.push({view:'front', src:null, guess:false});
+  for(let i=0;i<jobs.length;i++){
+    S._batchInfo = {index:i, total:jobs.length};
+    // eslint-disable-next-line no-await-in-loop
+    await runGenerate(prompt,label,metadata,mode,colorLockTarget,renderAsIs,jobs[i]);
+    if(!S._lastRenderOK) break;  // a job failed — don't keep firing the batch
+  }
+  S._batchInfo=null;
 }
 
 function handleRenderAsIs(){
@@ -2681,12 +3109,13 @@ function handleRenderAsIs(){
     `If the garment is charcoal, render it charcoal. If it is navy, render it navy. ` +
     `The finished render color must match the original garment color exactly as photographed. ` +
     `${fabricLine} ` +
+    `CONSTRUCTION RULE: Identify the closure by counting the buttons — a full-length button placket must be reproduced with the same button count; never convert a button-front garment into a polo, half-placket, or pullover. ` +
     `Maintain all original design details, seams, stitching, and construction exactly as shown. ` +
     `Place the garment on a strictly 100% PURE FLAT SOLID WHITE (#FFFFFF) background — exact RGB (255,255,255), zero gradients, zero shadows, zero vignette — so the background can be removed to full transparency after rendering. ` +
     `Render under bright, diffuse, high-exposure commercial studio front lighting that preserves true color without darkening. ` +
     `Soft natural folds only — no heavy shadows that mute or shift the garment color.`;
 
-  runGenerate(renderAsIsPrompt, styleName, metadata, 'render', null, true);
+  runRenderBatch(renderAsIsPrompt, styleName, metadata, 'render', null, true);
 }
 
 function handleSalesConvert(){handleSubmit(true);}
@@ -2818,30 +3247,49 @@ function updateClaudeBadge(){
 // ================================================================
 const STEPS=["Analyzing Original Garment...","Interpreting Style Selection...","Building 3D Mesh...","Generating Studio Render...","Refining Textures & Lighting...","Removing Tags & Labels...","Finishing Up..."];
 
-async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,renderAsIs=false){
+async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,renderAsIs=false,viewCtx=null,replay=null){
   if(!S.apiKey){showSettings();return;}
   // v5.14 — Render As Is is a pristine pass: regardless of session state
   // (active Change Color preset, lingering pantone/hex from a prior style),
   // do NOT apply any color lock and report neutral color metadata in the log.
   if(renderAsIs) colorLockTarget = null;
+  // v1.6.4 — per-view context. Front jobs (viewCtx null or view==='front')
+  // behave EXACTLY as before — zero regression. Side/Back jobs get a tagged
+  // metadata clone (so the original front metadata object is never mutated),
+  // a per-view source image, and the camera/orientation override in callGemini.
+  const isExtraView = !!(viewCtx && viewCtx.view && viewCtx.view!=='front');
+  const md = isExtraView
+    ? Object.assign({}, metadata, {view:viewCtx.view, guess:!!viewCtx.guess})
+    : metadata;
+  const viewSrc = (viewCtx && viewCtx.src) ? viewCtx.src : S.origImg;
+  // Batch progress prefix, e.g. "[2/3 · SIDE] " — empty for a lone front render.
+  const viewLabel = isExtraView ? viewCtx.view.toUpperCase() : 'FRONT';
+  const batchPfx = (S._batchInfo && S._batchInfo.total>1)
+    ? `[${S._batchInfo.index+1}/${S._batchInfo.total} · ${viewLabel}] ` : '';
+  S._lastRenderOK = false;  // flipped true only on a clean finish
   S.isProcessing=true;
-  S.currentLabel=label;S.currentMetadata=metadata;S.currentVersion=undefined;
+  S.currentLabel=label;S.currentMetadata=md;S.currentVersion=undefined;
   setProcessing(true);clearError();
-  let step=0;document.getElementById('procStep').textContent=STEPS[0];
-  const iv=setInterval(()=>{if(step<STEPS.length-1)document.getElementById('procStep').textContent=STEPS[++step];},2500);
+  let step=0;document.getElementById('procStep').textContent=batchPfx+STEPS[0];
+  const iv=setInterval(()=>{if(step<STEPS.length-1)document.getElementById('procStep').textContent=batchPfx+STEPS[++step];},2500);
   try{
     // If Anthropic key is set, use Claude to build a precision color prompt
     let finalPrompt=prompt;
-    if(S.anthropicKey && !prompt.includes('strictly render') && !prompt.includes('Sales Sheet')){
+    let formSuspect=false;  // v1.8.0 — set by the residual-form gate below
+    if(replay && typeof replay.finalPrompt==='string' && replay.finalPrompt){
+      // v1.7.0 faithful re-roll — reuse the exact prompt that produced the
+      // original render so this is a pure Gemini resample, not a rebuild.
+      finalPrompt=replay.finalPrompt;
+    } else if(S.anthropicKey && !prompt.includes('strictly render') && !prompt.includes('Sales Sheet')){
       try{
-        document.getElementById('procStep').textContent='Building precision color prompt with Claude...';
+        document.getElementById('procStep').textContent=batchPfx+'Building precision color prompt with Claude...';
         finalPrompt=await buildClaudePrompt(prompt,metadata,mode);
       }catch(claudeErr){
         console.warn('Claude prompt build failed, using local prompt:',claudeErr);
         finalPrompt=prompt; // fallback gracefully
       }
     }
-    const result=await callGemini(finalPrompt,mode);
+    const result=await callGemini(finalPrompt,mode,0,viewCtx);
     let processed=result;
     // v5.9 — bg removal mirrors the render-rule promotion: Edit mode runs removeBg
     // whenever any garment-modifying preset is active (Change Color, Change Design,
@@ -2850,7 +3298,7 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
     const editWithModify = mode==='edit' && S.activePresets.some(p=>MODIFYING_PRESETS.includes(p));
     const shouldRemoveBg = mode!=='sales_sheet' && (mode!=='edit' || editWithModify);
     if(shouldRemoveBg){
-      document.getElementById('procStep').textContent="Removing Background & Creating Transparency...";
+      document.getElementById('procStep').textContent=batchPfx+"Removing Background & Creating Transparency...";
       // v5.20 — Prior-alpha persistence on serial edits. When the input
       // already has a transparent background (a prior render fed back in)
       // AND the active operation should preserve silhouette, pass the prior
@@ -2861,9 +3309,35 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
       const silhouetteWillChange = S.activePresets.some(p=>SILHOUETTE_CHANGING.includes(p));
       let priorAlpha=null;
       if(!silhouetteWillChange){
-        try{priorAlpha=await extractAlphaMask(S.origImg);}catch(e){priorAlpha=null;}
+        try{priorAlpha=await extractAlphaMask(viewSrc);}catch(e){priorAlpha=null;}
       }
       try{processed=await removeBg(result, priorAlpha);}catch(e){console.warn('BG removal failed',e);}
+      // v1.8.0 — Residual-form gate: Side/Back renders only. If a form-like
+      // stalk survives above the garment's shoulder line, do ONE automatic
+      // faithful re-roll of the same job. If the retry is also suspect, keep
+      // the cleaner of the two and flag the history entry (amber "Check"
+      // badge) rather than looping — the gate is advisory, never destructive.
+      if(isExtraView && mode==='render'){
+        try{
+          const g1=await detectResidualForm(processed);
+          if(g1.suspect){
+            console.warn('[formGate] suspected residual form (stalkFrac='+g1.stalkFrac.toFixed(3)+') — auto re-rolling once');
+            document.getElementById('procStep').textContent=batchPfx+'Possible form detected — re-rendering once...';
+            const retry=await callGemini(finalPrompt,mode,0,viewCtx);
+            let retryProcessed=retry;
+            try{retryProcessed=await removeBg(retry, priorAlpha);}catch(e2){console.warn('BG removal failed (retry)',e2);}
+            const g2=await detectResidualForm(retryProcessed);
+            if(!g2.suspect){
+              processed=retryProcessed;
+              console.log('[formGate] retry clean — using retry render');
+            } else {
+              processed = (g2.stalkFrac<g1.stalkFrac)?retryProcessed:processed;
+              formSuspect=true;
+              console.warn('[formGate] retry still suspect — keeping cleaner render (stalkFrac '+Math.min(g1.stalkFrac,g2.stalkFrac).toFixed(3)+'), flagging entry');
+            }
+          }
+        }catch(e){console.warn('[formGate] gate error',e);}
+      }
     }
     // Color lock (v5.6) — deterministic LAB anchor to the user-specified target hex.
     // Applies to eyedropper, Pantone, AND hex-picker paths. Skipped for sales_sheet
@@ -2877,13 +3351,45 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
     // get recolored. Full segmentation-aware locking is a v6.x architectural lift.
     const targetForLock=(document.getElementById('targetInput')?.value||'').trim().toLowerCase();
     const isFullGarmentTarget = !targetForLock || targetForLock==='full garment' || targetForLock==='garment';
-    if(mode!=='sales_sheet' && colorLockTarget && S.activePresets.includes('Change Color') && isFullGarmentTarget){
-      document.getElementById('procStep').textContent="Locking garment color to target hex...";
+    // v1.7.0 — the live gate. On a faithful re-roll we instead honor the
+    // captured decision (replay.lockColor) so the lock fires exactly as it did
+    // for the original render, regardless of how presets/target read right now.
+    const liveLock = mode!=='sales_sheet' && !!colorLockTarget && S.activePresets.includes('Change Color') && isFullGarmentTarget;
+    const doLock = replay ? !!replay.lockColor : liveLock;
+    if(doLock && colorLockTarget){
+      document.getElementById('procStep').textContent=batchPfx+"Locking garment color to target hex...";
       try{processed=await enforceEyedropColor(processed, colorLockTarget);}catch(e){console.warn('Color lock failed',e);}
+    }
+    // v1.7.7 — Generation-time canvas normalization. Every render is painted
+    // onto the strict 1200×1600 / 3:4 canvas BEFORE it is stored, so on-screen
+    // image, Session History thumbnails, re-roll sources, byte-identity
+    // grouping, comparisons, and exports all share identical metrics no matter
+    // the style or Gemini's native output size. Gated off sales_sheet, which
+    // is intentionally page-ratio (mirrors the imageConfig aspectRatio gate).
+    if(mode!=='sales_sheet'){
+      try{processed=await normalizeTo34(processed);}catch(e){console.warn('3:4 normalization failed',e);}
     }
     const newV=S.versionCounter+1;S.versionCounter=newV;
     S.modImg=processed;S.currentVersion=newV;
-    S.history=[{prompt,image:processed,label,metadata,version:newV},...S.history].slice(0,MAX_HISTORY);
+    // v1.7.0 — store everything needed to faithfully re-roll this exact render,
+    // plus a top-level view/guess (independent of md shape) for grouping.
+    const replayView = isExtraView ? viewCtx.view : 'front';
+    const replayGuess = isExtraView ? !!viewCtx.guess : false;
+    S.history=[{
+      prompt, finalPrompt, image:processed, label, metadata:md, version:newV,
+      mode, colorLockTarget: colorLockTarget||null, lockColor: doLock,
+      view: replayView, guess: replayGuess, src: viewSrc, formSuspect
+    },...S.history].slice(0,MAX_HISTORY);
+    // v1.7.3 — the just-rendered version must become its (style,color,view)
+    // cell's thumbnail so a new render always surfaces in Session History.
+    // v1.7.5 — achieve this by CLEARING any existing pin for the cell rather
+    // than stamping the new version: with no pin, renderHistory falls through
+    // to the highest version (this render). This also self-heals a stale pin
+    // (from an earlier Make-current / re-roll, or a loaded prior session) that
+    // would otherwise keep an older render showing as the thumbnail. A
+    // deliberate older selection is re-set only via "Make current".
+    { const _ne=S.history[0];
+      delete S.anglePick[ghCellKey(styleKeyOf(_ne),ghColorIdentity(_ne).ck,viewOf(_ne))]; }
     S.selectedIndices=[];
 
     // Auto-log this generation decision
@@ -2893,6 +3399,8 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
       version: newV,
       styleName: label || '',
       mode: metadata.renderMode || mode,
+      renderAngle: isExtraView ? md.view.toUpperCase() : 'FRONT',
+      angleGuess: (isExtraView && md.guess) ? 'Yes (rotated from front)' : 'No',
       mannequinType: S.mannequinType || '—',
       targetPart: document.getElementById('targetInput')?.value || 'Full Garment',
       colorName: metadata.colorName || '',
@@ -2901,7 +3409,7 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
       hexColor: renderAsIs ? '' : (S.selectedColor || ''),
       colorCompensation: renderAsIs ? 'N/A' : (S.useComp ? 'Yes' : 'No'),
       eyedropped: renderAsIs ? 'No' : (S.wasEyedropped ? 'Yes' : 'No'),
-      colorLockApplied: (colorLockTarget && S.activePresets.includes('Change Color') && mode!=='sales_sheet') ? 'Yes' : 'No',
+      colorLockApplied: doLock ? 'Yes' : 'No',
       colorLockTarget: colorLockTarget || '',
       collectionAnchor: renderAsIs ? '' : (S.collectionAnchorSource || ''),
       fabric: metadata.fabric || '',
@@ -2910,18 +3418,20 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
       promptSent: finalPrompt||prompt,
       claudeUsed: (S.anthropicKey && finalPrompt !== prompt) ? 'Yes' : 'No',
       referenceAttached: S.referenceImage ? 'Yes' : 'No',
-      filename: buildFilename({label, metadata, version: newV}),
+      filename: buildFilename({label, metadata:md, version: newV}),
       notes: '',  // reserved for future manual note-adding
     };
     S.decisionLog.unshift(logEntry);
     updateLogBadge();
 
     setProcessing(false);
-    showResult(processed,label,metadata,newV);
+    showResult(processed,label,md,newV);
     renderHistory();
     clearPrompt();
     persistSession();
+    S._lastRenderOK = true;  // clean finish — batch may continue
   }catch(err){
+    S._lastRenderOK = false; // signal the batch orchestrator to stop
     const msg=err?.message||'';
     const is429=msg.includes('429')||msg.includes('RESOURCE_EXHAUSTED')||msg.toLowerCase().includes('quota')||msg.toLowerCase().includes('rate limit');
     if(is429){
@@ -2933,9 +3443,71 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
   }finally{clearInterval(iv);S.isProcessing=false;}
 }
 
-async function callGemini(prompt,mode,attempt=0){
-  const mime=S.origImg.match(/^data:(image\/[^;]+)/)?.[1]||'image/png';
-  const b64=S.origImg.split(',')[1];
+// ────────────────────────────────────────────────────────────────
+// v1.8.0 — RESIDUAL-FORM GATE (code-level enforcement for Side/Back).
+// Prompt text can only shift Gemini's output distribution; it cannot clamp
+// it. After background removal on an extra-angle render, this deterministic
+// check scans the opaque silhouette for a narrow "stalk" rising from the
+// TOP of the garment — the signature of a residual mannequin neck / head /
+// bust that survived generation. Heuristic: per-row opaque-pixel widths;
+// consecutive top rows narrower than STALK_W × the max row width, spanning
+// more than STALK_FRAC of total silhouette height, mark the render suspect.
+// A legit collar in profile is narrow for ~3-8% of garment height; a
+// neck+head runs 15-30%. Turtlenecks/hoods may brush the threshold — the
+// gate is ADVISORY (one auto re-roll + amber "Check" badge), never
+// destructive. All metrics logged to console for live threshold tuning.
+// ────────────────────────────────────────────────────────────────
+const FORM_GATE = { STALK_W:0.38, STALK_FRAC:0.12, MIN_ROWS:18 };
+async function detectResidualForm(dataUrl){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const c=document.createElement('canvas');
+        // Downscale for speed — the metrics are ratio-based, so scale-invariant.
+        const scale=Math.min(1, 500/img.height);
+        c.width=Math.max(1,Math.round(img.width*scale));
+        c.height=Math.max(1,Math.round(img.height*scale));
+        const x=c.getContext('2d');
+        x.drawImage(img,0,0,c.width,c.height);
+        const d=x.getImageData(0,0,c.width,c.height).data;
+        const W=c.width,H=c.height;
+        const rowW=new Array(H).fill(0);
+        let top=-1,bot=-1,maxW=0;
+        for(let yy=0;yy<H;yy++){
+          let cnt=0;
+          for(let xx=0;xx<W;xx++){ if(d[(yy*W+xx)*4+3]>16) cnt++; }
+          rowW[yy]=cnt;
+          if(cnt>0){ if(top<0) top=yy; bot=yy; if(cnt>maxW) maxW=cnt; }
+        }
+        if(top<0||maxW<10){ resolve({suspect:false,stalkFrac:0,reason:'empty'}); return; }
+        const gh=bot-top+1;
+        let stalkRows=0;
+        for(let yy=top;yy<=bot;yy++){
+          if(rowW[yy]>0 && rowW[yy]<FORM_GATE.STALK_W*maxW) stalkRows++;
+          else if(rowW[yy]>=FORM_GATE.STALK_W*maxW) break;
+        }
+        const stalkFrac=gh>0?stalkRows/gh:0;
+        const suspect = stalkRows>=FORM_GATE.MIN_ROWS && stalkFrac>FORM_GATE.STALK_FRAC;
+        console.log('[formGate] stalkRows='+stalkRows+' garmentH='+gh+' stalkFrac='+stalkFrac.toFixed(3)+' maxW='+maxW+' → '+(suspect?'SUSPECT':'clean'));
+        resolve({suspect,stalkFrac,stalkRows,garmentH:gh});
+      }catch(e){ console.warn('[formGate] failed',e); resolve({suspect:false,stalkFrac:0,reason:'error'}); }
+    };
+    img.onerror=()=>resolve({suspect:false,stalkFrac:0,reason:'load-failed'});
+    img.src=dataUrl;
+  });
+}
+
+async function callGemini(prompt,mode,attempt=0,viewCtx=null){
+  // v1.6.4 — per-view source + camera override. Front (default) is byte-for-byte
+  // the prior behaviour. Side/Back swap ONLY the camera orientation, the symmetry
+  // mandate, and the neck-opening clause — every ghost-mannequin "bust rule"
+  // (no form, pure #FFFFFF, no shadows, construction-identity lock) is untouched.
+  const srcImg = (viewCtx && viewCtx.src) ? viewCtx.src : S.origImg;
+  const view = (viewCtx && viewCtx.view) ? viewCtx.view : 'front';
+  const isExtraView = (view==='side' || view==='back');
+  const mime=srcImg.match(/^data:(image\/[^;]+)/)?.[1]||'image/png';
+  const b64=srcImg.split(',')[1];
   const isRender=mode==='render',isSketch=mode==='sketch',isSales=mode==='sales_sheet';
 
   // v5.9 — Any garment-modifying preset in Edit mode promotes the output to a render.
@@ -2943,6 +3515,33 @@ async function callGemini(prompt,mode,attempt=0){
   const MODIFYING_PRESETS=['Change Color','Change Design','Adjust Fit','Wash'];
   const editWithModify = mode==='edit' && S.activePresets.some(p=>MODIFYING_PRESETS.includes(p));
   const treatAsRender = isRender || editWithModify;
+
+  // v1.6.4 — view-conditional clauses spliced into styleRule + Rule 3.
+  // For front these equal the original front-facing wording (zero regression).
+  const orientationClause =
+      view==='side' ? 'Camera at a TRUE LEFT-SIDE PROFILE (90° side view). A side view is naturally asymmetric — do NOT force symmetry; show the side seam and one sleeve in profile.'
+    : view==='back' ? 'Camera STRAIGHT BEHIND the garment (direct 180° back view), centered and symmetrical. Show the back panel, back yoke, and the back of both sleeves.'
+    : 'Straight direct front-facing camera, symmetrical, centered.';
+  const neckClauseStyle =
+      view==='side' ? 'The neck opening is seen edge-on in profile — show its true side contour.'
+    : view==='back' ? 'The collar is viewed from BEHIND: show the OUTSIDE of the back neckband/collar. There is NO open hollow neck interior visible from the back, and that is correct — it is NOT a mannequin and NOT a fault.'
+    : 'The neck opening must be a clean open hollow circle showing only the inside back collar.';
+  const rule3Forced =
+      view==='side' ? 'FORCE A TRUE LEFT-SIDE PROFILE CAMERA ANGLE: Capture the garment from a clean 90° left-side profile. This overrides any front-facing instruction. A profile is naturally asymmetric — do NOT force symmetry. Keep the garment level and centered in frame.'
+    : view==='back' ? 'FORCE A STRAIGHT BACK CAMERA ANGLE: Capture the garment from directly behind (180° rear view), level and perpendicular to the camera, centered and symmetrical. This overrides any front-facing instruction. Show the rear of the garment only — no front detail should be visible.'
+    : 'FORCE PERFECT FRONT-FACING CAMERA ANGLE: The garment must ALWAYS be captured from a perfectly flat, straight, level, direct front-facing point of view, centered and perpendicular to the camera. Never render any three-quarter angle, profile, back view, skewed perspective, or rotated/tilted posture. Symmetrical alignment is mandatory.';
+  // v1.6.6 — When a REAL photo is supplied for the extra view, the input is
+  // ALREADY at the correct angle. The "FORCE … / OVERRIDES ANY FRONT-FACING
+  // INSTRUCTION" reorientation language is needed only for the GUESS path
+  // (which synthesises the angle from the front). On a real photo it instead
+  // nudges Gemini toward reprojecting the supplied photograph — wearer and
+  // all — the same failure class as the old guess-mode "rotate the reference"
+  // bug. So for real extra-view photos we swap the camera-MOVE framing for a
+  // "keep this angle, convert the worn shot to a ghost render" instruction.
+  const realExtraPhoto = isExtraView && !(viewCtx && viewCtx.guess);
+  const rule3 = realExtraPhoto
+    ? `MATCH THE SUPPLIED ${view==='back'?'BACK':'SIDE'} ANGLE — BUT REGENERATE EVERYTHING FRESH ON PURE WHITE: The input photograph already shows the garment at the correct ${view} angle, so MATCH that exact viewpoint (do NOT rotate, reproject, re-pose, tilt, or invent a different angle). This is NOT a "keep the photo" task and NOT a camera move — produce a brand-new ghost-mannequin e-commerce product render, the same kind of clean reconstruction used for the front, only seen from the ${view}. REPLACE THE ENTIRE BACKGROUND: every non-garment pixel must become flat pure #FFFFFF — retain NONE of the original photo's studio backdrop, grey gradient, vignette, or tone. Completely remove the human model (face, hair, skin, neck, hands, arms, legs, and ALL hair cascading over or down the garment) and reconstruct ONLY the garment as a hollow, invisible ghost form. Where the model's hair or body currently covers the garment, rebuild the complete, uninterrupted knit underneath as if no hair or body were ever there.`
+    : rule3Forced;
 
   const focusText=isSales?"FOCUS: Process the entire image (Sales Sheet). Identify all garment sketches and render them individually."
     :`FOCUS: Only modify the "${document.getElementById('targetInput').value||'garment'}".`;
@@ -2954,7 +3553,7 @@ async function callGemini(prompt,mode,attempt=0){
 
   const styleRule=isSales?"STYLE: 3D Product Render. Convert every colored sketch on this sales sheet into highly realistic 3D rendered garments. Maintain colors from the original sketches. Add realistic fabric textures, shadows, and depth to each item on the page. All garments must be front-facing."
     :isSketch?"STYLE: Technical Flat Sketch. High-contrast black lines on a white background. No shading, clear construction lines. Symmetrical, front-facing."
-    :treatAsRender?`STYLE: High-resolution photorealistic 3D E-commerce Ghost Mannequin Product Shot. MANNEQUIN TYPE: ${S.mannequinType==='male'?'MALE — broad shoulders, straight chest, male torso proportions. Do not use female curves or silhouette.':S.mannequinType==='female'?'FEMALE — narrower shoulders, curved chest, female torso proportions and silhouette.':'UNISEX — neutral straight torso, equal shoulder width, androgynous proportions.'}. The garment must look natural with realistic folds and weight. The mannequin form underneath gives it 3D volume but is 100% invisible — only the garment fabric is visible. CRITICAL: No neck post, no visible torso form, no mannequin stand. The neck opening must be a clean open hollow circle showing only the inside back collar. Reconstruct with 3D volume, rounded shoulders, natural chest contour. Reconstruction adds 3D body volume and drape ONLY — it must NOT change the garment's closure type, collar/neckline style, button count, plackets, or pockets; those are reproduced exactly from the input. If input is a flat sketch, convert to photorealistic finished garment with high-fidelity texture. Straight direct front-facing camera, symmetrical, centered.`
+    :treatAsRender?`STYLE: High-resolution photorealistic 3D E-commerce Ghost Mannequin Product Shot. MANNEQUIN TYPE: ${S.mannequinType==='male'?'MALE — broad shoulders, straight chest, male torso proportions. Do not use female curves or silhouette.':S.mannequinType==='female'?'FEMALE — narrower shoulders, curved chest, female torso proportions and silhouette.':'UNISEX — neutral straight torso, equal shoulder width, androgynous proportions.'}. The garment must look natural with realistic folds and weight. The mannequin form underneath gives it 3D volume but is 100% invisible — only the garment fabric is visible. CRITICAL: No neck post, no visible torso form, no mannequin stand. ${neckClauseStyle} Reconstruct with 3D volume, rounded shoulders, natural chest contour. Reconstruction adds 3D body volume and drape ONLY — it must NOT change the garment's closure type, collar/neckline style, button count, plackets, or pockets; those are reproduced exactly from the input. If input is a flat sketch, convert to photorealistic finished garment with high-fidelity texture. ${orientationClause}`
     :"MAINTAIN STYLE & STRUCTURE (WITH GHOST BUST ENFORCEMENT): Keep the essential yarn texture, patterns, and colors of the garment consistent with requested modifications. However, you MUST reshape the garment to fit a 3D hollow ghost mannequin torso shape. Do NOT retain pinched shoulders, flat-lay shapes, or hanger-draped droop from the input image. Reconstruct the garment with full 3-dimensional body volume, rounded natural shoulders, an open circular hollow neck, and a direct front-facing orientation.";
 
   // v5.23 — Restored + extended strapless / dress-form enforcement.
@@ -3016,6 +3615,43 @@ async function callGemini(prompt,mode,attempt=0){
   // GATED OFF for Change Design — that preset legitimately changes
   // neckline / buttons / pockets, so the lock must not fight it.
   const lockGarmentIdentity = treatAsRender && !S.activePresets.includes('Change Design');
+  // v1.6.4 — Orientation override block for Side / Back. Placed high so the
+  // camera change is unmissable, but it explicitly defers to every ghost-
+  // mannequin / pure-white / construction rule below — only the angle changes.
+  const viewBlock = isExtraView ? `
+    ═══════════════════════════════════════════════════════════════
+    RENDER ORIENTATION — ${view==='back'?'BACK':'SIDE'} VIEW ${realExtraPhoto?'(MATCH THE SUPPLIED ANGLE — REGENERATE FRESH ON PURE WHITE)':'(OVERRIDES ANY FRONT-FACING INSTRUCTION)'}:
+    ═══════════════════════════════════════════════════════════════
+    ► ${realExtraPhoto
+        ? (view==='back'
+            ? 'The input photograph already shows this garment from the correct back angle. MATCH that exact viewpoint — do NOT reproject, rotate, re-pose, or invent a different back angle. But do NOT copy the photo: produce a brand-new ghost render, completely replacing the photo background with flat pure #FFFFFF and removing the wearer entirely. Show the back panel, the OUTSIDE of the back neckband/collar, the back yoke, and the back of both sleeves. From behind there is NO open hollow neck interior — showing the outside of the back collar is correct and is NOT a mannequin or a fault.'
+            : 'The input photograph already shows this garment from the correct side angle. MATCH that exact viewpoint — do NOT reproject, rotate, re-pose, or invent a different side angle. But do NOT copy the photo: produce a brand-new ghost render, completely replacing the photo background with flat pure #FFFFFF and removing the wearer entirely. Show the side seam, one sleeve in profile, and the side silhouette. A side view is naturally ASYMMETRIC — do NOT force symmetry. The neck opening is seen edge-on.')
+        : (view==='back'
+            ? 'Render the garment from a DIRECT STRAIGHT-ON BACK camera angle (180° rear view). Show the back panel, the OUTSIDE of the back neckband/collar, the back yoke, and the back of both sleeves. Keep it symmetrical and centered. From behind there is NO open hollow neck interior — showing the outside of the back collar is correct and is NOT a mannequin or a fault.'
+            : 'Render the garment from a TRUE LEFT-SIDE PROFILE camera angle (90° side view). Show the side seam, one sleeve in profile, and the side silhouette. A side view is naturally ASYMMETRIC — do NOT force symmetry. The neck opening is seen edge-on.')}
+    ► EVERYTHING ELSE IS UNCHANGED: all ghost-mannequin rules (zero visible
+      form of any kind or color), pure #FFFFFF background, zero shadows, and
+      the construction-identity lock STILL APPLY IN FULL. Only the camera
+      orientation (and, for the side, the symmetry mandate) changes.
+    ► DISCARD THE INPUT PHOTO'S BACKGROUND AND ANY WEARER: The source image
+      for this ${view} view is a real-world photograph. Its own background
+      (studio gradient, grey, cream, coloured, or ANY non-white backdrop) and
+      ANY human model, head, hair, skin, neck, hands, arms, or legs present in
+      it MUST be completely discarded — NOT preserved, NOT carried over, NOT
+      reprojected. The output is ONLY the garment fabric, reconstructed as an
+      invisible ghost mannequin, floating on a 100% pure flat #FFFFFF
+      background identical to the empty space around it. If the source shows
+      the garment worn by a person, remove the person entirely — especially
+      long hair falling over the shoulders or down the back — and rebuild the
+      garment as a hollow ghost form, INCLUDING the portions of the knit
+      currently hidden behind that hair: reconstruct the complete,
+      uninterrupted back panel, yoke, and shoulders as if no hair or body
+      were ever there.
+    ► ${viewCtx && viewCtx.guess
+        ? 'NO dedicated '+view+' photograph was supplied. Use the FRONT reference ONLY to infer the garment\'s construction, colours, panels, and proportions — then RECONSTRUCT it as a ghost mannequin seen from this orientation. Do NOT rotate, reproject, or photo-warp the front image, and do NOT carry over its model, hair, skin, or background. Any colour, pattern, panel, or construction on the hidden side is INFERRED and may not match the real garment.'
+        : 'A real '+view+'-view photograph of THIS EXACT garment is the input image — reproduce its actual colours, panels, color-blocking, and construction faithfully. Do NOT invent or normalize the hidden side. (Still strip its background and any wearer per the rule directly above.)'}
+    ═══════════════════════════════════════════════════════════════
+    ` : '';
   const garmentIdentityBlock = lockGarmentIdentity ? `
     ═══════════════════════════════════════════════════════════════
     PRESERVE GARMENT IDENTITY — DO NOT REDESIGN THE STYLE:
@@ -3030,6 +3666,13 @@ async function callGemini(prompt,mode,attempt=0){
         show that same full placket with the SAME number of buttons.
         Do NOT convert a button-front shirt into a pullover or polo.
         Do NOT remove, add, or relocate buttons, snaps, zips, or plackets.
+        COUNT the buttons — more than 4 down the front is NOT a polo; buttons
+        may be low-contrast (tonal, cream-on-cream) so look carefully.
+      • Hem, cuff, and collar trim — keep the input's EXACT colors and
+        pattern: stripes/patterns continue into the trim exactly as
+        photographed. NEVER invent solid contrast trim (e.g. white hem or
+        cuffs) that is not in the input, and NEVER add ties, drawstrings,
+        hanging strips, tabs, or panels that are not in the input.
       • Collar / neckline style (camp/Cuban, polo, crew, V-neck, etc.) —
         keep identical. Do NOT swap one collar type for another.
       • Pockets — same presence, count, and placement.
@@ -3043,10 +3686,56 @@ async function callGemini(prompt,mode,attempt=0){
 
   const parts=[{inline_data:{data:b64,mime_type:mime}}];
   if(S.referenceImage){const rm=S.referenceImage.match(/^data:(image\/[^;]+)/)?.[1]||'image/png';parts.push({inline_data:{data:S.referenceImage.split(',')[1],mime_type:rm}});}
+  // ────────────────────────────────────────────────────────────────
+  // v1.8.0 — LEAN EXTRA-VIEW PROMPT (Side/Back renders).
+  // Root cause of the recurring guess-side mannequin: the shared render
+  // prompt grew to ~4k words with 41 "mannequin" mentions since v1.6.3.
+  // In image models negative text acts as a weak positive (semantic
+  // priming) and rule mass dilutes compliance. Extra views now get a
+  // purpose-written short prompt: positive "invisible wearer / hollow
+  // floating garment" framing, ZERO uses of the word "mannequin", and the
+  // single hard constraint in FINAL position (recency). Front renders keep
+  // the proven v1.6.3 regime. The old viewBlock/orientation clauses remain
+  // above only for the non-render extra-view edge case.
+  // ────────────────────────────────────────────────────────────────
+  if(isExtraView && treatAsRender){
+    const proportions = S.mannequinType==='male'?'broad-shouldered male':S.mannequinType==='female'?'female':'neutral unisex';
+    const isGuessView = !!(viewCtx && viewCtx.guess);
+    const inputSemantics = isGuessView
+      ? `The input image is the FRONT reference photograph of this garment. No ${view} photograph exists, so produce the ${view.toUpperCase()} view as a completely fresh render: infer the garment's construction, colours, stripes/panels, and proportions from the front, then build the ${view} view from that understanding. Do NOT rotate, warp, or reproject the input photograph itself, and do NOT carry over its background, hanger, or any person in it. Hidden-side details are inferred and may differ from the real garment.`
+      : `The input image is a real photograph of THIS EXACT garment taken from the ${view}. Match that exact viewpoint — do not rotate, re-pose, or invent a different angle — and reproduce its actual colours, panels, colour-blocking, and construction faithfully; do not invent or normalize the hidden side. Regenerate everything fresh: keep none of the photograph's background, and remove any person or body part in it.`;
+    const camera = view==='side'
+      ? `CAMERA: a true left-side 90° profile. A side view is naturally asymmetric — do not force symmetry. Show the side seam, one sleeve in profile, and the side silhouette; the neck opening is seen edge-on.`
+      : `CAMERA: directly behind the garment (180° rear view), level, centered, and symmetrical. Show the back panel, the OUTSIDE of the back neckband/collar, the back yoke, and the back of both sleeves. From behind there is no open neck interior visible — showing the outside of the back collar is correct.`;
+    // The embedded request must not re-import heavy boilerplate: Render As Is
+    // passes the full front preamble, and a Claude-built precision prompt may
+    // use priming vocabulary — condense/sanitize both for this path only.
+    let req = prompt || '';
+    if(req.startsWith('Perform a professional 3D')){
+      req = 'Render the garment strictly as is — exact same original colours, pattern, fabric texture, and construction as the input.';
+    }
+    req = req.replace(/ghost[\s-]*mannequin/gi,'invisible-wearer render').replace(/mannequin/gi,'invisible form');
+    parts.push({text:`E-COMMERCE GARMENT PRODUCT RENDER — ${view.toUpperCase()} VIEW.
+    REQUEST: "${req}"
+
+    INPUT: ${inputSemantics}
+
+    OUTPUT — exactly this and nothing else: the garment ALONE, hollow and three-dimensional, floating in empty space as if worn by someone completely invisible (${proportions} torso proportions give it its volume and drape). ${camera}
+
+    RULES:
+    1. BACKGROUND: every pixel that is not garment fabric is flat pure white #FFFFFF (RGB 255,255,255). Zero shadows, gradients, vignettes, reflections, or floor contact of any kind.
+    2. IDENTITY LOCK: the output is the SAME garment as the input — same closure type and button count, same collar style, same pockets, same sleeve length, and the same stripe/pattern/colour layout continuing into the hem, cuffs, and collar exactly as in the input. Do not add trims, ties, tabs, or panels that are not in the input, and do not normalize the garment into a more typical style.
+    3. CLEAN PLATE: remove every hanger, hook, wire, tag, and label. Where hair, a hand, or a body covered the knit in the source photo, rebuild the complete uninterrupted fabric underneath.
+    4. COMPOSITION: strict 3:4 portrait, garment centered with a comfortable 15% margin on all sides.
+    5. LIGHT & COLOUR: bright, diffuse, high-key commercial studio lighting; soft natural folds only; fabric colours match the input exactly — never lightened, greyed, or shifted.
+
+    FINAL CHECK — the most important rule of all: the finished image contains ONLY the hollow, floating garment on pure white. Above the collar, inside the neck opening, and everywhere around the garment there is nothing but empty white background — no body, no bust, no form, no stand, no neck, no head, no shoulders of any kind. If any such object would appear anywhere in the image, remove it and render the garment alone.`});
+  } else {
   parts.push({text:`AI FASHION EDITOR: ${focusText} 
     REQUEST: "${prompt}". 
     ${S.referenceImage && S.activePresets.includes('Change Design') ? "IMPORTANT: The SECOND image is the design reference. Study it carefully — extract its exact pattern, stripe layout, colors, and all visual details. Apply them precisely to the garment." : S.referenceImage ? "The SECOND image is a style reference — use its pattern and texture details as a guide." : ""}
     ${topPriorityBlock}
+    ${viewBlock}
     ${garmentIdentityBlock}
     CRITICAL RULES (ABSOLUTE COMPLIANCE REQUIRED - NO EXCEPTIONS):
     1. ${bgRule}
@@ -3062,13 +3751,15 @@ async function callGemini(prompt,mode,attempt=0){
     ✗ A flesh-toned, skin-toned, or translucent shape filling the area above a strapless neckline
 
     EXPOSED-AREA RULE: For strapless, sleeveless, off-shoulder, crop, backless, tube, bustier, or low-cut garments, the area outside the garment's actual fabric (above neckline, beside bare shoulders, above any exposed body region) MUST be pure #FFFFFF background — identical to the empty space surrounding the garment. There is no mannequin, no form, no body, no skin, no shadow in that area. Just empty white background.
-    3. FORCE PERFECT FRONT-FACING CAMERA ANGLE: The garment must ALWAYS be captured from a perfectly flat, straight, level, direct front-facing point of view, centered and perpendicular to the camera. Never render any three-quarter angle, profile, back view, skewed perspective, or rotated/tilted posture. Symmetrical alignment is mandatory.
+    3. ${rule3}
     4. ABSOLUTELY NO HANGERS OR TAGS: Completely remove any hangers, hooks, wires, price tags, barcode tags, sizing tags, cords, background items, or apparel labels (internal or external). The garment must float cleanly on its own.
     5. NO SHADOWS AT ALL: There must be absolutely NO drop shadows under the hem, NO floor shadows, NO soft ambient occlusion at the base of the garment, NO gradient darkening around the silhouette, NO shadow halos under hemlines, cords, or collars. Every single pixel that is not part of the garment fabric itself must be flat, pure, sterile solid white (#FFFFFF).
     6. ${styleRule}
     7. NO MODEL, HUMAN PARTS, MANNEQUIN HEAD, OR BUST FORM: No human faces, skin, arms, legs, models, or mannequin heads anywhere in the image. The neck opening of the garment must show only the hollow interior fabric — NO gray plastic neck post, NO mannequin head form, NO bust form visible above the collar. For strapless/sleeveless/crop/backless/bustier garments: NO fabric dress form, NO tailor's mannequin, NO dressmaker's bust above the neckline — that area must be pure #FFFFFF background only.
+    7b. REMOVE ANY LAYERED UNDERGARMENT: If a separate garment (t-shirt, tank, camisole, blouse) is worn underneath the target and visible through any opening, remove it completely — it is as foreign as the model's body. Through any opening show only the target garment's own hollow interior (inside of its opposite/back panel, inner facing, seams) — never an inner layer, never skin, never a flat white patch standing in for the missing layer.
     8. DIMENSIONS: Strictly align to a 3:4 portrait aspect ratio (1200px width, 1600px height). The garment must be beautifully centered with a comfortable 15% margin from all borders to prevent clipping.
     9. ABSOLUTE COLOR FIDELITY: If the request includes changing the color/recoloring (e.g., mentions changing color, paint, hex code, or Pantone), you MUST completely overrule and throw away the old, original base colors and undertones of the garment. Do not tint or blend the old color into the new one. Paint the entire garment's fabric cleanly, evenly, and precisely with the requested target hex or Pantone shade as a fresh new dye. Keep the fabric rendered under bright, diffuse, high-key commercial advertising studio lighting. Folds and shading must be extremely soft, subtle, and natural; under no circumstances allow heavy gray, black, or muddy shadows to darken or mute the garment's overall fabric color below the requested target swatch value. The main body/flat surface colors of the garment must match the user's requested swatch color perfectly.`});
+  }
 
   // v5.10 — Designated aspect ratio per mode, sent as a structured Gemini param.
   // Without imageConfig.aspectRatio, Gemini Flash Image silently defaults to 1:1
@@ -3085,7 +3776,7 @@ async function callGemini(prompt,mode,attempt=0){
   });
 
   if(resp.status===429){
-    if(attempt<3){document.getElementById('procStep').textContent=`Retrying... (Attempt ${attempt+1}/3)`;await new Promise(r=>setTimeout(r,delays[attempt]));return callGemini(prompt,mode,attempt+1);}
+    if(attempt<3){document.getElementById('procStep').textContent=`Retrying... (Attempt ${attempt+1}/3)`;await new Promise(r=>setTimeout(r,delays[attempt]));return callGemini(prompt,mode,attempt+1,viewCtx);}
     throw new Error('429: RESOURCE_EXHAUSTED - Quota limit reached.');
   }
   if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e?.error?.message||`Gemini error ${resp.status}`);}
@@ -3383,6 +4074,26 @@ async function removeBg(b64, priorAlpha=null){
       // silhouette as a ceiling on the new alpha. Dilated by 6px to tolerate
       // minor pose drift the model may introduce between iterations.
       // Halos outside the dilated prior silhouette are forced transparent.
+      // v1.7.7 — Dimension-mismatch rescale. Generation-time normalization
+      // stores all renders at 1200×1600, but Gemini's fresh output arrives at
+      // its native 3:4 size — so the prior mask and the new render no longer
+      // share dimensions and the exact-match guard below would silently skip
+      // 6a on every serial edit. Both are 3:4, so a nearest-neighbor rescale
+      // of the mask to (W,H) is distortion-free; the 6px dilation that follows
+      // absorbs any single-pixel rounding at the silhouette edge.
+      if(priorAlpha && (priorAlpha.width!==W || priorAlpha.height!==H)){
+        const pw=priorAlpha.width, ph=priorAlpha.height;
+        const scaled=new Uint8Array(W*H);
+        for(let y=0;y<H;y++){
+          const sy=Math.min(ph-1,Math.round(y*ph/H));
+          const srow=sy*pw, drow=y*W;
+          for(let x=0;x<W;x++){
+            const sx=Math.min(pw-1,Math.round(x*pw/W));
+            scaled[drow+x]=priorAlpha.data[srow+sx];
+          }
+        }
+        priorAlpha={width:W,height:H,data:scaled};
+      }
       if(priorAlpha && priorAlpha.width===W && priorAlpha.height===H){
         const DIL=6;
         // Separable horizontal max-dilation of the prior opaque mask
@@ -3420,8 +4131,14 @@ async function removeBg(b64, priorAlpha=null){
 
       // First: detect if the garment is "white-ish" — if so, abort the pass.
       // Sample every Nth opaque pixel to keep this O(W*H/sampleStride).
+      // v1.6.10 — count a pale-neutral pixel as white-GARMENT evidence only if
+      // it is also TEXTURED. A real white sweater is knit (high-frequency
+      // stitch texture); a smooth pale backdrop / shadow ghost is feature-less.
+      // Without this, a big smooth pale cloud inflated whiteRatio past 0.35 and
+      // made 6d (and 6b) skip entirely — leaving the cloud the user reported.
       let whiteCount=0, opaqueCount=0;
       const sampleStride=4;
+      const lumaIdx=(j)=>{const pj=j*4;return (d[pj]+d[pj+1]+d[pj+2])/3;};
       for(let i=0;i<W*H;i+=sampleStride){
         if(alpha[i]>=0.5){
           opaqueCount++;
@@ -3429,7 +4146,13 @@ async function removeBg(b64, priorAlpha=null){
           const r=d[pi], g=d[pi+1], b=d[pi+2];
           const luma=(r+g+b)/3;
           const chroma=Math.max(r,g,b)-Math.min(r,g,b);
-          if(chroma<CHROMA_THR && luma>LUMA_THR) whiteCount++;
+          if(chroma<CHROMA_THR && luma>LUMA_THR){
+            const x=i%W, y=(i/W)|0;
+            let tex=0;
+            if(x<W-1) tex+=Math.abs(luma-lumaIdx(i+1));
+            if(y<H-1) tex+=Math.abs(luma-lumaIdx(i+W));
+            if(tex > 2) whiteCount++;   // textured pale-neutral ⇒ likely white knit
+          }
         }
       }
       const whiteRatio = opaqueCount>0 ? whiteCount/opaqueCount : 0;
@@ -3467,6 +4190,159 @@ async function removeBg(b64, priorAlpha=null){
           const luma=(r+g+b)/3;
           const chroma=Math.max(r,g,b)-Math.min(r,g,b);
           if(chroma<CHROMA_THR && luma>LUMA_THR) alpha[i]=0;
+        }
+      }
+
+      // ── v1.6.8 Step 6d: Soft achromatic halo peel ───────────────────
+      // Gemini intermittently renders the garment on a soft grey vignette /
+      // glow instead of a flat #FFFFFF backdrop — near-constant on Side/Back
+      // (those are reconstructed from worn photos that carry a grey studio
+      // gradient), occasional on Front. The flat outer frame strips cleanly,
+      // but the smooth grey ramp hugging the silhouette survives every prior
+      // pass: Step 5's flood-fill + safe-zone BFS PROTECT it (its mid-grey
+      // core anchors), and 6b only fades near-white (luma>232) fringe. That
+      // surviving cloud is the "background not transparent" the user sees —
+      // identical in cause on every view; Side/Back just hit it far more.
+      //
+      // Prompts can't fix this — the render bgRule already mandates flat
+      // #FFFFFF and bans gradients/vignettes, and Gemini ignores it part of
+      // the time (same lesson as the reverted chroma-key approach). So peel
+      // it in code, same register as 6c: region-grow inward from the
+      // transparent frontier, removing pixels that look like halo and halting
+      // at the garment. A halo pixel is PALE (luma≥floor), NEUTRAL (low
+      // chroma — so a beige / coloured panel is never touched), SMOOTH vs the
+      // neighbour we arrived from (a luma STEP = garment edge ⇒ halt), and in
+      // a low-variance local neighbourhood. The 3×3 VARIANCE gate is the real
+      // garment protector and the reason the depth-map approach was dropped
+      // (a thick halo reads as "deep" too): a knit garment's surface and its
+      // true silhouette edge are textured / high-contrast (the edge is
+      // garment-vs-already-removed-bg in d[], which still holds the original
+      // RGB), so the grow stalls there; the painted halo gradient is
+      // feature-less and gets consumed. Guards, in order of reliance:
+      //   • white-garment carve-out (reuses 6b's whiteRatio) — skip entirely
+      //   • chroma gate (8)   — protects warm beige / any coloured panel
+      //   • variance gate (60)— halts at knit texture and the garment edge
+      //   • smoothness gate(7)— halts at a clean luma step into the garment
+      //   • luma floor (204)  — never touches mid/dark garment tones
+      //   • 60% runaway net   — if a perfectly flat pale-grey garment is
+      //     locally indistinguishable from the halo and the grow consumes
+      //     most of the opaque content, ABORT and keep everything (safe-fail
+      //     bias: preserve the garment, leave the halo for a manual retry).
+      // No-op on clean renders: garment-edge frontier pixels are high-variance
+      // (garment vs removed bg) so nothing seeds.
+      if(whiteRatio < 0.35){
+        let opCount6d=0;
+        for(let i=0;i<W*H;i++){ if(alpha[i]>=0.5) opCount6d++; }
+        if(opCount6d>0){
+          // v1.6.9 — floor lowered 204 → 180 so the grow also climbs a
+          // mid-grey CAST SHADOW (luma ~150–200), not just a pale vignette.
+          // Live test on 77S127SF: 6d was peeling the pale outer cloud
+          // (147k / 95k px on side / back) but leaving the darker shadow core,
+          // which sat below the old 204 floor. With 180 the garment is no
+          // longer protected by luminance alone (the grey body overlaps the
+          // shadow range) — the VARIANCE gate becomes the primary protector:
+          // a cast shadow is smooth/feature-less, the knit garment surface and
+          // its silhouette edge are textured, so the grow stalls at the knit.
+          // PROVISIONAL: worst case is a flat-lit grey panel that reads like a
+          // smooth shadow; the runaway net + chroma gate are the backstops,
+          // but a real failing PNG is still wanted to place this precisely.
+          const HALO_MIN_LUMA = 180;  // pale + mid-grey shadow; garment protected by variance
+          // v1.6.12 — raised 8 → 12 from a REAL exported PNG (77S127 side). The
+          // connected partial-alpha haze measured chroma p50=8, p90=10, p95=11 —
+          // it sat right on the old 8 cutoff and was rejected as "coloured", so the
+          // peel stalled. The grey knit body is just as smooth/low-chroma as the
+          // haze, so chroma can't be the body's protector here — the SMOOTH_DELTA
+          // luma step at the silhouette (haze ~235 vs grey body ~210 = a ~25 step,
+          // far over the 7 ceiling) halts the grow at the garment, and the runaway
+          // abort is the backstop if it ever over-reaches.
+          const HALO_CHROMA   = 12;   // neutral/faint-tint halo; beige panels (chroma 20+) protected (was 8)
+          const SMOOTH_DELTA  = 7;    // per-step ramp continuity — halts at a clean edge step
+          const SMOOTH_VAR    = 60;   // 3×3 luma-variance ceiling — halts at texture / edges
+          const RUNAWAY_FRAC  = 0.6;  // gross-runaway sanity net (flat grey garment ≈ shadow)
+          const lumaOf  =(i)=>{const pi=i*4;return (d[pi]+d[pi+1]+d[pi+2])/3;};
+          const chromaOf=(i)=>{const pi=i*4;return Math.max(d[pi],d[pi+1],d[pi+2])-Math.min(d[pi],d[pi+1],d[pi+2]);};
+          function localVar(i){
+            const x=i%W, y=(i/W)|0; let s=0,s2=0,n=0;
+            for(let dy=-1;dy<=1;dy++){ const ny=y+dy; if(ny<0||ny>=H) continue;
+              for(let dx=-1;dx<=1;dx++){ const nx=x+dx; if(nx<0||nx>=W) continue;
+                const lu=lumaOf(ny*W+nx); s+=lu; s2+=lu*lu; n++; } }
+            return n>0 ? (s2/n - (s/n)*(s/n)) : 0;
+          }
+          const removed=new Uint8Array(W*H);
+          const pstack=new Int32Array(W*H);
+          let psp=0, removedCount=0;
+          function tryPeel(i, fromLuma){
+            if(removed[i] || alpha[i] < 0.1) return;      // already gone / already transparent
+            const lu=lumaOf(i);
+            if(lu < HALO_MIN_LUMA) return;                // too dark to be the pale halo
+            if(chromaOf(i) >= HALO_CHROMA) return;         // has colour ⇒ garment, not halo
+            if(fromLuma>=0 && Math.abs(lu-fromLuma) > SMOOTH_DELTA) return; // edge step ⇒ garment
+            if(localVar(i) > SMOOTH_VAR) return;          // textured / edge ⇒ garment
+            removed[i]=1; removedCount++; pstack[psp++]=i;
+          }
+          // ── v1.7.2 smooth-garment guard ─────────────────────────────
+          // 6d's ONLY real garment protector is the SMOOTH_VAR variance gate,
+          // which assumes the garment surface is textured (knit) while the
+          // halo is feature-less. On a smooth jersey garment (e.g. a flat tee)
+          // the surface is as smooth / pale / low-chroma as the halo, so the
+          // inward grow walks off the halo straight into the garment and carves
+          // a wedge out of it (regression first seen on 78MT400 front — could
+          // not happen pre-6d, i.e. V1.6.3). Measure the garment's own interior
+          // texture: if its median 3×3 luma-variance is below SMOOTH_VAR, then
+          // by 6d's own definition most of the garment reads as "peelable" and
+          // the gate is void — so SKIP the peel and leave any halo for a manual
+          // retry. Documented safe-fail bias: never damage the garment. Median
+          // is logged so the cutoff can be tuned against real exports.
+          let smoothGarment=false;
+          {
+            const samples=[];
+            const STRIDE=Math.max(1,(Math.sqrt(W*H)/200)|0);
+            for(let i=0;i<W*H;i+=STRIDE){
+              if(alpha[i] < 0.5) continue;
+              const x=i%W, y=(i/W)|0;
+              if(x<=0||x>=W-1||y<=0||y>=H-1) continue;
+              // interior only — the silhouette edge is legitimately high-variance
+              // (garment vs removed bg) and would mask a smooth surface
+              if(alpha[i-1]<0.5||alpha[i+1]<0.5||alpha[i-W]<0.5||alpha[i+W]<0.5) continue;
+              samples.push(localVar(i));
+            }
+            if(samples.length >= 200){
+              samples.sort((a,b)=>a-b);
+              const median=samples[samples.length>>1];
+              smoothGarment = median < SMOOTH_VAR;
+              console.log('[removeBg 6d] interior variance median='+median.toFixed(1)+
+                (smoothGarment
+                  ? ' (<'+SMOOTH_VAR+') ⇒ smooth garment; skipping 6d peel to protect it'
+                  : ' ⇒ textured; 6d active'));
+            }
+          }
+          if(!smoothGarment){
+          // Seed ring: halo-qualifying opaque pixels that touch transparency.
+          for(let i=0;i<W*H;i++){
+            if(alpha[i] < 0.1) continue;
+            const x=i%W, y=(i/W)|0;
+            const transAdj =
+              (x>0   && alpha[i-1] < 0.1) || (x<W-1 && alpha[i+1] < 0.1) ||
+              (y>0   && alpha[i-W] < 0.1) || (y<H-1 && alpha[i+W] < 0.1);
+            if(transAdj) tryPeel(i, -1);
+          }
+          // Grow inward along the smooth, feature-less ramp.
+          while(psp>0){
+            const i=pstack[--psp]; const lu=lumaOf(i);
+            const x=i%W, y=(i/W)|0;
+            if(x>0)   tryPeel(i-1, lu);
+            if(x<W-1) tryPeel(i+1, lu);
+            if(y>0)   tryPeel(i-W, lu);
+            if(y<H-1) tryPeel(i+W, lu);
+          }
+          if(removedCount > 0 && removedCount <= opCount6d*RUNAWAY_FRAC){
+            for(let i=0;i<W*H;i++){ if(removed[i]) alpha[i]=0; }
+            console.log('[removeBg 6d] peeled '+removedCount+'px soft achromatic halo');
+          } else if(removedCount > 0){
+            console.warn('[removeBg 6d] aborted — peel would remove '+removedCount+'px ('+
+              (100*removedCount/opCount6d).toFixed(0)+'% of opaque); kept to protect garment');
+          }
+          } // end if(!smoothGarment)
         }
       }
 
@@ -3522,16 +4398,56 @@ async function removeBg(b64, priorAlpha=null){
           // removeBg likely failed upstream — bail rather than risk erasing
           // a real (if degenerate) render.
           if(maxSize >= W*H*0.01){
+            // v1.6.10 — per-component signature so a DETACHED smooth/achromatic
+            // island (a floating backdrop or shadow ghost — observed as the pale
+            // arch beside the side/back renders) is dropped at ANY size, while a
+            // textured OR coloured detached island (a legit second garment part)
+            // still follows the ≥3% size rule. Texture = mean abs luma diff to
+            // the right/down same-label neighbour (knit = high, smooth cloud ≈ 0);
+            // measured intra-component so the island's border against transparency
+            // doesn't inflate it.
+            // v1.6.12 — tuned from a REAL exported PNG (77S127 back). The
+            // detached floating cloud measured meanChroma=10.06 (it missed the
+            // old <10 gate by 0.06) and meanEdge=0.269; the garment knit measured
+            // meanEdge=1.977 and beige panels meanChroma~20+. So: widen the chroma
+            // ceiling to 16 (catches the faintly-tinted backdrop ghost, still well
+            // under beige), and TIGHTEN the edge gate to 1.0 — the real separator
+            // is texture (cloud 0.27 vs knit 1.98), so the smoothness test now
+            // carries the protection and a low-chroma knit fragment (edge ~2)
+            // is NOT dropped as a ghost (falls to the ≥3% size rule instead).
+            const ISLAND_CHROMA = 16;   // mean chroma below ⇒ neutral/grey (was 10)
+            const ISLAND_EDGE   = 1.0;  // mean intra-island edge below ⇒ smooth (was 3.0; knit≈2)
+            const cCount=new Float64Array(nextLabel+1);
+            const cChroma=new Float64Array(nextLabel+1);
+            const cEdge=new Float64Array(nextLabel+1);
+            const cEdgeN=new Float64Array(nextLabel+1);
+            const lumaAt=(j)=>{const pj=j*4;return (d[pj]+d[pj+1]+d[pj+2])/3;};
+            for(let i=0;i<W*H;i++){
+              const L=label[i]; if(!L) continue;
+              const pi=i*4;
+              cChroma[L]+=Math.max(d[pi],d[pi+1],d[pi+2])-Math.min(d[pi],d[pi+1],d[pi+2]);
+              cCount[L]++;
+              const x=i%W, y=(i/W)|0; const lu=lumaAt(i);
+              if(x<W-1 && label[i+1]===L){ cEdge[L]+=Math.abs(lu-lumaAt(i+1)); cEdgeN[L]++; }
+              if(y<H-1 && label[i+W]===L){ cEdge[L]+=Math.abs(lu-lumaAt(i+W)); cEdgeN[L]++; }
+            }
             const keepThresh = maxSize * ISLAND_KEEP_FRAC;
             const keep = new Uint8Array(nextLabel+1);
-            let kept=0;
-            for(let l=1;l<=nextLabel;l++){ if(l===maxLabel || sizes[l] >= keepThresh){ keep[l]=1; kept++; } }
+            let kept=0, droppedGhost=0;
+            for(let l=1;l<=nextLabel;l++){
+              if(l===maxLabel){ keep[l]=1; kept++; continue; }   // garment — always keep
+              const meanChroma = cCount[l]>0 ? cChroma[l]/cCount[l] : 0;
+              const meanEdge   = cEdgeN[l]>0 ? cEdge[l]/cEdgeN[l] : 0;
+              const smoothGhost = meanChroma < ISLAND_CHROMA && meanEdge < ISLAND_EDGE;
+              if(smoothGhost){ droppedGhost++; continue; }       // backdrop/shadow ghost — drop any size
+              if(sizes[l] >= keepThresh){ keep[l]=1; kept++; }   // textured/coloured part — size rule
+            }
             if(kept < nextLabel){
               let removed=0;
               for(let i=0;i<W*H;i++){
                 if(alpha[i] > 0 && !keep[label[i]]){ alpha[i]=0; removed++; }
               }
-              if(removed) console.log('[removeBg 6c] removed '+removed+'px across '+(nextLabel-kept)+' detached island(s)');
+              if(removed) console.log('[removeBg 6c] removed '+removed+'px across '+(nextLabel-kept)+' detached island(s)'+(droppedGhost?' ('+droppedGhost+' smooth/achromatic ghost)':''));
             }
           }
         }
@@ -3568,6 +4484,11 @@ function buildLabel(item){
   if(m.fit)parts.push(m.fit);if(m.color)parts.push(m.color);if(m.wash)parts.push(m.wash);
   if(parts.length>0)label=label?`${label} (${parts.join(', ')})`:parts.join(', ');
   if(item.version)label=label?`V${item.version} | ${label}`:`V${item.version}`;
+  // v1.6.4 — tag extra angles; flag guesses (rotated from the front).
+  if(m.view==='side'||m.view==='back'){
+    const tag=(m.view==='side'?'SIDE':'BACK')+(m.guess?' · GUESS':'');
+    label=label?`${label} [${tag}]`:`[${tag}]`;
+  }
   return label;
 }
 
@@ -3590,6 +4511,11 @@ function buildFilename(item){
   const ft = (item.metadata?.fit && item.metadata.fit !== 'adjusted' ? item.metadata.fit : '').trim();
 
   const parts = [style, cn, cc, fc, ft].filter(s => s.length > 0).map(s => s.toUpperCase());
+  // v1.6.4 — extra-angle suffix. Front stays unsuffixed (existing naming
+  // unchanged); side/back get _SIDE / _BACK so views don't overwrite each other.
+  const v = item.metadata?.view;
+  if(v==='side') parts.push('SIDE');
+  else if(v==='back') parts.push('BACK');
   // Sanitize filename: % causes browser to interpret as URL encoding (e.g. 50% COTTON → 50)
   // Replace % with PCT so "50% COTTON 50% ACRYLIC" → "50PCT COTTON 50PCT ACRYLIC"
   const safe = parts.join(' - ').replace(/%/g, 'PCT');
@@ -3784,8 +4710,132 @@ async function useCollectionColor(i){
 }
 
 // ================================================================
-// HISTORY
+// HISTORY — v1.7.0 grouped by Style › Color › Angle
+// Grouping is presentation-only: S.history stays a flat versioned list and
+// the tree is derived here each render. Every tile keeps its flat index `i`
+// so the existing index-based actions (select/compare, load, download,
+// delete, use-as-base, collection-color) keep working unchanged.
 // ================================================================
+// v1.8.1 — Grouping keys are case-normalized. The folder header (.gh-style)
+// and color name (.gh-color-name) both display text-transform:uppercase, so
+// "56ms373" and "56MS373" rendered as the SAME visible name while being
+// DIFFERENT Map keys — a duplicate style folder (or split color cell for
+// "beige"/"Beige"). Uppercasing the key matches what the user actually sees.
+// Retroactive: grouping is computed at paint time, so mixed-case entries
+// re-home on the next render/reload with no migration. Stale anglePick pins
+// under old mixed-case cell keys simply never match → correct "latest wins"
+// default (v1.7.5 semantics). The 'Original' fallback sentinel is left
+// mixed-case deliberately so ghColorIdentity's comparison is unchanged.
+function styleKeyOf(item){ return ((item.label||'').trim().toUpperCase()) || '(Untitled)'; }
+function colorKeyOf(item){
+  const m=item.metadata||{};
+  const raw=((m.colorName||'').trim()) || ((m.color||'').trim()) || ((m.colorCode||'').trim());
+  return raw ? raw.toUpperCase() : 'Original';
+}
+function colorSwatchOf(item){
+  const m=item.metadata||{};
+  const cand=[m.color,m.colorCode];
+  for(const raw of cand){
+    const c=(raw||'').trim();
+    if(/^#?[0-9a-fA-F]{6}$/.test(c)) return c[0]==='#'?c:('#'+c);
+  }
+  return null;
+}
+function viewOf(item){ return item.view || item.metadata?.view || 'front'; }
+function ghCellKey(sk,ck,vw){ return sk+'\u2225'+ck+'\u2225'+vw; }
+const GH_VIEW_ORDER={front:0,side:1,back:2};
+
+// v1.7.4 — Color identity for History grouping. A guessed extra angle (Side/
+// Back rendered with no own reference photo) carries no color metadata of its
+// own, so colorKeyOf() returns 'Original' even when it was rotated off a
+// recolored base via "Use as Base". Re-home it under the color of the render
+// it was derived from, matched deterministically by source image: the guess
+// stores src = origImg at render time, which is byte-identical to the base
+// render's .image. A guess taken off the original uploaded photo matches no
+// history entry, so it correctly stays Original — no false grouping, no
+// pixel-reading. Returns {ck, sw}; ck drives the group, sw the swatch.
+function ghColorIdentity(item){
+  const ownCk=colorKeyOf(item);
+  if(ownCk!=='Original') return {ck:ownCk, sw:colorSwatchOf(item)};
+  if(item && item.guess && viewOf(item)!=='front' && item.src){
+    const base=S.history.find(h=>h && h.image===item.src);
+    if(base){ const bck=colorKeyOf(base); if(bck!=='Original') return {ck:bck, sw:colorSwatchOf(base)}; }
+  }
+  return {ck:ownCk, sw:colorSwatchOf(item)};
+}
+
+function toggleHistGroup(enc){
+  const sk=decodeURIComponent(enc);
+  // v1.7.4 — style folders are an accordion: opening one folds every other
+  // style closed. Clicking the open folder closes it (leaves none open).
+  // Switching styles also clears the cell-history accordion so a stale "History"
+  // list from the previous style doesn't linger.
+  S.histOpenStyle = (S.histOpenStyle===sk) ? '\u0000__NONE__' : sk;
+  S.histExpandCells={};
+  renderHistory();
+}
+function toggleHistCell(enc){
+  const ck=decodeURIComponent(enc);
+  const wasOpen=!!S.histExpandCells[ck];
+  S.histExpandCells={};                  // v1.7.4 — accordion: only one cell's history open at a time
+  if(!wasOpen) S.histExpandCells[ck]=true;
+  renderHistory();
+}
+
+// Faithful re-roll: re-run the EXACT job that produced render `i` (captured
+// finalPrompt / view / guess / source / lock decision). Legacy entries with
+// no captured finalPrompt fall back to a current-settings re-roll.
+async function rerollRender(i){
+  if(S.isProcessing)return;
+  const e=S.history[i]; if(!e) return;
+  const sk=styleKeyOf(e),ck=ghColorIdentity(e).ck,vw=viewOf(e);  // v1.7.4 — resolved key matches grouping
+  // Resolve the source for a faithful resample. Prefer the source CAPTURED with
+  // this render (v1.7.0+) so re-rolls work even after the live Side/Back slots
+  // are cleared by moving to another style. Legacy entries (pre-v1.7.0) carry
+  // no captured src — fall back to the MATCHING live slot, never the front ref.
+  let src = e.src;
+  let srcOrigin = 'captured';
+  if(src===undefined || src===null){
+    src = vw==='side' ? S.sideImg : vw==='back' ? S.backImg : S.origImg;
+    srcOrigin = (vw==='front') ? 'front-ref(live)' : (vw+'-slot(live)');
+  }
+  if((vw==='side'||vw==='back') && !src){
+    setError("Can't re-roll this "+vw.toUpperCase()+" — its source photo isn't in this session anymore. "+
+      "Re-attach the "+vw+" reference photo (or open the style it belongs to) and try again.");
+    return;
+  }
+  console.log('[reroll] v'+e.version+' '+vw+' — source: '+srcOrigin+(e.guess?' · guess':'')+', replay finalPrompt: '+((typeof e.finalPrompt==='string'&&e.finalPrompt)?'yes':'no'));
+  const viewCtx={ view:vw, src, guess:!!e.guess };
+  const hasReplay = typeof e.finalPrompt==='string' && e.finalPrompt;
+  const replay = hasReplay ? { finalPrompt:e.finalPrompt, lockColor:!!e.lockColor } : null;
+  S._batchInfo=null;
+  await runGenerate(e.prompt||'', e.label||'', e.metadata||{}, e.mode||'render', e.colorLockTarget||null, false, viewCtx, replay);
+  if(S._lastRenderOK){
+    delete S.anglePick[ghCellKey(sk,ck,vw)];  // v1.7.5 — newest roll is the thumbnail (no pin => latest wins)
+    persistSession();
+    renderHistory();
+  }
+}
+
+// Promote an older roll to be the angle's "current" (pins via anglePick).
+function makeAngleCurrent(i){
+  const e=S.history[i]; if(!e) return;
+  S.anglePick[ghCellKey(styleKeyOf(e),ghColorIdentity(e).ck,viewOf(e))] = e.version;
+  loadHistoryItem(i);
+  persistSession();
+  renderHistory();
+}
+
+const GH_ICON={
+  redo:'<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.5" fill="currentColor" stroke="none"/>',
+  view:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  download:'<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>',
+  base:'<path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  drop:'<circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.52-4.48-10-10-10z"/>',
+  promote:'<circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/>'
+};
+
 function renderHistory(){
   const sec=document.getElementById('historySection');
   if(S.history.length===0){sec.classList.add('hidden');return;}
@@ -3793,42 +4843,128 @@ function renderHistory(){
   const compareBtn=document.getElementById('compareBtn');
   compareBtn.classList.toggle('hidden',S.selectedIndices.length<2);
   const list=document.getElementById('historyList');
-  const isSheet=i=>S.history[i]?.metadata?.renderMode==='Sales Sheet Render';
-  list.innerHTML=S.history.map((item,i)=>`
-    <div class="history-item">
-      <button class="hist-check ${S.selectedIndices.includes(i)?'checked':''}" onclick="toggleSelect(${i})" title="Select for comparison">
-        <svg viewBox="0 0 24 24">${S.selectedIndices.includes(i)?'<polyline points="20 6 9 17 4 12"/>':'<rect x="3" y="3" width="18" height="18" rx="2"/>'}</svg>
-      </button>
-      <button class="hist-main ${S.modImg===item.image?'active':''}" onclick="loadHistoryItem(${i})">
-        <div class="hist-thumb-wrap">
-          <img class="hist-thumb" src="${item.image}" alt="" style="${isSheet(i)?'background:#fff':''}"/>
-          ${item.version?`<div class="hist-vbadge">V${item.version}</div>`:''}
-        </div>
-        <div class="hist-info">
-          <div class="hist-prompt">${(item.prompt||'').slice(0,60)}</div>
-          <div class="hist-tags">
-            ${item.version?`<span class="hist-tag v">V${item.version}</span>`:''}
-            ${item.label?`<span class="hist-tag label">${item.label}</span>`:''}
-            ${item.metadata?.renderMode?`<span class="hist-tag mode ${isSheet(i)?'sheet':''}">${item.metadata.renderMode}</span>`:''}
+  const isSheet=item=>item?.metadata?.renderMode==='Sales Sheet Render';
+
+  // ── Build the Style › Color › Angle tree, retaining flat indices ──────
+  const groups=new Map();
+  S.history.forEach((item,i)=>{
+    const sk=styleKeyOf(item), vw=viewOf(item);
+    const ci=ghColorIdentity(item), ck=ci.ck;   // v1.7.4 — guess re-homing
+    if(!groups.has(sk)) groups.set(sk,{style:sk,order:-1,swatches:[],colors:new Map()});
+    const g=groups.get(sk);
+    if(!g.colors.has(ck)) g.colors.set(ck,{color:ck,swatch:null,order:-1,angles:new Map()});
+    const c=g.colors.get(ck);
+    if(!c.swatch && ci.sw){ c.swatch=ci.sw; if(!g.swatches.includes(ci.sw)) g.swatches.push(ci.sw); }
+    if(!c.angles.has(vw)) c.angles.set(vw,[]);
+    c.angles.get(vw).push({i,item});
+    const v=item.version||0;
+    if(v>g.order)g.order=v; if(v>c.order)c.order=v;
+  });
+
+  const tileMini=(i,extra='')=>`
+    <button class="gh-mini-btn" title="View" onclick="loadHistoryItem(${i})"><svg viewBox="0 0 24 24">${GH_ICON.view}</svg></button>
+    <button class="gh-mini-btn" title="Download" onclick="downloadHistItem(${i})"><svg viewBox="0 0 24 24">${GH_ICON.download}</svg></button>
+    ${extra}
+    <button class="gh-mini-btn danger" title="Delete this render" onclick="deleteHistoryItem(${i})"><svg viewBox="0 0 24 24">${GH_ICON.trash}</svg></button>`;
+
+  const sortedGroups=[...groups.values()].sort((a,b)=>b.order-a.order);
+  // v1.7.4 — accordion default. Open the top (newest) style on first paint and
+  // self-heal if the chosen style was deleted. '\u0000__NONE__' is the explicit
+  // "user collapsed everything" sentinel and is left untouched so a deliberately
+  // closed panel stays closed.
+  const styleSet=new Set(sortedGroups.map(g=>g.style));
+  if(sortedGroups.length && S.histOpenStyle!=='\u0000__NONE__' && !styleSet.has(S.histOpenStyle)){
+    S.histOpenStyle=sortedGroups[0].style;
+  }
+  let html='';
+  for(const g of sortedGroups){
+    const open = (S.histOpenStyle===g.style);
+    const colors=[...g.colors.values()].sort((a,b)=>b.order-a.order);
+    const renderCount=colors.reduce((n,c)=>{let t=0;c.angles.forEach(arr=>t+=arr.length);return n+t;},0);
+    const encSK=encodeURIComponent(g.style);
+    html+=`<div class="gh-group">
+      <button class="gh-group-head" onclick="toggleHistGroup('${encSK}')">
+        <span class="gh-chev" style="transform:rotate(${open?90:0}deg)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="gh-folder"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span>
+        <span class="gh-style">${g.style}</span>
+        <span class="gh-swatches">${g.swatches.slice(0,5).map(s=>`<span class="gh-sw" style="background:${s}"></span>`).join('')}</span>
+        <span class="gh-count">${colors.length} color${colors.length>1?'s':''} · ${renderCount} render${renderCount>1?'s':''}</span>
+      </button>`;
+    if(open){
+      html+=`<div class="gh-group-body">`;
+      for(const c of colors){
+        html+=`<div class="gh-color">
+          <div class="gh-color-head">
+            ${c.swatch?`<span class="gh-sw" style="background:${c.swatch}"></span>`:''}
+            <span class="gh-color-name">${c.color}</span>
+            <span class="gh-color-meta">latest v${c.order}</span>
           </div>
-        </div>
-        <div class="hist-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </button>
-      <div class="hist-actions">
-        <button class="hist-action-btn" title="Use as Base" onclick="useAsBaseHistory(${i})">
-          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        </button>
-        <button class="hist-action-btn" title="Use this color for collection (match across styles)" onclick="useCollectionColor(${i})">
-          <svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.52-4.48-10-10-10z"/></svg>
-        </button>
-        <button class="hist-action-btn" title="Download" onclick="downloadHistItem(${i})">
-          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-        </button>
-        <button class="hist-action-btn delete" title="Delete this render" onclick="deleteHistoryItem(${i})">
-          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-        </button>
-      </div>
-    </div>`).join('');
+          <div class="gh-angle-grid">`;
+        const views=[...c.angles.keys()].sort((a,b)=>(GH_VIEW_ORDER[a]??9)-(GH_VIEW_ORDER[b]??9)||a.localeCompare(b));
+        for(const vw of views){
+          const arr=c.angles.get(vw).slice().sort((a,b)=>(b.item.version||0)-(a.item.version||0));
+          const ckey=ghCellKey(g.style,c.color,vw);
+          const pinned=S.anglePick[ckey];
+          let cur=arr.find(x=>x.item.version===pinned) || arr[0];
+          const olders=arr.filter(x=>x!==cur);
+          const ci=cur.i, citem=cur.item;
+          const selected=S.selectedIndices.includes(ci);
+          const loaded=S.modImg===citem.image;
+          const expanded=!!S.histExpandCells[ckey];
+          html+=`<div class="gh-cell ${selected?'sel':''}" ${loaded?'style="border-color:var(--ink)"':''}>
+            <div class="gh-thumb-wrap ${isSheet(citem)?'sheet':''}" onclick="loadHistoryItem(${ci})" title="View this render">
+              <img src="${citem.image}" alt=""/>
+              <span class="gh-vbadge">V${citem.version}</span>
+              ${citem.guess?'<span class="gh-guess">Guess</span>':''}
+              ${citem.formSuspect?'<span class="gh-warn" title="Automatic check flagged a possible residual form — verify this render">Check</span>':''}
+              <button class="gh-pick ${selected?'checked':''}" title="Select for comparison" onclick="event.stopPropagation();toggleSelect(${ci})">
+                <svg viewBox="0 0 24 24">${selected?'<polyline points="20 6 9 17 4 12"/>':'<rect x="3" y="3" width="18" height="18" rx="2"/>'}</svg>
+              </button>
+            </div>
+            <div class="gh-foot">
+              <span class="gh-view">${vw}</span>
+              <span class="gh-count" style="margin-left:0">v${citem.version}</span>
+              <span class="gh-mini">
+                <button class="gh-mini-btn redo" title="Re-roll this angle (faithful resample of the original job)" onclick="rerollRender(${ci})" ${S.isProcessing?'disabled':''}>
+                  <svg viewBox="0 0 24 24">${GH_ICON.redo}</svg>
+                </button>
+                <button class="gh-mini-btn" title="Use as Base" onclick="useAsBaseHistory(${ci})"><svg viewBox="0 0 24 24">${GH_ICON.base}</svg></button>
+                <button class="gh-mini-btn" title="Use this color across the collection" onclick="useCollectionColor(${ci})"><svg viewBox="0 0 24 24">${GH_ICON.drop}</svg></button>
+                <button class="gh-mini-btn" title="Download" onclick="downloadHistItem(${ci})"><svg viewBox="0 0 24 24">${GH_ICON.download}</svg></button>
+                <button class="gh-mini-btn danger" title="Delete this render" onclick="deleteHistoryItem(${ci})"><svg viewBox="0 0 24 24">${GH_ICON.trash}</svg></button>
+              </span>
+            </div>`;
+          if(olders.length){
+            html+=`<button class="gh-hist-toggle" onclick="toggleHistCell('${encodeURIComponent(ckey)}')">
+              <svg viewBox="0 0 24 24"><polyline points="${expanded?'6 9 12 15 18 9':'9 18 15 12 9 6'}"/></svg>
+              History (${olders.length})
+            </button>`;
+            if(expanded){
+              html+=`<div class="gh-hist-list">`;
+              for(const o of olders){
+                html+=`<div class="gh-hrow">
+                  <img src="${o.item.image}" alt="" onclick="loadHistoryItem(${o.i})" title="View"/>
+                  <span class="gh-hver">v${o.item.version}</span>
+                  <span class="gh-hmeta">superseded</span>
+                  <span class="gh-mini">
+                    <button class="gh-make-current" title="Make this the current ${vw}" onclick="makeAngleCurrent(${o.i})"><svg viewBox="0 0 24 24">${GH_ICON.promote}</svg>Make current</button>
+                    <button class="gh-mini-btn" title="Download" onclick="downloadHistItem(${o.i})"><svg viewBox="0 0 24 24">${GH_ICON.download}</svg></button>
+                    <button class="gh-mini-btn danger" title="Delete this render" onclick="deleteHistoryItem(${o.i})"><svg viewBox="0 0 24 24">${GH_ICON.trash}</svg></button>
+                  </span>
+                </div>`;
+              }
+              html+=`</div>`;
+            }
+          }
+          html+=`</div>`;
+        }
+        html+=`</div></div>`;
+      }
+      html+=`</div>`;
+    }
+    html+=`</div>`;
+  }
+  list.innerHTML=html;
 }
 
 function toggleSelect(i){
@@ -3977,28 +5113,22 @@ async function downloadCurrent(){
 
 // Core export pipeline — Rule 1: enforces 1200×1600 / 3:4 with proportional fit-to-page
 // Rule 3: runs bg removal pass for render-mode outputs
-async function exportImage(b64,filename,isRender){
-  const img=new Image();
-  await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=b64;});
-
-  // Primary removeBg runs at generation time; export just paints the result.
-  // The v5.3 safety pass was removed in v5.4 — it ate white garment regions
-  // (e.g. white stripes in a navy-and-white polo) because flood-fill cannot
-  // distinguish "background that happens to be white" from "garment that
-  // happens to be white" once they touch the silhouette. The primary removeBg
-  // now uses safe-zone protection from anchor pixels to handle this correctly.
-  let source=b64;
-
-  // Reload processed source
+// v1.7.7 — the 1200×1600 canvas normalization is extracted into normalizeTo34()
+// and now ALSO runs at generation time in runGenerate (before storage), so the
+// on-screen image, thumbnails, history entries, re-roll sources, comparisons,
+// and exports all share identical metrics. exportImage still normalizes as an
+// idempotent safety net — it's a no-op for new renders but still corrects
+// legacy history entries loaded from pre-v1.7.7 sessions.
+async function normalizeTo34(b64){
   const srcImg=new Image();
-  await new Promise((res,rej)=>{srcImg.onload=res;srcImg.onerror=rej;srcImg.src=source;});
-
-  // Step 2: Paint to exact 1200×1600 canvas — proportional fit-to-page, center-biased
+  await new Promise((res,rej)=>{srcImg.onload=res;srcImg.onerror=rej;srcImg.src=b64;});
+  // Idempotence fast-path: already exactly 1200×1600 → return unchanged so
+  // byte-identity grouping (ghColorIdentity) and re-encode churn are avoided.
+  if(srcImg.width===1200 && srcImg.height===1600) return b64;
   const canvas=document.createElement('canvas');
   canvas.width=1200;canvas.height=1600;
   const ctx=canvas.getContext('2d');
   ctx.clearRect(0,0,1200,1600);
-
   // Proportional scale: fit entire garment within bounds without clipping
   const scale=Math.min(1200/srcImg.width,1600/srcImg.height);
   const drawW=srcImg.width*scale;
@@ -4007,8 +5137,17 @@ async function exportImage(b64,filename,isRender){
   const offsetX=(1200-drawW)/2;
   const offsetY=(1600-drawH)/2;
   ctx.drawImage(srcImg,offsetX,offsetY,drawW,drawH);
+  return canvas.toDataURL('image/png');
+}
 
-  const out=canvas.toDataURL('image/png');
+async function exportImage(b64,filename,isRender){
+  // Primary removeBg runs at generation time; export just paints the result.
+  // The v5.3 safety pass was removed in v5.4 — it ate white garment regions
+  // (e.g. white stripes in a navy-and-white polo) because flood-fill cannot
+  // distinguish "background that happens to be white" from "garment that
+  // happens to be white" once they touch the silhouette. The primary removeBg
+  // now uses safe-zone protection from anchor pixels to handle this correctly.
+  const out=await normalizeTo34(b64);
   dlImage(out,filename);
 }
 
