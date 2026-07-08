@@ -679,7 +679,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
                 </div>
               </div>
               <img class="base" id="sliderOrigImg" src="" alt=""/>
-              <div class="slider-clip" id="sliderClip" style="clip-path:inset(0 50% 0 0)">
+              <div class="slider-clip" id="sliderClip" style="clip-path:inset(0 0 0 50%)">
                 <img id="sliderModImg" src="" alt=""/>
               </div>
               <div class="slider-line" id="sliderLine" style="left:50%"></div>
@@ -1749,7 +1749,7 @@ function getDynamicColorDescriptor(hex){
 //   .gh-color-name display text-transform:uppercase, so differently-cased
 //   labels rendered identically but grouped separately. Retroactive merge
 //   at next paint; no data migration; 'Original' sentinel untouched.
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.0.1';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -4631,7 +4631,7 @@ function setupSlider(){
     const pct=Math.max(0,Math.min(100,((x-rect.left)/rect.width)*100));
     document.getElementById('sliderLine').style.left=pct+'%';
     document.getElementById('sliderHandle').style.left=pct+'%';
-    document.getElementById('sliderClip').style.clipPath=`inset(0 ${100-pct}% 0 0)`;
+    document.getElementById('sliderClip').style.clipPath=`inset(0 0 0 ${pct}%)`;
   };
   wrap.addEventListener('mousedown',e=>{dragging=true;move(e);});
   wrap.addEventListener('touchstart',e=>{dragging=true;move(e);},{passive:true});
