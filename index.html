@@ -1687,7 +1687,7 @@ function getDynamicColorDescriptor(hex){
 //   .gh-color-name display text-transform:uppercase, so differently-cased
 //   labels rendered identically but grouped separately. Retroactive merge
 //   at next paint; no data migration; 'Original' sentinel untouched.
-const APP_VERSION = '2.0.2';
+const APP_VERSION = '2.0.5';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -1963,10 +1963,26 @@ async function init(){
   // appScreen becomes visible.
 }
 
+// v2.0.5 — new source image upload replaces Style Name with just the STYLE
+// NUMBER parsed from the filename: basename minus extension, then the first
+// token before " - ", "_", or a space. "76MS395S - PINK CHIP.png" → 76MS395S.
+// Applies only to source-garment uploads (upload/header/drop), not reference
+// images, and skips camera captures (generic names like image.jpg).
+function setStyleNameFromFile(file){
+  if(!file || !file.name) return;
+  const base = file.name.replace(/\.[^.]+$/, '').trim();
+  const style = base.split(/\s*[-_\s]\s*/)[0].trim();
+  if(!style) return;
+  const el = document.getElementById('styleNameInput');
+  if(el) el.value = style;
+}
+
 // Global file select handler — called inline from onchange attributes
 function handleFileSelect(input, type){
   const file = input.files[0];
   if(!file) return;
+  const isCamera = input.id === 'cameraInput' || input.id === 'headerCameraInput';
+  if((type === 'upload' || type === 'header') && !isCamera) setStyleNameFromFile(file);
   const reader = new FileReader();
   reader.onload = function(e){
     if(type === 'upload') handleImageUpload(e.target.result);
@@ -2004,6 +2020,7 @@ function setupFileInputs(){
       e.preventDefault(); uz.classList.remove('drag');
       const file = e.dataTransfer.files[0];
       if(!file) return;
+      setStyleNameFromFile(file); // v2.0.5 — dropped source file names the style
       const reader = new FileReader();
       reader.onload = function(ev){ handleImageUpload(ev.target.result); };
       reader.readAsDataURL(file);
@@ -3349,7 +3366,7 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
       promptSent: finalPrompt||prompt,
       claudeUsed: (S.anthropicKey && finalPrompt !== prompt) ? 'Yes' : 'No',
       referenceAttached: S.referenceImage ? 'Yes' : 'No',
-      filename: buildFilename({label, metadata:md, version: newV}),
+      filename: buildFilename({label, metadata:md, version: newV}, true),
       notes: '',  // reserved for future manual note-adding
     };
     S.decisionLog.unshift(logEntry);
@@ -4423,11 +4440,15 @@ function buildLabel(item){
 
 // Rule 2: [Style Name] - [Color Name] - [Color Code] - [Fabric Content].png
 // Always reads live field values. Falls back to stored metadata for batch exports.
-function buildFilename(item){
-  // Live field values — most accurate, always up to date
-  const liveColorName = (document.getElementById('colorNameInput')?.value||'').trim();
-  const liveColorCode = (document.getElementById('colorCodeInput')?.value||'').trim();
-  const liveFabricContent = (document.getElementById('fabricContentInput')?.value||'').trim();
+function buildFilename(item, preferLive = false){
+  // v2.0.3 — live field values are only authoritative for the CURRENT render
+  // (downloadCurrent / generation time). History downloads must use the item's
+  // stored metadata, otherwise old renders get stamped with whatever is typed
+  // in the fields right now.
+  const live = id => preferLive ? (document.getElementById(id)?.value||'').trim() : '';
+  const liveColorName = live('colorNameInput');
+  const liveColorCode = live('colorCodeInput');
+  const liveFabricContent = live('fabricContentInput');
 
   // Style name: from item label (set at generation time)
   const style = (item.label || '').trim();
@@ -5000,7 +5021,7 @@ function downloadMultiComparison(){
 async function downloadCurrent(){
   if(!S.modImg)return;
   const isRender=S.currentMetadata?.renderMode!=='Sales Sheet Render';
-  const filename=buildFilename({label:S.currentLabel,metadata:S.currentMetadata,version:S.currentVersion});
+  const filename=buildFilename({label:S.currentLabel,metadata:S.currentMetadata,version:S.currentVersion}, true);
   await exportImage(S.modImg,filename,isRender);
 }
 
@@ -5054,7 +5075,7 @@ function downloadCurrentComparison(){
     ctx.fillStyle='#141414';ctx.font='bold 16px monospace';ctx.textAlign='center';
     ctx.fillText('ORIGINAL',p+i1.width/2,p+lh/2+5);ctx.fillText('MODIFIED',p*2+i1.width+i2.width/2,p+lh/2+5);
     ctx.drawImage(i1,p,p+lh);ctx.drawImage(i2,p*2+i1.width,p+lh);
-    dlImage(c.toDataURL('image/png'),`comparison-${buildFilename({label:S.currentLabel,metadata:S.currentMetadata})}`);
+    dlImage(c.toDataURL('image/png'),`comparison-${buildFilename({label:S.currentLabel,metadata:S.currentMetadata}, true)}`);
   };
   i1.onload=done;i2.onload=done;i1.src=S.origImg;i2.src=S.modImg;
 }
