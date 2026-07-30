@@ -1687,7 +1687,7 @@ function getDynamicColorDescriptor(hex){
 //   .gh-color-name display text-transform:uppercase, so differently-cased
 //   labels rendered identically but grouped separately. Retroactive merge
 //   at next paint; no data migration; 'Original' sentinel untouched.
-const APP_VERSION = '2.0.5';
+const APP_VERSION = '2.0.6';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -3228,7 +3228,11 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
       // v1.7.0 faithful re-roll — reuse the exact prompt that produced the
       // original render so this is a pure Gemini resample, not a rebuild.
       finalPrompt=replay.finalPrompt;
-    } else if(S.anthropicKey && !prompt.includes('strictly render') && !prompt.includes('Sales Sheet')){
+    } else if(S.anthropicKey && mode!=='sketch' && !prompt.includes('strictly render') && !prompt.includes('Sales Sheet')){
+      // v2.0.6 — Sketch mode bypasses the Claude precision builder: its
+      // system prompt is hard-wired for photorealistic color renders
+      // (studio lighting, fold shadows), which directly contradicts the
+      // monochrome flat-sketch requirement and was overriding Sketch mode.
       try{
         document.getElementById('procStep').textContent=batchPfx+'Building precision color prompt with Claude...';
         finalPrompt=await buildClaudePrompt(prompt,metadata,mode);
@@ -3244,6 +3248,12 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
     // Adjust Fit, Wash). Pure prompt-only Edit still skips removal to preserve model context.
     const MODIFYING_PRESETS=['Change Color','Change Design','Adjust Fit','Wash'];
     const editWithModify = mode==='edit' && S.activePresets.some(p=>MODIFYING_PRESETS.includes(p));
+    // v2.0.6 — Sketch runs bg removal like all renders (transparent output),
+    // but via the sketchSafe path: core flood fill + safe-zone BFS only.
+    // Post-passes 6b/6d (pale-achromatic suppression — would eat the flat's
+    // interior white fill through thin outlines) and 6c (island removal —
+    // would delete detached line marks like button circles and dashed
+    // topstitching) are skipped inside removeBg.
     const shouldRemoveBg = mode!=='sales_sheet' && (mode!=='edit' || editWithModify);
     if(shouldRemoveBg){
       document.getElementById('procStep').textContent=batchPfx+"Removing Background & Creating Transparency...";
@@ -3259,7 +3269,7 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
       if(!silhouetteWillChange){
         try{priorAlpha=await extractAlphaMask(viewSrc);}catch(e){priorAlpha=null;}
       }
-      try{processed=await removeBg(result, priorAlpha);}catch(e){console.warn('BG removal failed',e);}
+      try{processed=await removeBg(result, priorAlpha, {sketchSafe: mode==='sketch'});}catch(e){console.warn('BG removal failed',e);}
       // v1.8.0 — Residual-form gate: Side/Back renders only. If a form-like
       // stalk survives above the garment's shoulder line, do ONE automatic
       // faithful re-roll of the same job. If the retry is also suspect, keep
@@ -3678,6 +3688,43 @@ async function callGemini(prompt,mode,attempt=0,viewCtx=null){
     5. LIGHT & COLOUR: bright, diffuse, high-key commercial studio lighting; soft natural folds only; fabric colours match the input exactly — never lightened, greyed, or shifted.
 
     FINAL CHECK — the most important rule of all: the finished image contains ONLY the hollow, floating garment on pure white. Above the collar, inside the neck opening, and everywhere around the garment there is nothing but empty white background — no body, no bust, no form, no stand, no neck, no head, no shoulders of any kind. If any such object would appear anywhere in the image, remove it and render the garment alone.`});
+  } else if(isSketch){
+    // ────────────────────────────────────────────────────────────────
+    // v2.0.6 — LEAN SKETCH PROMPT (dedicated, replaces the shared render
+    // mega-prompt for Sketch mode). Root cause of the "sketch comes back
+    // as a color render" failure: Sketch previously rode the full render
+    // prompt where the one-line sketch styleRule (Rule 6) was drowned by
+    // ~1.5k words of photorealistic vocabulary (ghost-mannequin 3D volume,
+    // high-key studio lighting, "paint the fabric") — the exact rule-mass /
+    // priming failure class fixed for extra views in v1.8.0. Same cure:
+    // a short purpose-written prompt with positive+negative rule pairing
+    // ("every pixel is black or white" + "NO color / NO photorealism"),
+    // flat presentation (no 3D volume language at all), and the monochrome
+    // constraint restated in FINAL position (recency).
+    // The target field is neutralized here — a flat sketch is always a
+    // whole-garment conversion, so a partial target like "buttons" must
+    // never scope the request (normalization at the rendering layer).
+    // ────────────────────────────────────────────────────────────────
+    let req = (prompt||'').trim();
+    if(!req || /^Modify the /i.test(req) || req.startsWith('Perform a professional 3D')){
+      req = 'Convert the full garment into a technical flat sketch.';
+    }
+    req = req.replace(/photorealistic/gi,'line-drawn').replace(/ghost[\s-]*mannequin/gi,'flat sketch').replace(/mannequin/gi,'flat form');
+    parts.push({text:`TECHNICAL FLAT SKETCH CONVERSION — CAD LINE DRAWING.
+    REQUEST: "${req}"
+
+    INPUT: The input image shows a garment (photograph or 3D render). Convert the ENTIRE garment into a professional technical flat sketch — the black-and-white CAD-style line drawing used in fashion tech packs.
+
+    OUTPUT — exactly this and nothing else: a black-and-white line drawing of the whole garment, front-facing, bilaterally symmetrical, centered on a solid pure white #FFFFFF page.
+
+    RULES (every one is mandatory):
+    1. MONOCHROME ONLY — POSITIVE RULE: every pixel in the finished image is either a PURE BLACK (#000000) line or PURE WHITE (#FFFFFF) background/fill. Exactly two values exist in the image.
+    2. FORBIDDEN: NO color of any kind, NO photorealism, NO fabric or knit texture rendering, NO gray shading, NO gradients, NO fills, NO soft shadows, NO 3D lighting. The input garment's colors are DISCARDED entirely — stripes, prints, and pattern elements are redrawn as clean black OUTLINE linework only, never as filled, tinted, or shaded areas.
+    3. LINE CONVENTIONS: clean uniform-weight outlines for the silhouette; thinner solid lines for interior seams and panel lines; dashed lines for topstitching. Draw every construction detail present in the input — collar/neckband, placket with the SAME button count as the input, pockets, cuffs, hems — and indicate ribbing with short parallel lines. Do not invent details that are not in the input.
+    4. FLAT PRESENTATION: the garment is drawn FLAT, as if laid perfectly flat on a table — NO body, NO form, NO 3D volume, NO drape, NO folds, NO perspective. Straight direct front view.
+    5. COMPOSITION: strict 3:4 portrait, garment centered with a comfortable 15% margin on all sides; the background is uninterrupted solid #FFFFFF with zero marks, zero text, zero labels, zero callouts, zero color swatches.
+
+    FINAL CHECK — the most important rule of all: the finished image is pure black line art on a pure white page. If ANY colored, gray-shaded, textured, or photographic pixel would appear anywhere in the image, remove it and draw that area as black-and-white line work instead.`});
   } else {
   parts.push({text:`AI FASHION EDITOR: ${focusText} 
     REQUEST: "${prompt}". 
@@ -3866,7 +3913,15 @@ async function extractAlphaMask(b64){
   });
 }
 
-async function removeBg(b64, priorAlpha=null){
+async function removeBg(b64, priorAlpha=null, opts={}){
+  // v2.0.6 — opts.sketchSafe: Sketch-mode variant. The core edge-seeded
+  // flood fill + safe-zone BFS runs unchanged (the closed black outline
+  // stops the fill, so the flat's interior white fill is preserved as
+  // opaque), but post-passes 6b and 6c are skipped:
+  //   6b would fade legit interior white sitting within 3px of the
+  //      transparent page through a thin (1–2px) outline stroke;
+  //   6c largest-component keep would delete legitimately detached line
+  //      marks (button circles, dashed topstitching, size-label boxes).
   // Safe-zone-aware background removal.
   // v5.4: anchor + safe-zone BFS to protect interior near-bg regions.
   // v5.20 adds two post-passes after the core alpha is computed:
@@ -4070,6 +4125,8 @@ async function removeBg(b64, priorAlpha=null){
       }
 
       // ── v5.20 Step 6b: Edge-band chroma suppression ─────────────────
+      // v2.0.6 — skipped in sketchSafe mode (see removeBg header).
+      if(!opts.sketchSafe){
       // Halos surviving the BFS classifier are colorless by construction
       // (anti-aliased non-garment-color, not garment color). Walk the band
       // of opaque pixels within 3px of a transparent region; fade any that
@@ -4293,6 +4350,8 @@ async function removeBg(b64, priorAlpha=null){
           } // end if(!smoothGarment)
         }
       }
+      } // end if(!opts.sketchSafe) — gates 6b + 6d (both target pale
+        // achromatic regions, which IS a flat sketch's interior fill)
 
       // ── v1.6.3 Step 6c: Detached-island removal (connected-component) ──
       // A ghost-mannequin render is, by definition, a SINGLE connected
@@ -4306,7 +4365,10 @@ async function removeBg(b64, priorAlpha=null){
       // components (8-connectivity), keep the largest plus any that are a
       // meaningful fraction of it, and zero everything else — which also
       // sweeps the sub-OP haze fringing a removed island.
-      {
+      // v2.0.6 — skipped in sketchSafe mode: a flat sketch legitimately
+      // contains detached opaque marks (button circles, dashed topstitch
+      // segments, size-label boxes) that must survive.
+      if(!opts.sketchSafe){
         const ISLAND_KEEP_FRAC = 0.03;  // keep secondary parts >=3% of main blob
         const OP = 0.02;                // opaque cutoff for connectivity (~5/255);
                                         // low enough to keep the garment's feather
