@@ -373,6 +373,14 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
 .angle-note strong{color:var(--ink);font-weight:700}
 .angle-options{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--ink)}
 .mannequin-opt.shake{animation:shake 0.4s both}
+/* v2.0.9 — Frame Lock selector. Dedicated class (NOT .mannequin-opt):
+   setMannequin / resetPreviewState / resetSession clear .mannequin-opt
+   actives unscoped, which would strip a shared-class button's state. */
+.frame-opt{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 6px;gap:5px;cursor:pointer;transition:all 0.2s;border-right:1px solid var(--ink);background:transparent;font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.55}
+.frame-opt:last-child{border-right:none}
+.frame-opt:hover{opacity:1;background:rgba(20,20,20,0.04)}
+.frame-opt.active{background:var(--ink);color:#fff;opacity:1}
+.frame-opt svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5}
 .angle-guess-warn{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.07em;line-height:1.5;color:#b45309;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);padding:6px 8px;margin:8px 0 0}
 
 /* CUSTOM PANTONE LIBRARY */
@@ -730,6 +738,27 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
                 </button>
               </div>
               <p class="mannequin-required-warn" id="mannequinWarn">Please select a mannequin type before rendering</p>
+            </div>
+
+            <!-- v2.0.9 — Frame Lock: deterministic garment size/position
+                 uniformity inside the 1200×1600 canvas. Front renders only. -->
+            <div class="mannequin-selector" id="frameLockSelector">
+              <div class="mannequin-label">Frame Lock</div>
+              <div class="mannequin-options">
+                <button type="button" class="frame-opt active" data-frame="top" onclick="setGarmentClass('top',this)">
+                  <svg viewBox="0 0 24 24"><path d="M8 4l-4 3 2 4 2-1v10h8V10l2 1 2-4-4-3-2 2h-4L8 4z"/></svg>
+                  Top
+                </button>
+                <button type="button" class="frame-opt" data-frame="bottom" onclick="setGarmentClass('bottom',this)">
+                  <svg viewBox="0 0 24 24"><path d="M7 4h10l1 16h-5l-1-9-1 9H6L7 4zM7 8h10"/></svg>
+                  Bottom
+                </button>
+                <button type="button" class="frame-opt" data-frame="off" onclick="setGarmentClass('off',this)">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M6.5 6.5l11 11"/></svg>
+                  Off
+                </button>
+              </div>
+              <p class="angle-note">Locks garment scale &amp; position in the delivered file so all Tops (shoulder width) or all Bottoms (waistband) frame identically. Front renders only.</p>
             </div>
 
             <!-- v1.6.13 — Render Angles (Render mode only). Front toggle, on by default. -->
@@ -1687,7 +1716,62 @@ function getDynamicColorDescriptor(hex){
 //   .gh-color-name display text-transform:uppercase, so differently-cased
 //   labels rendered identically but grouped separately. Retroactive merge
 //   at next paint; no data migration; 'Original' sentinel untouched.
-const APP_VERSION = '2.0.6';
+// ================================================================
+// V2.0.7 (2026-08-06) — 6d halo peel no longer disabled by white-knit garments.
+//   • Root cause (57MS328SF yellow/white stripe): whiteRatio counts TEXTURED
+//     pale-neutral pixels, so white KNIT stripes pushed it ≥0.35 and silently
+//     skipped BOTH 6b and 6d — pale bg clouds survived around the silhouette.
+//   • whiteRatio now gates 6b ONLY (its band fade has no texture check and
+//     would eat a white garment's edges — that guard stays). 6d runs on every
+//     render; its own guards protect the garment: SMOOTH_VAR halts at knit
+//     texture, the v1.7.2 smooth-garment interior-variance guard skips smooth
+//     pale garments, and the 60% runaway abort remains the backstop.
+//   • whiteRatio is now ALWAYS logged ([removeBg] whiteRatio=…) — the old
+//     skip was silent, which is why this took a live report to find.
+// ================================================================
+// V2.0.8 (2026-08-06) — "Scrub BG": manual aggressive background pass. (BETA)
+//   • New eraser button on each Session History cell (next to Re-roll).
+//     Client-side only — no API call, no cost, instant.
+//   • Re-runs removeBg on the stored PNG with {aggressive:true}: bypasses
+//     the two WHOLE-PASS protection skips (6b whiteRatio white-garment
+//     carve-out, 6d smooth-garment interior-variance guard). All per-pixel
+//     gates (chroma / variance / smoothness / luma floor) and the 60%
+//     runaway abort stay live — they are the halt-at-garment mechanism.
+//   • Manual invocation is what makes aggressive safe: the user is looking
+//     at the result, and it lands NON-DESTRUCTIVELY as a new version in the
+//     same (style,color,angle) cell. Original stays in cell history;
+//     "Make current" reverts. Replay fields copied from the parent so
+//     re-rolling a scrubbed entry replays the parent's generation job.
+//   • Every scrub gets its own version bump + decision-log row
+//     (mode: "BG Scrub (client-side)").
+//
+// V2.0.9 — GARMENT FRAME LOCK (deterministic in-canvas uniformity)
+//   Problem: delivered files are always 1200×1600, but the garment's SIZE
+//   and POSITION inside that canvas varied per render because Gemini picks
+//   its own camera distance each call. normalizeTo34 only letterboxed —
+//   it never rescaled the garment itself.
+//   Fix: new deterministic frameLockGarment() step (post removeBg + color
+//   lock, pre-store). Measures the garment from its alpha mask and
+//   rescales/repositions it onto a fresh 1200×1600 canvas to fixed anchors:
+//   • TOPS   — shoulder line at y=240, shoulder width (widest span in the
+//              top 15% of the garment) normalized to 660px.
+//   • BOTTOMS — waistband at y=240, waistband width (widest span in the
+//              top 6%) normalized to 480px.
+//   Guards: 1.5× max upscale (clamped + flagged, never blurred beyond),
+//   height/width fit guards so long garments (maxi cardigans, full-length
+//   pants) shrink to fit rather than clip. Scale factor logged to the
+//   decision log ("Frame Lock" column in CSV export).
+//   Scope v1: FRONT renders (and edits w/ modifying presets) only. Side/
+//   Back excluded — a side profile's narrow span would blow up under a
+//   width anchor; they keep plain normalizeTo34. Sketch excluded (flats
+//   keep their own framing). Sales sheet excluded (page-ratio).
+//   UI: "Frame Lock" selector (Top / Bottom / Off) under Mannequin Type,
+//   default Top, sticky across uploads, persisted in session. Buttons use
+//   dedicated .frame-opt class — .mannequin-opt has unscoped active-clears
+//   in 4 call sites that would strip a shared-class button's state.
+//   If the render has no alpha mask (bg removal skipped/failed), frame
+//   lock is skipped and normalizeTo34 runs as before — never destructive.
+const APP_VERSION = '2.0.9';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -1696,6 +1780,9 @@ const S={
   activeMode:'render',
   activePresets:[],
   mannequinType:'',  // 'male' | 'female' | 'unisex'
+  garmentClass:'top', // v2.0.9 — Frame Lock class: 'top' | 'bottom' | 'off'.
+                      // Sticky across uploads (batch flows render many tops
+                      // in a row); only Reset Session returns it to 'top'.
   selectedFit:'',     // e.g. 'Slim Fit', 'Oversize' etc
   // v1.6.13 — Render angles. Front is selected by default and renders from
   // origImg / Front Reference. side/back are opt-in extras, each with its own
@@ -1814,6 +1901,7 @@ function persistSession(){
       currentMetadata: S.currentMetadata,
       decisionLog: S.decisionLog,
       mannequinType: S.mannequinType,
+      garmentClass: S.garmentClass,
       selectedFit: S.selectedFit,
       renderViews: S.renderViews,
       sideImg: S.sideImg,
@@ -1847,6 +1935,7 @@ async function restoreSession(){
   S.currentMetadata = data.currentMetadata || {};
   S.decisionLog = Array.isArray(data.decisionLog) ? data.decisionLog : [];
   S.mannequinType = data.mannequinType || '';
+  S.garmentClass = data.garmentClass || 'top';  // v2.0.9
   S.selectedFit = data.selectedFit || '';
   S.renderViews = (data.renderViews && typeof data.renderViews==='object')
     ? {front:(data.renderViews.front===undefined ? true : !!data.renderViews.front), side:!!data.renderViews.side, back:!!data.renderViews.back}
@@ -1888,6 +1977,8 @@ async function restoreSession(){
       if(b.dataset.mannequin === S.mannequinType) b.classList.add('active');
     });
   }
+  // v2.0.9 — restore Frame Lock selection
+  try{ syncFrameLockUI(); }catch(e){ console.error(e); }
   // v1.6.4 — rebuild the extra-angle selector + reference slots from state
   try{ syncRenderAngleUI(); }catch(e){ console.error(e); }
 
@@ -2140,6 +2231,8 @@ function resetApp(){
   if(!ok) return;
   S.origImg=null;S.modImg=null;S.history=[];S.selectedIndices=[];
   S.decisionLog=[];S.appInitialized=false;S.mannequinType='';S.selectedFit='';
+  S.garmentClass='top';  // v2.0.9 — Frame Lock back to default
+  try{ syncFrameLockUI(); }catch(e){}
   S.versionCounter=0;S.currentVersion=null;S.currentLabel='';S.currentMetadata={};
   S.activePresets=[];
   S.renderViews={front:true,side:false,back:false};S.sideImg=null;S.backImg=null;
@@ -2159,6 +2252,19 @@ function resetApp(){
 // ================================================================
 // MODE
 // ================================================================
+// v2.0.9 — Frame Lock class selection
+function setGarmentClass(type, btn){
+  S.garmentClass = type;
+  document.querySelectorAll('.frame-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  persistSession();
+}
+function syncFrameLockUI(){
+  document.querySelectorAll('.frame-opt').forEach(b => {
+    b.classList.toggle('active', b.dataset.frame === (S.garmentClass||'top'));
+  });
+}
+
 function setMannequin(type, btn){
   S.mannequinType = type;
   document.querySelectorAll('.mannequin-opt').forEach(b => b.classList.remove('active'));
@@ -3224,6 +3330,7 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
     // If Anthropic key is set, use Claude to build a precision color prompt
     let finalPrompt=prompt;
     let formSuspect=false;  // v1.8.0 — set by the residual-form gate below
+    let frameLockInfo=null; // v2.0.9 — set by frameLockGarment when applied
     if(replay && typeof replay.finalPrompt==='string' && replay.finalPrompt){
       // v1.7.0 faithful re-roll — reuse the exact prompt that produced the
       // original render so this is a pure Gemini resample, not a rebuild.
@@ -3325,7 +3432,30 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
     // the style or Gemini's native output size. Gated off sales_sheet, which
     // is intentionally page-ratio (mirrors the imageConfig aspectRatio gate).
     if(mode!=='sales_sheet'){
-      try{processed=await normalizeTo34(processed);}catch(e){console.warn('3:4 normalization failed',e);}
+      // v2.0.9 — Frame Lock first: deterministic garment-scale uniformity.
+      // Scope: front renders / front-composition edits with a real alpha
+      // mask, and only while the user hasn't switched Frame Lock off.
+      // Sketch excluded (flats keep native framing). Side/Back excluded —
+      // a side profile's narrow span would blow up under a width anchor.
+      // Any skip or failure falls through to plain normalizeTo34 (v1.7.7
+      // behavior), so this step is never destructive.
+      let framed=false;
+      if(shouldRemoveBg && mode!=='sketch' && !isExtraView && S.garmentClass!=='off'){
+        try{
+          document.getElementById('procStep').textContent=batchPfx+"Locking garment frame...";
+          const fl=await frameLockGarment(processed, S.garmentClass||'top');
+          if(fl.applied){
+            processed=fl.img; framed=true; frameLockInfo=fl;
+            console.log('[frameLock] '+(S.garmentClass||'top')+' anchorWidth='+fl.anchorWidth+'px scale='+fl.scale+'×'+(fl.clamped?' (upscale clamped)':'')+(fl.fitLimited?' (fit-limited)':''));
+            if(fl.clamped) console.warn('[frameLock] render arrived small — upscale clamped at '+FRAME_LOCK.maxUpscale+'×; garment will sit under target width');
+          } else {
+            console.warn('[frameLock] skipped: '+fl.reason+' — falling back to normalizeTo34');
+          }
+        }catch(e){console.warn('[frameLock] failed',e);}
+      }
+      if(!framed){
+        try{processed=await normalizeTo34(processed);}catch(e){console.warn('3:4 normalization failed',e);}
+      }
     }
     const newV=S.versionCounter+1;S.versionCounter=newV;
     S.modImg=processed;S.currentVersion=newV;
@@ -3369,6 +3499,13 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
       eyedropped: renderAsIs ? 'No' : (S.wasEyedropped ? 'Yes' : 'No'),
       colorLockApplied: doLock ? 'Yes' : 'No',
       colorLockTarget: colorLockTarget || '',
+      // v2.0.9 — Frame Lock audit trail: class + applied scale, so drift in
+      // Gemini's raw framing stays visible across the log.
+      frameLock: frameLockInfo
+        ? (S.garmentClass||'top')+' '+frameLockInfo.scale+'\u00d7'
+          +(frameLockInfo.clamped?' (clamped)':'')
+          +(frameLockInfo.fitLimited?' (fit-limited)':'')
+        : (S.garmentClass==='off' ? 'Off' : 'Not applied'),
       collectionAnchor: renderAsIs ? '' : (S.collectionAnchorSource || ''),
       fabric: metadata.fabric || '',
       fabricContent: metadata.fabricContent || '',
@@ -3914,6 +4051,16 @@ async function extractAlphaMask(b64){
 }
 
 async function removeBg(b64, priorAlpha=null, opts={}){
+  // v2.0.8 — opts.aggressive: manual "Scrub BG" variant (user-invoked, never
+  // automatic). Bypasses the two WHOLE-PASS skips only:
+  //   • 6b runs even when whiteRatio ≥ 0.35 (white-garment carve-out off)
+  //   • 6d runs even when the smooth-garment interior-variance guard trips
+  // Every PER-PIXEL gate stays live (chroma protects coloured garment, the
+  // variance + smoothness gates halt the peel at knit texture / edge steps,
+  // luma floor protects mid/dark tones) and the 60% runaway abort remains.
+  // Safe because it is manual + non-destructive: the result lands as a NEW
+  // history version superseding the flawed roll; the original stays in cell
+  // history for Make-current revert.
   // v2.0.6 — opts.sketchSafe: Sketch-mode variant. The core edge-seeded
   // flood fill + safe-zone BFS runs unchanged (the closed black outline
   // stops the fill, so the flat's interior white fill is preserved as
@@ -4161,8 +4308,13 @@ async function removeBg(b64, priorAlpha=null, opts={}){
         }
       }
       const whiteRatio = opaqueCount>0 ? whiteCount/opaqueCount : 0;
+      // v2.0.7 — always log. The ≥0.35 skip used to silence 6b AND 6d with no
+      // trace; a striped white-knit garment (57MS328SF yellow/white) tripped it
+      // and pale bg clouds survived with nothing in the console to show why.
+      console.log('[removeBg] whiteRatio='+whiteRatio.toFixed(3)+
+        (whiteRatio>=0.35?(opts.aggressive?' (≥0.35 but aggressive ⇒ 6b forced)':' (≥0.35 ⇒ white garment; 6b edge-band skip)'):' ⇒ 6b active'));
 
-      if(whiteRatio < 0.35){
+      if(whiteRatio < 0.35 || opts.aggressive){
         // Build transparent mask
         const trans=new Uint8Array(W*H);
         for(let i=0;i<W*H;i++){ if(alpha[i]<0.1) trans[i]=1; }
@@ -4235,7 +4387,18 @@ async function removeBg(b64, priorAlpha=null, opts={}){
       //     bias: preserve the garment, leave the halo for a manual retry).
       // No-op on clean renders: garment-edge frontier pixels are high-variance
       // (garment vs removed bg) so nothing seeds.
-      if(whiteRatio < 0.35){
+      // v2.0.7 — whiteRatio gate REMOVED from 6d (it still gates 6b, whose
+      // near-white band fade has no texture check and genuinely would eat a
+      // white garment's edges). whiteRatio counts TEXTURED pale-neutral pixels
+      // (v1.6.10), so a white-KNIT-striped garment (57MS328SF) pushed it ≥0.35
+      // and silently disabled the halo peel — leaving the pale clouds the pass
+      // exists to remove. 6d does not need the carve-out: white knit is
+      // textured, so the SMOOTH_VAR gate halts the peel at the stripes; a
+      // smooth white garment is caught by the v1.7.2 smooth-garment guard
+      // (interior variance median), and the 60% runaway net remains the
+      // backstop. Verify against 78MT400 (smooth-jersey regression case)
+      // before promoting.
+      {
         let opCount6d=0;
         for(let i=0;i<W*H;i++){ if(alpha[i]>=0.5) opCount6d++; }
         if(opCount6d>0){
@@ -4314,11 +4477,15 @@ async function removeBg(b64, priorAlpha=null, opts={}){
             if(samples.length >= 200){
               samples.sort((a,b)=>a-b);
               const median=samples[samples.length>>1];
-              smoothGarment = median < SMOOTH_VAR;
+              // v2.0.8 — aggressive (manual Scrub BG) overrides this whole-pass
+              // skip; the per-pixel gates + runaway abort stay as protection.
+              smoothGarment = !opts.aggressive && median < SMOOTH_VAR;
               console.log('[removeBg 6d] interior variance median='+median.toFixed(1)+
                 (smoothGarment
                   ? ' (<'+SMOOTH_VAR+') ⇒ smooth garment; skipping 6d peel to protect it'
-                  : ' ⇒ textured; 6d active'));
+                  : (opts.aggressive && median < SMOOTH_VAR
+                      ? ' (<'+SMOOTH_VAR+' but aggressive ⇒ 6d forced)'
+                      : ' ⇒ textured; 6d active')));
             }
           }
           if(!smoothGarment){
@@ -4794,6 +4961,70 @@ async function rerollRender(i){
   }
 }
 
+// v2.0.8 — Scrub BG: manual, client-side aggressive background-removal pass
+// on an existing render. No API call, no cost, instant. Re-runs removeBg on
+// the stored PNG with {aggressive:true}: the two whole-pass protection skips
+// (6b whiteRatio white-garment carve-out, 6d smooth-garment guard) are
+// bypassed; every per-pixel gate and the 60% runaway abort stay live.
+// Non-destructive: the result is a NEW history version in the same
+// (style,color,angle) cell, superseding the flawed roll — the original stays
+// in cell history and "Make current" reverts. Replay fields (finalPrompt,
+// src, lockColor…) are copied from the parent so re-rolling a scrubbed entry
+// faithfully replays the PARENT's generation job, not a no-op.
+async function scrubBg(i){
+  if(S.isProcessing) return;
+  const e=S.history[i]; if(!e || !e.image) return;
+  setProcessing(true);
+  document.getElementById('procStep').textContent='Scrubbing background (aggressive pass, no API call)...';
+  try{
+    console.log('[scrubBg] v'+e.version+' '+viewOf(e)+' — aggressive removeBg pass');
+    const scrubbed=await removeBg(e.image, null, {aggressive:true});
+    const newV=S.versionCounter+1; S.versionCounter=newV;
+    const md=Object.assign({}, e.metadata||{}, {bgScrub:true, bgScrubOf:e.version});
+    const entry={
+      prompt:e.prompt, finalPrompt:e.finalPrompt, image:scrubbed,
+      label:e.label, metadata:md, version:newV,
+      mode:e.mode, colorLockTarget:e.colorLockTarget||null, lockColor:!!e.lockColor,
+      view:viewOf(e), guess:!!e.guess, src:e.src, formSuspect:e.formSuspect
+    };
+    S.history=[entry,...S.history].slice(0,MAX_HISTORY);
+    // Newest roll becomes the cell thumbnail (same mechanism as a re-roll:
+    // clear the pin, renderHistory falls through to highest version).
+    delete S.anglePick[ghCellKey(styleKeyOf(entry),ghColorIdentity(entry).ck,viewOf(entry))];
+    S.selectedIndices=[];
+    // Audit trail — a new version number must have a decision-log row.
+    S.decisionLog.unshift({
+      id:newV, timestamp:new Date().toISOString(), version:newV,
+      styleName:e.label||'', mode:'BG Scrub (client-side)',
+      renderAngle:viewOf(e).toUpperCase(),
+      angleGuess:e.guess?'Yes (rotated from front)':'No',
+      mannequinType:S.mannequinType||'\u2014',
+      targetPart:e.metadata?.target||'\u2014',
+      colorName:e.metadata?.colorName||'', colorCode:e.metadata?.colorCode||'',
+      pantoneCode:'', hexColor:'', colorCompensation:'N/A', eyedropped:'No',
+      colorLockApplied:'No', colorLockTarget:'', collectionAnchor:'',
+      fabric:e.metadata?.fabric||'', fabricContent:e.metadata?.fabricContent||'',
+      presets:'N/A',
+      promptSent:'N/A \u2014 aggressive client-side background scrub of V'+e.version,
+      claudeUsed:'No', referenceAttached:'No',
+      filename:buildFilename({label:e.label, metadata:md, version:newV}, true),
+      notes:''
+    });
+    updateLogBadge();
+    // If the scrubbed roll is the one on screen, show the result.
+    if(S.currentVersion===e.version){
+      S.modImg=scrubbed; S.currentVersion=newV;
+      showResult(scrubbed, e.label, md, newV);
+    }
+    persistSession();
+    renderHistory();
+  }catch(err){
+    console.warn('[scrubBg] failed', err);
+    setError('Background scrub failed: '+(err?.message||'unknown error'));
+  }
+  setProcessing(false);
+}
+
 // Promote an older roll to be the angle's "current" (pins via anglePick).
 function makeAngleCurrent(i){
   const e=S.history[i]; if(!e) return;
@@ -4804,6 +5035,7 @@ function makeAngleCurrent(i){
 }
 
 const GH_ICON={
+  scrub:'<path d="M20 20H7.5l-4.2-4.2c-.9-.9-.9-2.4 0-3.3L13.9 2c.9-.9 2.4-.9 3.3 0l4.2 4.2c.9.9.9 2.4 0 3.3L12.2 18.7"/><line x1="8.6" y1="8.4" x2="15.6" y2="15.4"/>',
   redo:'<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.5" fill="currentColor" stroke="none"/>',
   view:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
   download:'<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
@@ -4904,6 +5136,9 @@ function renderHistory(){
               <span class="gh-mini">
                 <button class="gh-mini-btn redo" title="Re-roll this angle (faithful resample of the original job)" onclick="rerollRender(${ci})" ${S.isProcessing?'disabled':''}>
                   <svg viewBox="0 0 24 24">${GH_ICON.redo}</svg>
+                </button>
+                <button class="gh-mini-btn" title="Scrub BG — aggressive pass to remove any leftover background (client-side, no API call; saved as a new version)" onclick="scrubBg(${ci})" ${S.isProcessing?'disabled':''}>
+                  <svg viewBox="0 0 24 24">${GH_ICON.scrub}</svg>
                 </button>
                 <button class="gh-mini-btn" title="Use as Base" onclick="useAsBaseHistory(${ci})"><svg viewBox="0 0 24 24">${GH_ICON.base}</svg></button>
                 <button class="gh-mini-btn" title="Use this color across the collection" onclick="useCollectionColor(${ci})"><svg viewBox="0 0 24 24">${GH_ICON.drop}</svg></button>
@@ -5095,6 +5330,95 @@ async function downloadCurrent(){
 // and exports all share identical metrics. exportImage still normalizes as an
 // idempotent safety net — it's a no-op for new renders but still corrects
 // legacy history entries loaded from pre-v1.7.7 sessions.
+// ================================================================
+// v2.0.9 — GARMENT FRAME LOCK
+// Deterministic, model-agnostic in-canvas uniformity. Measures the
+// garment from its alpha mask and rescales/repositions it onto a fresh
+// 1200×1600 canvas to fixed anchors, so every Top / every Bottom lands
+// identically framed regardless of Gemini's per-render camera distance.
+// Pure canvas math — survives any render-model swap untouched.
+// ================================================================
+const FRAME_LOCK = {
+  canvasW: 1200, canvasH: 1600,
+  anchorY: 240,        // garment top edge (shoulder line / waistband) lands here (15% down)
+  topWidth: 660,       // normalized shoulder width for TOPS
+  bottomWidth: 480,    // normalized waistband width for BOTTOMS
+  maxUpscale: 1.5,     // never enlarge beyond this — clamp + flag instead of blur
+  sideMargin: 60,      // min horizontal margin after scaling
+  bottomMargin: 80,    // min gap below longest garments
+  topBandFrac: 0.15,   // TOPS: shoulder width = widest row span in top 15% of garment
+  waistBandFrac: 0.06, // BOTTOMS: waistband width = widest row span in top 6%
+  alphaThresh: 128     // pixel counts as garment at alpha >= this
+};
+
+// Returns {img, applied, scale, clamped, fitLimited, anchorWidth, reason}.
+// Never destructive: any measurement failure returns {applied:false} and
+// the caller falls back to plain normalizeTo34.
+async function frameLockGarment(b64, cls){
+  const F=FRAME_LOCK;
+  const img=new Image();
+  await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=b64;});
+  const w=img.width, h=img.height;
+  const mc=document.createElement('canvas'); mc.width=w; mc.height=h;
+  const mctx=mc.getContext('2d');
+  mctx.drawImage(img,0,0);
+  const d=mctx.getImageData(0,0,w,h).data;
+
+  // Pass 1 — bbox of opaque pixels. Also count transparency: with none,
+  // bg removal was skipped/failed and the mask would be the whole canvas.
+  let minX=w, maxX=-1, minY=h, maxY=-1, transparent=0;
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const a=d[(y*w+x)*4+3];
+      if(a<250) transparent++;
+      if(a>=F.alphaThresh){
+        if(x<minX)minX=x; if(x>maxX)maxX=x;
+        if(y<minY)minY=y; if(y>maxY)maxY=y;
+      }
+    }
+  }
+  if(maxX<0 || transparent < w*h*0.05){
+    return {applied:false, reason: maxX<0 ? 'empty-mask' : 'no-alpha'};
+  }
+  const bboxW=maxX-minX+1, bboxH=maxY-minY+1;
+  if(bboxW<20 || bboxH<20) return {applied:false, reason:'mask-too-small'};
+
+  // Pass 2 — anchor width: widest opaque row span inside the top band.
+  const bandRows=Math.max(2, Math.round(bboxH*(cls==='bottom'?F.waistBandFrac:F.topBandFrac)));
+  let anchorWidth=0;
+  for(let y=minY; y<minY+bandRows && y<=maxY; y++){
+    let rMin=-1, rMax=-1;
+    for(let x=minX;x<=maxX;x++){
+      if(d[(y*w+x)*4+3]>=F.alphaThresh){ if(rMin<0)rMin=x; rMax=x; }
+    }
+    if(rMin>=0 && (rMax-rMin+1)>anchorWidth) anchorWidth=rMax-rMin+1;
+  }
+  if(anchorWidth<10) return {applied:false, reason:'no-anchor-span'};
+
+  // Scale to anchor target, then apply guards.
+  const targetW = cls==='bottom' ? F.bottomWidth : F.topWidth;
+  let scale = targetW/anchorWidth;
+  let clamped=false, fitLimited=false;
+  if(scale>F.maxUpscale){ scale=F.maxUpscale; clamped=true; }
+  const maxScaleH=(F.canvasH-F.anchorY-F.bottomMargin)/bboxH;  // long garments must not clip
+  const maxScaleW=(F.canvasW-2*F.sideMargin)/bboxW;            // wide sleeves/flares must not clip
+  const fitScale=Math.min(maxScaleH,maxScaleW);
+  if(fitScale<scale){ scale=fitScale; fitLimited=true; }
+  if(!(scale>0) || !isFinite(scale)) return {applied:false, reason:'bad-scale'};
+
+  // Paint: crop to bbox, place top edge at anchorY, center horizontally.
+  const out=document.createElement('canvas');
+  out.width=F.canvasW; out.height=F.canvasH;
+  const octx=out.getContext('2d');
+  octx.clearRect(0,0,F.canvasW,F.canvasH);
+  octx.imageSmoothingEnabled=true;
+  octx.imageSmoothingQuality='high';
+  const dw=bboxW*scale, dh=bboxH*scale;
+  octx.drawImage(img, minX, minY, bboxW, bboxH, (F.canvasW-dw)/2, F.anchorY, dw, dh);
+  return {img:out.toDataURL('image/png'), applied:true,
+          scale:Math.round(scale*100)/100, clamped, fitLimited, anchorWidth};
+}
+
 async function normalizeTo34(b64){
   const srcImg=new Image();
   await new Promise((res,rej)=>{srcImg.onload=res;srcImg.onerror=rej;srcImg.src=b64;});
@@ -5300,7 +5624,7 @@ function exportLogCSV(){
   });
   var cols=['Version','Timestamp','Style Name','Mode','Target Part',
     'Color Name','Color Code','Fabric Content','Pantone Code','Hex Color',
-    'Color Compensation','Eyedropped','Fabric/Texture','Presets Active',
+    'Color Compensation','Eyedropped','Frame Lock','Fabric/Texture','Presets Active',
     'Reference Image','Exported Filename','Claude Used','Prompt Sent','Notes'];
   function esc(v){
     var s=String(v==null?'':v);
@@ -5315,7 +5639,7 @@ function exportLogCSV(){
   S.decisionLog.forEach(function(e){
     lines.push([e.version,e.timestamp,e.styleName,e.mode,e.targetPart,
       e.colorName,e.colorCode,e.fabricContent||'',e.pantoneCode,e.hexColor,
-      e.colorCompensation,e.eyedropped,e.fabric,e.presets,
+      e.colorCompensation,e.eyedropped,e.frameLock||'',e.fabric,e.presets,
       e.referenceAttached,e.filename,e.claudeUsed||'No',e.promptSent,e.notes
     ].map(esc).join(','));
   });
