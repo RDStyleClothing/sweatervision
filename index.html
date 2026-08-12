@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SWEATERVISION V2.0.9 — RD Style</title>
+<title>SWEATERVISION V2.1.1 — RD Style</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -505,7 +505,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
     <div>
       <div style="display:flex;align-items:center">
         <span class="logo-title">SWEATERVISION</span>
-        <span class="version-badge" id="versionBadge">V2.0.9</span>
+        <span class="version-badge" id="versionBadge">V2.1.1</span>
       </div>
       <div class="logo-sub">Sweater AI Engine By RD Style</div>
     </div>
@@ -1771,7 +1771,23 @@ function getDynamicColorDescriptor(hex){
 //   in 4 call sites that would strip a shared-class button's state.
 //   If the render has no alpha mask (bg removal skipped/failed), frame
 //   lock is skipped and normalizeTo34 runs as before — never destructive.
-const APP_VERSION = '2.0.9';
+const APP_VERSION = '2.1.1';
+
+// v2.1.0-beta — MODEL PINS hoisted as top-level constants (model-agnosticism
+// roadmap, step 1). Exact pinned strings only — never -latest / -preview
+// aliases (render reproducibility mid-season).
+// RENDER_MODEL: gemini-2.5-flash-image shuts down 2026-10-02; migrated to
+// the stable Gemini 3.1 Flash Image via the Interactions API (see callGemini).
+// RENDER_IMAGE_SIZE: '1K' = 896x1200 @ 3:4 — near-parity with 2.5's 864x1184
+// so the D6 benchmark isolates the MODEL variable. Flip to '2K' (1792x2400,
+// real Frame Lock upscale headroom) only after the benchmark passes.
+// GEMINI_THINKING_LEVEL: 'minimal' pinned explicitly for determinism;
+// benchmark 'high' as a separate arm (thinking tokens are billed).
+// CLAUDE_MODEL: Sonnet 5 — pinned stable string, no date suffix exists.
+const RENDER_MODEL = 'gemini-3.1-flash-image';
+const RENDER_IMAGE_SIZE = '1K';
+const GEMINI_THINKING_LEVEL = 'minimal';
+const CLAUDE_MODEL = 'claude-sonnet-5';
 
 const S={
   apiKey:'',anthropicKey:'',showTimer:true,
@@ -3231,9 +3247,13 @@ Base instruction to enhance: ${localPrompt}`;
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true',
     },
+    // v2.1.0-beta — Sonnet 5 (CLAUDE_MODEL pin). Adaptive thinking is always
+    // on in Sonnet 5 and its tokens count against max_tokens, so the budget
+    // is raised 400→1024 to keep headroom for the ~130-word instruction.
+    // No sampling params are sent (Sonnet 5 rejects manual temperature/top_k).
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 400,
+      model: CLAUDE_MODEL,
+      max_tokens: 1024,
       system: systemPrompt,
       messages: [{ role: 'user', content: userMsg }],
     }),
@@ -3245,7 +3265,9 @@ Base instruction to enhance: ${localPrompt}`;
   }
 
   const data = await resp.json();
-  const text = data.content?.[0]?.text?.trim();
+  // Find the text block by type — with adaptive thinking, content[0] may be
+  // a thinking block, so positional indexing is no longer safe.
+  const text = data.content?.find(b => b.type === 'text')?.text?.trim();
   if(!text) throw new Error('Claude returned empty response');
   return text;
 }
@@ -3511,6 +3533,10 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
       fabricContent: metadata.fabricContent || '',
       presets: renderAsIs ? 'Render As Is' : (S.activePresets.length ? S.activePresets.join(' | ') : 'None'),
       promptSent: finalPrompt||prompt,
+      // v2.1.0-beta — record WHICH render model produced this image. Required
+      // for the D6 migration benchmark: quality deltas are unattributable
+      // without per-image model provenance.
+      renderModel: RENDER_MODEL,
       claudeUsed: (S.anthropicKey && finalPrompt !== prompt) ? 'Yes' : 'No',
       referenceAttached: S.referenceImage ? 'Yes' : 'No',
       filename: buildFilename({label, metadata:md, version: newV}, true),
@@ -3893,18 +3919,49 @@ async function callGemini(prompt,mode,attempt=0,viewCtx=null){
     9. ABSOLUTE COLOR FIDELITY: If the request includes changing the color/recoloring (e.g., mentions changing color, paint, hex code, or Pantone), you MUST completely overrule and throw away the old, original base colors and undertones of the garment. Do not tint or blend the old color into the new one. Paint the entire garment's fabric cleanly, evenly, and precisely with the requested target hex or Pantone shade as a fresh new dye. Keep the fabric rendered under bright, diffuse, high-key commercial advertising studio lighting. Folds and shading must be extremely soft, subtle, and natural; under no circumstances allow heavy gray, black, or muddy shadows to darken or mute the garment's overall fabric color below the requested target swatch value. The main body/flat surface colors of the garment must match the user's requested swatch color perfectly.`});
   }
 
-  // v5.10 — Designated aspect ratio per mode, sent as a structured Gemini param.
-  // Without imageConfig.aspectRatio, Gemini Flash Image silently defaults to 1:1
-  // regardless of any "3:4 portrait" rule in the prompt prose.
-  // Sales sheet stays unset — the input image IS the page layout, let Gemini follow it.
+  // v2.1.0-beta — INTERACTIONS API MIGRATION (Gemini 3.1 Flash Image).
+  // generateContent + gemini-2.5-flash-image is deprecated (shutdown
+  // 2026-10-02); POST /v1beta/interactions is Google's GA-recommended
+  // surface for all 3.x image models. Structural changes vs v5.10:
+  //   contents.parts            → input[] of {type:'text'|'image'} blocks
+  //   generationConfig.imageConfig.aspectRatio
+  //                             → response_format {type:'image', aspect_ratio,
+  //                               image_size, mime_type}
+  //   ?key= query param         → x-goog-api-key header (documented auth)
+  //   candidates[0].content.parts[].inlineData
+  //                             → output_image / steps[].content[] blocks
+  // Aspect-ratio principle unchanged from v5.10: enforce 3:4 as a structured
+  // API param (enforcement hierarchy: API > code > prompt), never prose-only.
+  // Sales sheet stays unset — the Interactions API defaults output size to
+  // match the input image, so the sheet layout continues to drive framing.
+  // image_size is pinned explicitly for renders (the "match input" default
+  // is an implicit behavior we don't want on the render path).
   const aspectRatio = mode==='sales_sheet' ? null : '3:4';
-  const generationConfig = { responseModalities:['IMAGE','TEXT'] };
-  if(aspectRatio) generationConfig.imageConfig = { aspectRatio };
+  // v2.1.1-beta — Interactions API rejects mime_type:'image/png'
+  // ("SUPPORTED VALUES: 'IMAGE/JPEG'"). JPEG output is safe here: the render
+  // never carries alpha (removeBg creates it downstream), and any JPEG edge
+  // chroma noise is exactly what Step 6b edge-band suppression already handles.
+  const responseFormat = { type:'image', mime_type:'image/jpeg' };
+  if(aspectRatio){ responseFormat.aspect_ratio = aspectRatio; responseFormat.image_size = RENDER_IMAGE_SIZE; }
+
+  // Existing parts[] (built by all the prompt/rule code above) is translated
+  // 1:1 into Interactions input blocks — prompt construction stays untouched.
+  const input = parts.map(p =>
+    p.inline_data
+      ? { type:'image', data:p.inline_data.data, mime_type:p.inline_data.mime_type }
+      : { type:'text', text:p.text }
+  );
 
   const delays=[2000,4000,8000];
-  const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${S.apiKey}`,{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({contents:{parts},generationConfig})
+  const resp=await fetch('https://generativelanguage.googleapis.com/v1beta/interactions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-goog-api-key':S.apiKey},
+    body:JSON.stringify({
+      model: RENDER_MODEL,
+      input,
+      response_format: responseFormat,
+      generation_config: { thinking_level: GEMINI_THINKING_LEVEL }
+    })
   });
 
   if(resp.status===429){
@@ -3913,15 +3970,24 @@ async function callGemini(prompt,mode,attempt=0,viewCtx=null){
   }
   if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e?.error?.message||`Gemini error ${resp.status}`);}
   const data=await resp.json();
-  const cand=data.candidates?.[0];
-  if(!cand)throw new Error("AI returned no candidates. This might be due to safety filters.");
-  let txt='';
-  for(const part of cand.content?.parts||[]){
-    if(part.inlineData)return`data:image/png;base64,${part.inlineData.data}`;
-    if(part.text)txt+=part.text;
+
+  // Convenience property first (present in Interactions responses), then a
+  // manual walk of model_output steps. Thought-step interim images live in
+  // step.summary, NOT step.content, so they are never picked up here. If a
+  // model_output step carries multiple images, the LAST one is the final
+  // render — so collect rather than early-return.
+  if(data.output_image?.data) return `data:image/jpeg;base64,${data.output_image.data}`;
+  let txt='', lastImg=null;
+  for(const step of data.steps||[]){
+    if(step.type!=='model_output') continue;
+    for(const block of step.content||[]){
+      if(block.type==='image' && block.data) lastImg=block.data;
+      else if(block.type==='text' && block.text) txt+=block.text;
+    }
   }
+  if(lastImg) return `data:image/jpeg;base64,${lastImg}`;
   if(txt)throw new Error(`AI returned text instead of an image: ${txt.slice(0,100)}...`);
-  throw new Error(`No image returned from AI. Finish reason: ${cand.finishReason||'unknown'}`);
+  throw new Error(`No image returned from AI${data.status?` (status: ${data.status})`:''}. This might be due to safety filters.`);
 }
 
 // ================================================================
@@ -5006,6 +5072,7 @@ async function scrubBg(i){
       fabric:e.metadata?.fabric||'', fabricContent:e.metadata?.fabricContent||'',
       presets:'N/A',
       promptSent:'N/A \u2014 aggressive client-side background scrub of V'+e.version,
+      renderModel:'N/A (client-side)',
       claudeUsed:'No', referenceAttached:'No',
       filename:buildFilename({label:e.label, metadata:md, version:newV}, true),
       notes:''
@@ -5625,7 +5692,7 @@ function exportLogCSV(){
   var cols=['Version','Timestamp','Style Name','Mode','Target Part',
     'Color Name','Color Code','Fabric Content','Pantone Code','Hex Color',
     'Color Compensation','Eyedropped','Frame Lock','Fabric/Texture','Presets Active',
-    'Reference Image','Exported Filename','Claude Used','Prompt Sent','Notes'];
+    'Reference Image','Exported Filename','Render Model','Claude Used','Prompt Sent','Notes'];
   function esc(v){
     var s=String(v==null?'':v);
     if(s.indexOf(',')>-1||s.indexOf('"')>-1||s.indexOf('\n')>-1){
@@ -5640,7 +5707,7 @@ function exportLogCSV(){
     lines.push([e.version,e.timestamp,e.styleName,e.mode,e.targetPart,
       e.colorName,e.colorCode,e.fabricContent||'',e.pantoneCode,e.hexColor,
       e.colorCompensation,e.eyedropped,e.frameLock||'',e.fabric,e.presets,
-      e.referenceAttached,e.filename,e.claudeUsed||'No',e.promptSent,e.notes
+      e.referenceAttached,e.filename,e.renderModel||'',e.claudeUsed||'No',e.promptSent,e.notes
     ].map(esc).join(','));
   });
   var csv=lines.join('\n');
