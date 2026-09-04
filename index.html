@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SWEATERVISION V2.1.1 — RD Style</title>
+<!-- VERSION SURFACE: keep in sync with APP_VERSION (runtime re-sets document.title, but this is what shows before scripts run and in view-source) -->
+<title>SWEATERVISION V3.3.2 — RD Style</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -539,6 +540,8 @@ table.pm-zones tr:last-child td{border-bottom:none}
 #pmHovTip .sw{width:10px;height:10px;border:1px solid rgba(255,255,255,0.45);display:inline-block;flex:none}
 table.pm-zones tr.pm-hov td{background:rgba(20,20,20,0.07)}
 table.pm-zones tbody tr{cursor:default}
+/* v3.3.1 — rescued-accent badge in the zone table */
+.pm-acc{font-size:7px;font-weight:700;letter-spacing:0.08em;padding:1px 5px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);vertical-align:1px}
 .pm-gates{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .pm-view-seg{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:inline-flex;border:1px solid var(--ink);background:rgba(255,255,255,0.92);backdrop-filter:blur(6px);z-index:8}
 .pm-view-seg button{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 12px;border-right:1px solid var(--ink)}
@@ -791,7 +794,7 @@ table.pm-zones tbody tr{cursor:default}
 
             <div class="mannequin-label">Detect Color Zones</div>
             <div class="pm-row">
-              <label>Zones (k)</label>
+              <label title="Base zones k-means looks for. Small high-contrast trims (tipping, piping, buttons) found beyond these are added automatically as ACCENT zones, so the table can show more rows than k.">Zones (k)</label>
               <span class="pm-stepper"><button type="button" onclick="pmKStep(-1)">−</button><span class="pm-k" id="pmKVal">4</span><button type="button" onclick="pmKStep(1)">+</button></span>
               <span style="flex:1"></span>
               <button type="button" class="pm-btn solid" id="pmDetectBtn" onclick="pmDetect()">Detect</button>
@@ -1964,7 +1967,22 @@ function getDynamicColorDescriptor(hex){
 // no RNG in the rescue path. Detect note reports "N accent zone(s)
 // rescued". Third marked deviation from bench v1.3 (after D1 color-math
 // rewire and D2 seeded k-means++).
-const APP_VERSION = '3.3.0';
+//
+// v3.3.1 — ACCENT BADGE (2026-09-04): rescued accent zones now identify
+// themselves. Zone objects carry accent:true provenance from the rescue
+// pass; the zone table shows an ACCENT pill on those rows, and the
+// Zones (k) label explains that trims found beyond k are added
+// automatically — so "k=4 but 5 rows" reads as the feature it is. The
+// flag is detect-time provenance: manual merge/split rebuilds drop it by
+// design. UI only — engine unchanged (PATTERN_ENGINE stays 1.5).
+//
+// v3.3.2 — STATIC <title> SYNC (2026-09-04): the hardcoded <title> in the
+// head still said V2.1.1 — runtime overwrites it from APP_VERSION at boot,
+// but the stale string showed pre-boot and in view-source. Static <title>
+// is now a fourth version surface to bump with every release (filename,
+// badge/constant, decision-log strings, static <title>) — marked with a
+// sync comment in the head.
+const APP_VERSION = '3.3.2';
 const PATTERN_ENGINE = '1.5';  // lineage: Tier-1 bench 1.0–1.3 → 1.4 (D1+D2) → 1.5 (D3 accent rescue)
 
 // v2.1.0-beta — MODEL PINS hoisted as top-level constants (model-agnosticism
@@ -6138,7 +6156,7 @@ function pmDetect(){
       if(grpA.length<minN)break;
       const c=nextC++;
       for(const o of grpA)maskMap[o.p]=c;
-      zones.push({c,mean:cA,count:grpA.length});
+      zones.push({c,mean:cA,count:grpA.length,accent:true});  // v3.3.1 — provenance for the table badge
       meansByC[c]=cA;rescuedCs.push(c);
       rescuedN++;
       pool=grpB;
@@ -6161,7 +6179,8 @@ function pmDetect(){
   PM.maskMap=finalMap;
   const tot=zones.reduce((t,z)=>t+z.count,0);
   PM.zones=zones.map((z,i)=>({id:i,mean:z.mean,hex:pmLab2Hex(z.mean[0],z.mean[1],z.mean[2]),
-    pct:100*z.count/tot,keep:true,target:pmLab2Hex(z.mean[0],z.mean[1],z.mean[2]),result:null}));
+    pct:100*z.count/tot,keep:true,target:pmLab2Hex(z.mean[0],z.mean[1],z.mean[2]),result:null,
+    accent:!!z.accent}));  // v3.3.1 — rescued-accent provenance
   PM.outData=null;PM.outB64=null;PM.zoneB64=null;PM.applied=false;PM.sel.clear();
   pmEl('pmSegNote').textContent=zones.length+' zones · '+coreIdx.length.toLocaleString()+' garment px · '+Math.round(performance.now()-t0)+' ms · deterministic'+(rescuedN?' · '+rescuedN+' accent zone'+(rescuedN>1?'s':'')+' rescued (trim/tipping)':'');
   pmEl('pmZoneWrap').classList.remove('hidden');
@@ -6185,7 +6204,8 @@ function pmRenderZones(){
     tr.innerHTML=
       '<td><input type="checkbox" data-pmsel="'+z.id+'" '+(PM.sel.has(z.id)?'checked':'')+' aria-label="select zone"></td>'+
       '<td><span class="pm-sw" style="background:'+z.hex+'"></span></td>'+
-      '<td>'+z.hex+'<br><span style="opacity:.45">L '+z.mean[0].toFixed(0)+' a '+z.mean[1].toFixed(0)+' b '+z.mean[2].toFixed(0)+'</span></td>'+
+      '<td>'+z.hex+(z.accent?' <span class="pm-acc" title="Rescued accent zone (trim/tipping/buttons) — found beyond the k base zones">ACCENT</span>':'')+
+        '<br><span style="opacity:.45">L '+z.mean[0].toFixed(0)+' a '+z.mean[1].toFixed(0)+' b '+z.mean[2].toFixed(0)+'</span></td>'+
       '<td>'+z.pct.toFixed(1)+'%</td>'+
       '<td><input type="checkbox" data-pmkeep="'+z.id+'" '+(z.keep?'checked':'')+'></td>'+
       '<td style="white-space:nowrap"><input type="color" class="pm-swpick" value="'+z.target+'" data-pmcol="'+z.id+'" '+(z.keep?'disabled':'')+'> '+
