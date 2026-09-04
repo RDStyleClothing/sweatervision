@@ -211,7 +211,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
 /* MODE TABS */
-.mode-tabs{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--ink);margin-bottom:0}
+.mode-tabs{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--ink);margin-bottom:0}
 .mode-tab{padding:8px 4px;font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.05em;text-align:center;transition:all 0.2s;border-right:1px solid var(--ink)}
 .mode-tab:last-child{border-right:none}
 .mode-tab.active{background:var(--ink);color:var(--bg)}
@@ -492,6 +492,58 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
 .log-stat-bar{display:flex;gap:20px;margin-bottom:16px;flex-wrap:wrap}
 .log-stat{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;opacity:0.5}
 .log-stat strong{font-size:14px;font-weight:700;color:var(--ink);opacity:1;display:block;margin-bottom:1px}
+
+/* ── V3.0.0 PATTERN MODE ─────────────────────────────────────────── */
+.pm-box{border:1px solid var(--ink);padding:14px;background:rgba(255,255,255,0.5);animation:fadein 0.2s}
+.pm-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.pm-row label{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.6;min-width:92px}
+.pm-row input[type=range]{flex:1;accent-color:var(--ink);height:3px}
+.pm-row .pm-val{font-family:var(--font-mono);font-size:10px;min-width:40px;text-align:right}
+.pm-stepper{display:inline-flex;align-items:center;border:1px solid var(--ink)}
+.pm-stepper button{padding:3px 11px;font-size:13px;font-family:var(--font-mono)}
+.pm-stepper .pm-k{font-family:var(--font-mono);font-size:11px;font-weight:700;padding:0 9px;border-left:1px solid var(--ink);border-right:1px solid var(--ink)}
+.pm-src-row{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--ink);margin-bottom:10px}
+.pm-src-row button{padding:9px 4px;font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.06em;border-right:1px solid var(--ink);opacity:0.55}
+.pm-src-row button:last-child{border-right:none}
+.pm-src-row button.active{background:var(--ink);color:#fff;opacity:1}
+.pm-note{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.5;margin-bottom:10px;line-height:1.7}
+.pm-btn{border:1px solid var(--ink);font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;padding:8px 12px;transition:all .2s}
+.pm-btn:hover:not(:disabled){background:var(--ink);color:var(--bg)}
+.pm-btn:disabled{opacity:0.35;cursor:not-allowed}
+.pm-btn.solid{background:var(--ink);color:var(--bg)}
+.pm-btn.solid:hover:not(:disabled){background:#000}
+.pm-apply{width:100%;background:var(--ink);color:var(--bg);font-family:var(--font-display);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;padding:13px;margin-top:6px;transition:all .2s}
+.pm-apply:hover:not(:disabled){background:#000}
+.pm-apply:disabled{opacity:0.35;cursor:not-allowed}
+table.pm-zones{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--ink);margin-bottom:10px}
+table.pm-zones th{font-family:var(--font-mono);font-size:7px;text-transform:uppercase;letter-spacing:0.1em;opacity:0.5;text-align:left;padding:6px 5px;border-bottom:1px solid var(--ink)}
+table.pm-zones td{padding:6px 5px;border-bottom:1px solid rgba(20,20,20,0.1);vertical-align:middle;font-family:var(--font-mono);font-size:9px}
+table.pm-zones tr:last-child td{border-bottom:none}
+.pm-sw{width:18px;height:18px;border:1px solid rgba(0,0,0,0.25);display:inline-block;vertical-align:middle}
+.pm-swpick{width:26px;height:26px;border:1px solid var(--ink);padding:0;cursor:pointer;background:none;vertical-align:middle}
+.pm-hex{width:62px;border:1px solid var(--ink);background:transparent;font-family:var(--font-mono);font-size:9px;padding:4px;text-transform:uppercase}
+.pm-de{font-size:8px;padding:2px 6px;border-radius:10px;white-space:nowrap;font-weight:700;font-family:var(--font-mono)}
+.pm-de.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+.pm-de.warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.pm-de.bad{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+.pm-de.mut{background:rgba(20,20,20,0.05);color:rgba(20,20,20,0.5);border:1px solid rgba(20,20,20,0.1)}
+/* v3.1.0 — shadow-shade suggestions (derived from main-zone target) */
+.pm-sugg{display:flex;align-items:center;gap:5px;margin-top:5px}
+.pm-sugg-sw{width:14px;height:14px;border:1px solid rgba(0,0,0,0.25);display:inline-block;flex:none}
+.pm-sugg-hex{font-family:var(--font-mono);font-size:8px;opacity:0.65;letter-spacing:0.04em}
+.pm-sugg-btn{border:1px solid var(--ink);background:transparent;font-family:var(--font-mono);font-size:7px;text-transform:uppercase;letter-spacing:0.08em;padding:2px 7px;cursor:pointer;transition:all .2s}
+.pm-sugg-btn:hover{background:var(--ink);color:var(--bg)}
+/* v3.2.0 — zone hover highlight (table row ⇄ garment) */
+#pmHovCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
+#pmHovTip{position:absolute;pointer-events:none;z-index:6;background:var(--ink);color:#fff;font-family:var(--font-mono);font-size:9px;letter-spacing:0.05em;padding:4px 8px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+#pmHovTip .sw{width:10px;height:10px;border:1px solid rgba(255,255,255,0.45);display:inline-block;flex:none}
+table.pm-zones tr.pm-hov td{background:rgba(20,20,20,0.07)}
+table.pm-zones tbody tr{cursor:default}
+.pm-gates{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.pm-view-seg{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:inline-flex;border:1px solid var(--ink);background:rgba(255,255,255,0.92);backdrop-filter:blur(6px);z-index:8}
+.pm-view-seg button{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 12px;border-right:1px solid var(--ink)}
+.pm-view-seg button:last-child{border-right:none}
+.pm-view-seg button.on{background:var(--ink);color:var(--bg)}
 </style>
 </head>
 <body>
@@ -597,7 +649,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
           <div id="gridView" class="preview-grid">
             <div class="pane" id="origPane">
               <img id="origImg" src="" alt="Original"/>
-              <div class="pane-label">Front Reference</div>
+              <div class="pane-label" id="origPaneLabel">Front Reference</div>
             </div>
             <div class="pane checker" id="modPane">
               <div class="standby" id="standbyState">
@@ -614,6 +666,9 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
                 </div>
               </div>
               <img id="modImg" src="" alt="Modified" class="hidden" style="width:100%;height:100%;object-fit:cover"/>
+              <!-- v3.2.0 — zone hover highlight overlay + tooltip (Pattern Mode only) -->
+              <canvas id="pmHovCanvas" class="hidden"></canvas>
+              <div id="pmHovTip" class="hidden"></div>
               <div class="pane-label ai hidden" id="aiBadge">AI Generated</div>
               <div style="position:absolute;top:10px;left:10px;z-index:5" class="hidden" id="modLabelBadge">
                 <span style="background:rgba(255,255,255,0.85);backdrop-filter:blur(6px);color:var(--ink);padding:4px 12px;border-radius:20px;font-family:var(--font-display);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;display:block;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="modLabelText"></span>
@@ -631,6 +686,13 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
                 <button class="pane-btn" id="magnifyBtn" title="Magnify — hover render to inspect" onclick="toggleMagnify()">
                   <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/><line x1="11" y1="8.2" x2="11" y2="13.8"/><line x1="8.2" y1="11" x2="13.8" y2="11"/></svg>
                 </button>
+                <button class="pane-btn" id="patternPaneBtn" title="Pattern recolor — open this render in Pattern Mode (V3.0)" onclick="pmFromCurrent()">
+                  <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="8" cy="7" r="1.6" fill="currentColor" stroke="none"/><circle cx="14" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="10" cy="17" r="1.6" fill="currentColor" stroke="none"/></svg>
+                </button>
+              </div>
+              <div class="pm-view-seg hidden" id="pmViewSeg">
+                <button type="button" id="pmViewRenderBtn" class="on" onclick="pmSetView('render')">Render</button>
+                <button type="button" id="pmViewZoneBtn" onclick="pmSetView('zonemap')">Zone Map</button>
               </div>
               <div class="magnify-lens hidden" id="magnifyLens"><img id="magnifyImg" alt=""/></div>
             </div>
@@ -683,11 +745,11 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
         <!-- Color Name + Code -->
         <div class="grid2">
           <div class="field">
-            <label class="field-label">Color Name</label>
+            <label class="field-label" id="colorNameLabel">Color Name</label>
             <input type="text" id="colorNameInput" class="text-input" placeholder="e.g. Dusty Blue"/>
           </div>
           <div class="field">
-            <label class="field-label">Color Code</label>
+            <label class="field-label" id="colorCodeLabel">Color Code</label>
             <input type="text" id="colorCodeInput" class="text-input" placeholder="e.g. B2182"/>
           </div>
         </div>
@@ -712,6 +774,73 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
             <button class="mode-tab active" data-mode="render" onclick="setMode('render',this)">Render</button>
             <button class="mode-tab" data-mode="sketch" onclick="setMode('sketch',this)">Sketch</button>
             <button class="mode-tab" data-mode="sales_sheet" onclick="setMode('sales_sheet',this)">Sales Sheet</button>
+            <button class="mode-tab" data-mode="pattern" onclick="setMode('pattern',this)">Pattern</button>
+          </div>
+        </div>
+
+        <!-- V3.0.0 — PATTERN MODE panel (Pattern tab only): zone-level deterministic recolor -->
+        <div class="field hidden" id="patternSection">
+          <div class="pm-box">
+            <div class="mannequin-label">Source Render</div>
+            <div class="pm-src-row">
+              <button type="button" id="pmSrcCurrentBtn" class="active" onclick="pmUseCurrent()">Current Render</button>
+              <button type="button" id="pmSrcUploadBtn" onclick="document.getElementById('pmFileInput').click()">Upload PNG</button>
+            </div>
+            <input type="file" id="pmFileInput" style="display:none" accept="image/png,image/webp,image/jpeg" onchange="pmHandleFile(this)"/>
+            <p class="pm-note" id="pmSourceNote">Load a finished render — or use the pattern button on any Session History item.</p>
+
+            <div class="mannequin-label">Detect Color Zones</div>
+            <div class="pm-row">
+              <label>Zones (k)</label>
+              <span class="pm-stepper"><button type="button" onclick="pmKStep(-1)">−</button><span class="pm-k" id="pmKVal">4</span><button type="button" onclick="pmKStep(1)">+</button></span>
+              <span style="flex:1"></span>
+              <button type="button" class="pm-btn solid" id="pmDetectBtn" onclick="pmDetect()">Detect</button>
+            </div>
+            <div class="pm-row">
+              <label title="Down-weights lightness in clustering so one dyed color stays one zone across folds and shadow.">L* Weight</label>
+              <input type="range" id="pmWL" min="0.1" max="1" step="0.05" value="0.3" oninput="document.getElementById('pmWLVal').textContent=(+this.value).toFixed(2)"/>
+              <span class="pm-val" id="pmWLVal">0.30</span>
+            </div>
+            <div class="pm-row">
+              <label title="Zones smaller than this are merged into the nearest by chroma.">Min Zone</label>
+              <input type="range" id="pmMinPct" min="0" max="5" step="0.25" value="0.5" oninput="document.getElementById('pmMinPctVal').textContent=(+this.value).toFixed(2)+'%'"/>
+              <span class="pm-val" id="pmMinPctVal">0.50%</span>
+            </div>
+            <p class="pm-note" id="pmSegNote"></p>
+
+            <div id="pmZoneWrap" class="hidden">
+              <table class="pm-zones">
+                <thead><tr><th></th><th></th><th>Detected</th><th>Share</th><th>Keep</th><th>Target</th><th>&Delta;E</th></tr></thead>
+                <tbody id="pmZoneBody"></tbody>
+              </table>
+              <!-- v3.1.0 — shadow-shade suggestion bar: shown when the main zone's
+                   target has moved off its detected color and derived shades are
+                   available for the other zones. Suggestion only — nothing applies
+                   until the per-zone Apply or Apply All is clicked. -->
+              <div class="pm-row hidden" id="pmSuggBar" style="margin-bottom:8px">
+                <span class="pm-note" id="pmSuggNote" style="margin:0;flex:1">Suggested shades from main-zone target — original shading offsets preserved</span>
+                <button type="button" class="pm-btn" id="pmSuggAllBtn" onclick="pmApplyAllSuggestions()">Apply All</button>
+              </div>
+              <div class="pm-row" style="margin-bottom:8px">
+                <button type="button" class="pm-btn" id="pmMergeBtn" onclick="pmMergeSelected()" disabled>Merge</button>
+                <button type="button" class="pm-btn" id="pmSplitBtn" onclick="pmSplitSelected()" disabled>Split</button>
+                <span class="pm-note" id="pmSelNote" style="margin:0;flex:1;text-align:right">Tick to merge (2+) / split (1)</span>
+              </div>
+              <div class="pm-row">
+                <label title="0.75 = preserve render shading; 1.0 = force flat to target lightness.">Lum. Anchor</label>
+                <input type="range" id="pmLumA" min="0.4" max="1" step="0.05" value="0.75" oninput="document.getElementById('pmLumAVal').textContent=(+this.value).toFixed(2)"/>
+                <span class="pm-val" id="pmLumAVal">0.75</span>
+              </div>
+              <div class="pm-row" style="margin-bottom:4px">
+                <label>Edge Feather</label>
+                <input type="checkbox" id="pmFeather" checked style="accent-color:var(--ink)"/>
+                <span class="pm-note" style="margin:0">1px boundary blend</span>
+              </div>
+              <button type="button" class="pm-apply" id="pmApplyBtn" onclick="pmApplyRecolor()">Apply Recolor — No Render Cost</button>
+              <div class="pm-gates" id="pmGates"></div>
+              <button type="button" class="pm-btn solid" id="pmSaveBtn" style="width:100%;margin-top:10px;padding:11px" onclick="pmSaveToHistory()" disabled>Save Colorway To History</button>
+              <p class="pm-note" style="margin-top:8px;margin-bottom:0">Gates: recolored &le; &Delta;E 3 of target &middot; kept drift &le; &Delta;E 1 &middot; measured post-feather. Deterministic &mdash; no Gemini/Claude calls.</p>
+            </div>
           </div>
         </div>
 
@@ -877,7 +1006,7 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
         </div>
 
         <!-- Prompt + Submit -->
-        <div class="field">
+        <div class="field" id="promptField">
           <div class="prompt-wrap">
             <textarea id="promptInput" class="prompt-textarea" placeholder="Describe the changes (e.g., 'Change the sweater color to navy blue and make it a slimmer fit on the model')"></textarea>
             <button class="submit-btn" id="submitBtn" onclick="handleSubmit()" title="Generate">
@@ -1771,7 +1900,72 @@ function getDynamicColorDescriptor(hex){
 //   in 4 call sites that would strip a shared-class button's state.
 //   If the render has no alpha mask (bg removal skipped/failed), frame
 //   lock is skipped and normalizeTo34 runs as before — never destructive.
-const APP_VERSION = '2.1.1';
+// v3.0.0 — PATTERN MODE (2026-09-03): fifth Action Mode tab — zone-level
+// deterministic recolor of finished renders (whole color families offline,
+// zero API cost per colorway). Chroma-weighted k-means segmentation +
+// per-zone masked mean-LAB shift (the zone generalization of
+// enforceEyedropColor: full a*/b* anchor, adjustable L* anchor, default
+// 0.75 per RENDER_RULES §4.3). Engine transplanted from the Pattern Mode
+// Tier-1 bench v1.3 with two MARKED DEVIATIONS (PATTERN_ENGINE 1.4):
+//   D1 — color math rewired to this file's canonical rgbToLab/labToRgb
+//        (bench carried duplicate copies; numeric equivalence verified).
+//   D2 — k-means++ init on a seeded mulberry32 PRNG (deterministic
+//        detect; bench used Math.random()).
+// Zone merge/split editing, 1px boundary feather, ΔE gates (recolored
+// ≤3 of target, kept-zone drift ≤1, measured POST-feather — the honest
+// number). Output saves to Session History as a versioned PATTERN item
+// (Rule-2 filename from live Colorway Name/Code fields) and is decision-
+// logged with engine version + zone map. Entry points: render-pane
+// button, history mini-button, Pattern tab source picker. Pattern items
+// are deliberate color changes — EXEMPT from render-vs-original color QA
+// by design; re-roll on a pattern item reopens it in Pattern Mode.
+//
+// v3.1.0 — SHADOW-SHADE SUGGESTIONS (2026-09-04): when the MAIN zone's
+// (largest share) target moves off its detected color, the app suggests a
+// derived target for every other zone: that zone's original LAB offset from
+// the main zone (ΔL/Δa/Δb as detected) re-applied to the new main target —
+// the garment's shading structure is preserved exactly. Suggestions render
+// as swatch + hex + Apply under each zone's target inputs, plus an
+// Apply All bar under the table. Suggestion only: nothing changes until
+// clicked; applying sets the zone's target and unticks Keep so it takes
+// effect. Pure UI over existing pmLab/pmLab2Hex math — engine untouched
+// (PATTERN_ENGINE unchanged at 1.4).
+//
+// v3.2.0 — ZONE HOVER HIGHLIGHT (2026-09-04): bidirectional hover linking
+// between the zone table and the garment so the user can be sure which
+// color a zone refers to. Hovering a zone row dims every OTHER zone on the
+// output pane (render or zone-map view), leaving the hovered zone at full
+// clarity; hovering the garment itself highlights the zone under the
+// cursor the same way, marks its table row, and shows a cursor tooltip
+// (detected swatch · hex · share). Overlay is a separate pointer-events:
+// none canvas over modImg using the magnifier's object-fit:cover geometry;
+// per-zone masks cached against PM.maskMap identity. Suppressed while the
+// magnifier is active. Display-only — engine and zone data untouched
+// (PATTERN_ENGINE unchanged at 1.4).
+//
+// v3.2.1 — STALE PATTERN SOURCE FIX (2026-09-04): re-entering the Pattern
+// tab no longer resurrects the previous style. Sources now carry a kind
+// ('render' | 'history' | 'upload'): a 'render' source must still be the
+// current render on entry — reloaded if a newer render exists, cleared if
+// the session moved on (source swap) with no render yet; a 'history'
+// source survives only while its history item exists; 'upload' PNGs are an
+// explicit choice and are never touched. New garment upload (Upload New)
+// now hard-resets Pattern Mode like Reset Session always did. Tab
+// round-trips on an unchanged render still preserve zones/targets exactly.
+//
+// v3.3.0 — D3 ACCENT RESCUE (2026-09-04, PATTERN_ENGINE 1.4 → 1.5): small
+// high-contrast trims (collar tipping, piping, contrast buttons) no longer
+// vanish into the nearest mass zone. After k-means assignment + Min-Zone
+// merge, CORE pixels farther than PM_ACC_T (weighted ΔE² ≈ ΔE 20) from
+// every zone mean are pooled; a pool ≥ max(0.05% of core px, 250 px)
+// becomes its own zone (one farthest-pair 2-means split when the pool is
+// bimodal; max 2 rescued zones), its soft COVER edges re-attached, and the
+// rescued zone is EXEMPT from the Min-Zone merge. Fully deterministic —
+// no RNG in the rescue path. Detect note reports "N accent zone(s)
+// rescued". Third marked deviation from bench v1.3 (after D1 color-math
+// rewire and D2 seeded k-means++).
+const APP_VERSION = '3.3.0';
+const PATTERN_ENGINE = '1.5';  // lineage: Tier-1 bench 1.0–1.3 → 1.4 (D1+D2) → 1.5 (D3 accent rescue)
 
 // v2.1.0-beta — MODEL PINS hoisted as top-level constants (model-agnosticism
 // roadmap, step 1). Exact pinned strings only — never -latest / -preview
@@ -2147,6 +2341,7 @@ function setupFileInputs(){
 function handleImageUpload(b64){
   S.origImg=b64;S.modImg=null;S.currentLabel='';S.currentMetadata={};
   S.history=[];S.versionCounter=0;S.selectedIndices=[];
+  try{ pmReset(); }catch(e){}  // v3.2.1 — new garment session: no stale Pattern Mode source
   S.mannequinType='';  // reset mannequin on new upload
   S.selectedFit='';    // reset fit selection on new upload
   // v1.6.4 — new garment => drop any extra-angle selections + their photos
@@ -2246,6 +2441,7 @@ function resetApp(){
   );
   if(!ok) return;
   S.origImg=null;S.modImg=null;S.history=[];S.selectedIndices=[];
+  try{ pmReset(); }catch(e){}
   S.decisionLog=[];S.appInitialized=false;S.mannequinType='';S.selectedFit='';
   S.garmentClass='top';  // v2.0.9 — Frame Lock back to default
   try{ syncFrameLockUI(); }catch(e){}
@@ -2392,7 +2588,8 @@ function setMode(mode,btn){
   const isSales=mode==='sales_sheet';
   const isRender=mode==='render';
   const isSketch=mode==='sketch';
-  document.getElementById('targetField').classList.toggle('hidden',isSales);
+  const isPattern=mode==='pattern';   // v3.0.0 — Pattern Mode
+  document.getElementById('targetField').classList.toggle('hidden',isSales||isPattern);
   document.getElementById('fabricSection').classList.toggle('hidden',!isRender&&!isSales);
   // Mannequin selector only shown in Render mode (not Sales Sheet)
   const mSel = document.getElementById('mannequinSelector');
@@ -2404,7 +2601,16 @@ function setMode(mode,btn){
   // garment (handleImageUpload) or swapped source (swapSourceImage) sets Front
   // on; an in-session "Front off" choice now persists across mode switches.
   if(isRender){ syncRenderAngleUI(); }
-  document.getElementById('presetsSection').classList.toggle('hidden',isSales);
+  document.getElementById('presetsSection').classList.toggle('hidden',isSales||isPattern);
+  // v3.0.0 — Pattern Mode swaps the prompt/preset stack for the pattern panel.
+  // Everything here is a classList.toggle with a boolean, so leaving Pattern
+  // restores each section exactly as the destination mode defines it.
+  const _pf=document.getElementById('promptField');   if(_pf)_pf.classList.toggle('hidden',isPattern);
+  const _pd=document.getElementById('presetDetails'); if(_pd)_pd.classList.toggle('hidden',isPattern);
+  const _ps=document.getElementById('patternSection');if(_ps)_ps.classList.toggle('hidden',!isPattern);
+  const _el=document.getElementById('engineLabel');   if(_el)_el.textContent=isPattern?'Deterministic LAB Engine — No API Calls':'Gemini Engine';
+  const _cnl=document.getElementById('colorNameLabel');if(_cnl)_cnl.textContent=isPattern?'Colorway Name':'Color Name';
+  const _ccl=document.getElementById('colorCodeLabel');if(_ccl)_ccl.textContent=isPattern?'Colorway Code':'Color Code';
   // v5.13 — Style Reference section now gated on Change Design preset, not just mode.
   updateRefSectionVisibility();
   if(isRender||isSales){
@@ -2422,6 +2628,8 @@ function setMode(mode,btn){
   }
   renderPresets();
   renderPresetDetails();
+  // v3.0.0 — Pattern Mode pane handoff (after presets so ref visibility is settled)
+  try{ if(isPattern) pmEnter(); else pmLeave(); }catch(e){ console.error('[pattern] mode handoff',e); }
 }
 
 // ================================================================
@@ -2461,9 +2669,13 @@ function togglePreset(label,id){
 function updateRefSectionVisibility(){
   const section=document.getElementById('refSection');
   if(!section) return;
-  const shouldShow = S.activeMode!=='sales_sheet' && S.activePresets.includes('Change Design');
+  // v3.0.0 — Pattern Mode hides the section but PRESERVES an attached
+  // reference: pattern recolor never uses it, and clearing it here would
+  // destroy the user's Change-Design setup just for visiting the tab.
+  const inPattern = S.activeMode==='pattern';
+  const shouldShow = !inPattern && S.activeMode!=='sales_sheet' && S.activePresets.includes('Change Design');
   section.classList.toggle('hidden', !shouldShow);
-  if(!shouldShow && S.referenceImage){
+  if(!shouldShow && !inPattern && S.referenceImage){
     removeRef();
   }
 }
@@ -2961,6 +3173,9 @@ function targetForWholeGarmentRender(rawTarget){
 function handleSubmit(forceAsIs=false){
   // Declare mode FIRST — used in all validations below
   const mode=S.activeMode;
+  // v3.0.0 — Pattern Mode has its own Apply path (deterministic, no API);
+  // the prompt box is hidden there, but guard against any stray call site.
+  if(mode==='pattern') return;
   const styleName=document.getElementById('styleNameInput').value.trim();
   if(!styleName){
     const inp=document.getElementById('styleNameInput');
@@ -4998,6 +5213,9 @@ function toggleHistCell(enc){
 async function rerollRender(i){
   if(S.isProcessing)return;
   const e=S.history[i]; if(!e) return;
+  // v3.0.0 — a pattern colorway is deterministic, not a render: there is no
+  // job to resample. Re-roll reopens it in Pattern Mode on its source render.
+  if(e.metadata?.renderMode==='Pattern Recolor'){ pmFromHistory(i); return; }
   const sk=styleKeyOf(e),ck=ghColorIdentity(e).ck,vw=viewOf(e);  // v1.7.4 — resolved key matches grouping
   // Resolve the source for a faithful resample. Prefer the source CAPTURED with
   // this render (v1.7.0+) so re-rolls work even after the live Side/Back slots
@@ -5109,7 +5327,8 @@ const GH_ICON={
   trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>',
   base:'<path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
   drop:'<circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.52-4.48-10-10-10z"/>',
-  promote:'<circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/>'
+  promote:'<circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/>',
+  pattern:'<path d="M4 7h16M4 12h16M4 17h16"/><circle cx="8" cy="7" r="1.6" fill="currentColor" stroke="none"/><circle cx="14" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="10" cy="17" r="1.6" fill="currentColor" stroke="none"/>'
 };
 
 function renderHistory(){
@@ -5192,6 +5411,7 @@ function renderHistory(){
               <img src="${citem.image}" alt=""/>
               <span class="gh-vbadge">V${citem.version}</span>
               ${citem.guess?'<span class="gh-guess">Guess</span>':''}
+              ${citem.metadata?.renderMode==='Pattern Recolor'?'<span class="gh-guess" style="background:var(--accent);color:#fff">Pattern</span>':''}
               ${citem.formSuspect?'<span class="gh-warn" title="Automatic check flagged a possible residual form — verify this render">Check</span>':''}
               <button class="gh-pick ${selected?'checked':''}" title="Select for comparison" onclick="event.stopPropagation();toggleSelect(${ci})">
                 <svg viewBox="0 0 24 24">${selected?'<polyline points="20 6 9 17 4 12"/>':'<rect x="3" y="3" width="18" height="18" rx="2"/>'}</svg>
@@ -5209,6 +5429,7 @@ function renderHistory(){
                 </button>
                 <button class="gh-mini-btn" title="Use as Base" onclick="useAsBaseHistory(${ci})"><svg viewBox="0 0 24 24">${GH_ICON.base}</svg></button>
                 <button class="gh-mini-btn" title="Use this color across the collection" onclick="useCollectionColor(${ci})"><svg viewBox="0 0 24 24">${GH_ICON.drop}</svg></button>
+                <button class="gh-mini-btn" title="Pattern recolor — open in Pattern Mode (V3.0)" onclick="pmFromHistory(${ci})"><svg viewBox="0 0 24 24">${GH_ICON.pattern}</svg></button>
                 <button class="gh-mini-btn" title="Download" onclick="downloadHistItem(${ci})"><svg viewBox="0 0 24 24">${GH_ICON.download}</svg></button>
                 <button class="gh-mini-btn danger" title="Delete this render" onclick="deleteHistoryItem(${ci})"><svg viewBox="0 0 24 24">${GH_ICON.trash}</svg></button>
               </span>
@@ -5719,6 +5940,700 @@ function exportLogCSV(){
   document.body.appendChild(a);a.click();
   document.body.removeChild(a);URL.revokeObjectURL(url);
 }
+
+// ================================================================
+// PATTERN MODE (V3.0.0) — zone-level deterministic recolor
+// Engine: verbatim transplant of the Pattern Mode Tier-1 bench v1.3
+// (PATTERN_ENGINE 1.4). Marked deviations from the bench source:
+//   D1 — color math rewired to this file's canonical rgbToLab /
+//        labToRgb (bench carried its own rgb2lab/lab2rgb copies;
+//        the formulas are numerically identical — pmLab / pmRgbArr
+//        below are thin array adapters, not reimplementations).
+//   D2 — k-means++ init runs on a seeded mulberry32 PRNG so Detect
+//        is deterministic (bench used Math.random()). Same source
+//        image + same params => same zones, every run.
+// Folded-in fixes vs the bench: NaN guard when a zone loses all core
+// pixels after an edit; real Rule-2 output filenames via history.
+// No Gemini/Claude calls anywhere in this section.
+// ================================================================
+const PM_CORE=200, PM_COVER=10;   // alpha gates: core = mean/cluster, cover = recolor reach
+// v3.3.0 — D3 accent rescue (PATTERN_ENGINE 1.5) tuning
+const PM_ACC_T=400;        // weighted-ΔE² gate: a CORE pixel farther than this from EVERY zone mean is an accent candidate (≈ΔE 20)
+const PM_ACC_FRAC=0.0005;  // a pool must be ≥ 0.05% of core garment px…
+const PM_ACC_MINPX=250;    // …and ≥ 250 px absolute, so noise never becomes a zone
+const PM_ACC_MAX=2;        // at most two rescued accent zones per detect
+const PM_SEED=0x53564C;           // 'SVL' — fixed detect seed (D2)
+const PM_ZMAP=['#7f77dd','#1d9e75','#d85a30','#d4537e','#378add','#b97316','#0f6e56','#993556'];
+const PM={src:null,srcTag:'',W:0,H:0,base:null,maskMap:null,zones:[],sel:new Set(),
+          view:'render',outData:null,outB64:null,zoneB64:null,applied:false,
+          hovZone:-1,_hov:null};  // v3.2.0 — zone hover highlight state + mask cache
+let pmK=4;
+
+function pmMulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+// D1 — canonical color math adapters (array shape used by the engine core)
+function pmLab(r,g,b){const o=rgbToLab(r,g,b);return[o.L,o.a,o.b];}
+function pmRgbArr(L,a,b){const o=labToRgb(L,a,b);return[o.r,o.g,o.b];}
+function pmRgb2Hex(r,g,b){return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,v|0)).toString(16).padStart(2,'0')).join('').toUpperCase();}
+function pmLab2Hex(L,a,b){const c=pmRgbArr(L,a,b);return pmRgb2Hex(c[0],c[1],c[2]);}
+function pmDE(a,b){const dl=a[0]-b[0],da=a[1]-b[1],db=a[2]-b[2];return Math.sqrt(dl*dl+da*da+db*db);}
+function pmWd(p,c,wL){const dl=p[0]-c[0],da=p[1]-c[1],db=p[2]-c[2];return wL*dl*dl+da*da+db*db;}
+function pmEl(id){return document.getElementById(id);}
+
+function pmKStep(d){ pmK=Math.max(2,Math.min(8,pmK+d)); pmEl('pmKVal').textContent=pmK; }
+
+/* ---------- source loading ---------- */
+function pmLoadSource(b64,tag,kind){
+  if(!b64)return;
+  const im=new Image();
+  im.onload=()=>{
+    PM.src=b64;PM.srcTag=tag||'';PM.W=im.naturalWidth;PM.H=im.naturalHeight;
+    PM.srcKind=kind||'upload';  // v3.2.1 — 'render' | 'history' | 'upload' (staleness tracking)
+    const c=document.createElement('canvas');c.width=PM.W;c.height=PM.H;
+    const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);
+    PM.base=x.getImageData(0,0,PM.W,PM.H);
+    pmHideZoneHighlight();PM._hov=null;  // v3.2.0 — new source, old masks invalid
+    PM.maskMap=null;PM.zones=[];PM.sel.clear();
+    PM.outData=null;PM.outB64=null;PM.zoneB64=null;PM.applied=false;PM.view='render';
+    const sn=pmEl('pmSourceNote');
+    if(sn)sn.textContent=(PM.srcTag?PM.srcTag+' · ':'')+PM.W+' × '+PM.H+' px';
+    if(S.activeMode==='pattern'){
+      const oi=pmEl('origImg');if(oi)oi.src=b64;
+      pmResetOutputPane();
+      pmDetect();
+    }
+  };
+  im.onerror=()=>{const sn=pmEl('pmSourceNote');if(sn)sn.textContent='Could not read that image.';};
+  im.src=b64;
+}
+function pmUseCurrent(){
+  if(!S.modImg){
+    const sn=pmEl('pmSourceNote');
+    if(sn)sn.textContent='No render in this session yet — generate one, pick from Session History, or upload a PNG.';
+    return;
+  }
+  pmLoadSource(S.modImg,'Current render'+(S.currentVersion?' V'+S.currentVersion:''),'render');
+}
+function pmHandleFile(input){
+  const f=input.files&&input.files[0];
+  input.value='';
+  if(!f)return;
+  const rd=new FileReader();
+  rd.onload=ev=>pmLoadSource(ev.target.result,f.name,'upload');
+  rd.readAsDataURL(f);
+}
+function pmFromCurrent(){
+  if(!S.modImg){ setError('No render to pattern-recolor yet — generate a render first.'); return; }
+  pmLoadSource(S.modImg,'Current render'+(S.currentVersion?' V'+S.currentVersion:''),'render');
+  const tab=document.querySelector('.mode-tab[data-mode="pattern"]');
+  if(tab)setMode('pattern',tab);
+}
+function pmFromHistory(i){
+  const item=S.history[i]; if(!item||!item.image)return;
+  pmLoadSource(item.image,'V'+(item.version||'?')+(item.label?' — '+item.label:''),'history');
+  const tab=document.querySelector('.mode-tab[data-mode="pattern"]');
+  if(tab)setMode('pattern',tab);
+}
+
+/* ---------- segmentation: chroma-weighted k-means (bench verbatim; D2 seeded) ---------- */
+function pmDetect(){
+  if(!PM.base){const sn=pmEl('pmSegNote');if(sn)sn.textContent='Load a source render first.';return;}
+  const t0=performance.now();
+  const d=PM.base.data,N=PM.W*PM.H,wL=+pmEl('pmWL').value,K=pmK;
+  const rnd=pmMulberry32(PM_SEED);   // D2 — deterministic detect
+  const coreIdx=[];
+  for(let p=0;p<N;p++){if(d[p*4+3]>=PM_CORE)coreIdx.push(p);}
+  if(coreIdx.length<50){pmEl('pmSegNote').textContent='Not enough opaque pixels — use a transparent-background render.';return;}
+  const step=Math.max(1,Math.floor(coreIdx.length/40000));
+  const sample=[];
+  for(let i=0;i<coreIdx.length;i+=step){const p=coreIdx[i]*4;sample.push(pmLab(d[p],d[p+1],d[p+2]));}
+  // k-means++ init (seeded)
+  let cents=[sample[(rnd()*sample.length)|0].slice()];
+  while(cents.length<K){
+    let best=null,bd=-1;
+    for(let t=0;t<24;t++){
+      const cand=sample[(rnd()*sample.length)|0];
+      let m=Infinity;for(const c of cents){const e=pmWd(cand,c,wL);if(e<m)m=e;}
+      if(m>bd){bd=m;best=cand;}
+    }
+    cents.push(best.slice());
+  }
+  // iterate
+  for(let it=0;it<14;it++){
+    const sumL=new Float64Array(K),sumA=new Float64Array(K),sumB=new Float64Array(K),cnt=new Int32Array(K);
+    for(const px of sample){
+      let bi=0,bd=Infinity;for(let c=0;c<K;c++){const e=pmWd(px,cents[c],wL);if(e<bd){bd=e;bi=c;}}
+      sumL[bi]+=px[0];sumA[bi]+=px[1];sumB[bi]+=px[2];cnt[bi]++;
+    }
+    for(let c=0;c<K;c++)if(cnt[c]){cents[c]=[sumL[c]/cnt[c],sumA[c]/cnt[c],sumB[c]/cnt[c]];}
+  }
+  // assign ALL cover pixels -> maskMap ; accumulate CORE means per zone
+  const maskMap=new Int16Array(N).fill(-1);
+  const sL=new Float64Array(K),sA=new Float64Array(K),sB=new Float64Array(K),cc=new Int32Array(K);
+  for(let p=0;p<N;p++){
+    const a=d[p*4+3];if(a<PM_COVER)continue;
+    const lab=pmLab(d[p*4],d[p*4+1],d[p*4+2]);
+    let bi=0,bd=Infinity;for(let c=0;c<K;c++){const e=pmWd(lab,cents[c],wL);if(e<bd){bd=e;bi=c;}}
+    maskMap[p]=bi;
+    if(a>=PM_CORE){sL[bi]+=lab[0];sA[bi]+=lab[1];sB[bi]+=lab[2];cc[bi]++;}
+  }
+  let zones=[];
+  for(let c=0;c<K;c++)if(cc[c])zones.push({c,mean:[sL[c]/cc[c],sA[c]/cc[c],sB[c]/cc[c]],count:cc[c]});
+  // merge tiny zones into nearest survivor by chroma
+  const totalCore=zones.reduce((t,z)=>t+z.count,0);
+  const minPct=+pmEl('pmMinPct').value;
+  const small=zones.filter(z=>100*z.count/totalCore<minPct);
+  const keep=zones.filter(z=>100*z.count/totalCore>=minPct);
+  if(keep.length&&small.length){
+    const remap={};
+    for(const sm of small){
+      let bi=keep[0].c,bd=Infinity;
+      for(const k of keep){const e=pmWd(sm.mean,k.mean,wL);if(e<bd){bd=e;bi=k.c;}}
+      remap[sm.c]=bi;
+    }
+    for(let p=0;p<N;p++){if(maskMap[p]>=0&&remap[maskMap[p]]!==undefined)maskMap[p]=remap[maskMap[p]];}
+    zones=keep;
+  }
+  // ---- v3.3.0 — D3 ACCENT RESCUE (PATTERN_ENGINE 1.5) ----
+  // Small high-contrast trims (collar tipping, piping, buttons) are chromatic
+  // outliers that k-means absorbs into the nearest mass zone when K is low:
+  // every centroid goes to the big shading tiers, and the accent — a fraction
+  // of a percent of the garment — never earns one. Rescue: pool CORE pixels
+  // whose weighted distance to their OWN zone mean (which, by nearest-centroid
+  // assignment, is their minimum over all zones) exceeds PM_ACC_T; a pool big
+  // enough (PM_ACC_FRAC of core px, floor PM_ACC_MINPX) becomes its own zone,
+  // split once via farthest-pair 2-means when the pool is itself bimodal
+  // (e.g. white tipping + contrast buttons), up to PM_ACC_MAX zones. Runs
+  // AFTER the Min-Zone merge, so a rescued accent is exempt from it — an
+  // accent is small by nature. Deterministic; no RNG involved.
+  let rescuedN=0;
+  if(zones.length){
+    const minN=Math.max(PM_ACC_MINPX,Math.round(coreIdx.length*PM_ACC_FRAC));
+    const meansByC={};zones.forEach(z=>{meansByC[z.c]=z.mean;});
+    let pool=[];
+    for(let p=0;p<N;p++){const zc=maskMap[p];if(zc<0||meansByC[zc]===undefined)continue;
+      const i=p*4;if(d[i+3]<PM_CORE)continue;
+      const l=pmLab(d[i],d[i+1],d[i+2]);
+      if(pmWd(l,meansByC[zc],wL)>PM_ACC_T)pool.push({p,l});}
+    let nextC=Math.max(...zones.map(z=>z.c))+1;
+    const rescuedCs=[];
+    let guard=0;
+    while(pool.length>=minN&&rescuedN<PM_ACC_MAX&&guard++<4){
+      let m=[0,0,0];for(const o of pool){m[0]+=o.l[0];m[1]+=o.l[1];m[2]+=o.l[2];}
+      m=[m[0]/pool.length,m[1]/pool.length,m[2]/pool.length];
+      let far=null,fd=-1;
+      for(const o of pool){const e=pmWd(o.l,m,wL);if(e>fd){fd=e;far=o;}}
+      let cA=m,grpA=pool,grpB=[];
+      if(fd>PM_ACC_T){ // bimodal pool — 2-means (farthest-pair seed), take the larger side this round
+        let cB=far.l.slice();cA=m.slice();
+        for(let it=0;it<10;it++){
+          const a=[0,0,0,0],b=[0,0,0,0];
+          for(const o of pool){const t=pmWd(o.l,cA,wL)<=pmWd(o.l,cB,wL)?a:b;t[0]+=o.l[0];t[1]+=o.l[1];t[2]+=o.l[2];t[3]++;}
+          if(a[3])cA=[a[0]/a[3],a[1]/a[3],a[2]/a[3]];
+          if(b[3])cB=[b[0]/b[3],b[1]/b[3],b[2]/b[3]];
+        }
+        grpA=[];grpB=[];
+        for(const o of pool){(pmWd(o.l,cA,wL)<=pmWd(o.l,cB,wL)?grpA:grpB).push(o);}
+        if(grpB.length>grpA.length){const tg=grpA;grpA=grpB;grpB=tg;cA=cB;}
+      }
+      if(grpA.length<minN)break;
+      const c=nextC++;
+      for(const o of grpA)maskMap[o.p]=c;
+      zones.push({c,mean:cA,count:grpA.length});
+      meansByC[c]=cA;rescuedCs.push(c);
+      rescuedN++;
+      pool=grpB;
+    }
+    // pull the accent's soft edges in: COVER-but-not-CORE pixels switch to a
+    // rescued zone only when it is strictly closer than their current zone
+    if(rescuedN){
+      for(let p=0;p<N;p++){const i=p*4,a=d[i+3];
+        if(a<PM_COVER||a>=PM_CORE||maskMap[p]<0||meansByC[maskMap[p]]===undefined)continue;
+        const l=pmLab(d[i],d[i+1],d[i+2]);
+        let bi=maskMap[p],bd=pmWd(l,meansByC[bi],wL);
+        for(const rc of rescuedCs){const e=pmWd(l,meansByC[rc],wL);if(e<bd){bd=e;bi=rc;}}
+        maskMap[p]=bi;}
+    }
+  }
+  zones.sort((a,b)=>b.count-a.count);
+  const reindex={};zones.forEach((z,i)=>reindex[z.c]=i);
+  const finalMap=new Int16Array(N).fill(-1);
+  for(let p=0;p<N;p++){if(maskMap[p]>=0&&reindex[maskMap[p]]!==undefined)finalMap[p]=reindex[maskMap[p]];}
+  PM.maskMap=finalMap;
+  const tot=zones.reduce((t,z)=>t+z.count,0);
+  PM.zones=zones.map((z,i)=>({id:i,mean:z.mean,hex:pmLab2Hex(z.mean[0],z.mean[1],z.mean[2]),
+    pct:100*z.count/tot,keep:true,target:pmLab2Hex(z.mean[0],z.mean[1],z.mean[2]),result:null}));
+  PM.outData=null;PM.outB64=null;PM.zoneB64=null;PM.applied=false;PM.sel.clear();
+  pmEl('pmSegNote').textContent=zones.length+' zones · '+coreIdx.length.toLocaleString()+' garment px · '+Math.round(performance.now()-t0)+' ms · deterministic'+(rescuedN?' · '+rescuedN+' accent zone'+(rescuedN>1?'s':'')+' rescued (trim/tipping)':'');
+  pmEl('pmZoneWrap').classList.remove('hidden');
+  pmEl('pmSaveBtn').disabled=true;
+  pmEl('pmGates').innerHTML='';
+  pmRenderZones();
+  PM.view='zonemap';pmPaintView();
+}
+
+/* ---------- zone table ---------- */
+function pmRenderZones(){
+  const tb=pmEl('pmZoneBody');if(!tb)return;
+  tb.innerHTML='';
+  PM.zones.forEach(z=>{
+    const tr=document.createElement('tr');
+    let badge='<span class="pm-de mut">—</span>';
+    if(z.result!==null){
+      const cls=z.keep?(z.result<=1?'ok':z.result<=3?'warn':'bad'):(z.result<=3?'ok':z.result<=6?'warn':'bad');
+      badge='<span class="pm-de '+cls+'">'+(z.keep?'drift ':'')+'ΔE '+z.result.toFixed(1)+'</span>';
+    }
+    tr.innerHTML=
+      '<td><input type="checkbox" data-pmsel="'+z.id+'" '+(PM.sel.has(z.id)?'checked':'')+' aria-label="select zone"></td>'+
+      '<td><span class="pm-sw" style="background:'+z.hex+'"></span></td>'+
+      '<td>'+z.hex+'<br><span style="opacity:.45">L '+z.mean[0].toFixed(0)+' a '+z.mean[1].toFixed(0)+' b '+z.mean[2].toFixed(0)+'</span></td>'+
+      '<td>'+z.pct.toFixed(1)+'%</td>'+
+      '<td><input type="checkbox" data-pmkeep="'+z.id+'" '+(z.keep?'checked':'')+'></td>'+
+      '<td style="white-space:nowrap"><input type="color" class="pm-swpick" value="'+z.target+'" data-pmcol="'+z.id+'" '+(z.keep?'disabled':'')+'> '+
+        '<input type="text" class="pm-hex" value="'+z.target+'" data-pmhex="'+z.id+'" '+(z.keep?'disabled':'')+'>'+
+        // v3.1.0 — per-zone shadow-shade suggestion (filled by pmUpdateSuggestions)
+        (z.id!==0?'<div class="pm-sugg hidden" data-pmsugg="'+z.id+'" title="Derived from the main-zone target — this zone\'s original shading offset preserved">'+
+          '<span class="pm-sugg-sw"></span><span class="pm-sugg-hex"></span>'+
+          '<button type="button" class="pm-sugg-btn" data-pmsuggapply="'+z.id+'">Apply</button></div>':'')+
+        '</td>'+
+      '<td>'+badge+'</td>';
+    // v3.2.0 — hovering a zone row highlights that zone on the garment
+    tr.dataset.pmzone=z.id;
+    tr.onmouseenter=()=>pmShowZoneHighlight(z.id);
+    tr.onmouseleave=pmHideZoneHighlight;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('[data-pmkeep]').forEach(el=>el.onchange=e=>{
+    const z=PM.zones[+e.target.dataset.pmkeep];z.keep=e.target.checked;z.result=null;pmRenderZones();});
+  tb.querySelectorAll('[data-pmcol]').forEach(el=>el.oninput=e=>{
+    const z=PM.zones[+e.target.dataset.pmcol];z.target=e.target.value.toUpperCase();
+    tb.querySelector('[data-pmhex="'+z.id+'"]').value=z.target;
+    pmUpdateSuggestions();});  // v3.1.0 — refresh shade suggestions live
+  tb.querySelectorAll('[data-pmhex]').forEach(el=>el.onchange=e=>{
+    let v=e.target.value.trim();if(!v.startsWith('#'))v='#'+v;
+    if(/^#[0-9a-fA-F]{6}$/.test(v)){const z=PM.zones[+e.target.dataset.pmhex];z.target=v.toUpperCase();
+      tb.querySelector('[data-pmcol="'+z.id+'"]').value=z.target;e.target.value=z.target;}
+    else e.target.value=PM.zones[+e.target.dataset.pmhex].target;
+    pmUpdateSuggestions();});  // v3.1.0 — refresh shade suggestions
+  tb.querySelectorAll('[data-pmsel]').forEach(el=>el.onchange=e=>{
+    const id=+e.target.dataset.pmsel;
+    if(e.target.checked)PM.sel.add(id);else PM.sel.delete(id);
+    pmUpdateSelButtons();});
+  tb.querySelectorAll('[data-pmsuggapply]').forEach(el=>el.onclick=e=>{
+    pmApplySuggestion(+e.target.dataset.pmsuggapply);});  // v3.1.0
+  pmUpdateSelButtons();
+  pmUpdateSuggestions();  // v3.1.0 — suggestions survive re-renders
+}
+
+/* ---------- v3.1.0 — shadow-shade suggestions ----------
+   When the MAIN zone (largest share — PM.zones[0], zones are sorted by
+   count desc) has its target moved off its detected color, every other
+   zone gets a suggested target: the zone's original LAB offset from the
+   main zone (ΔL/Δa/Δb between DETECTED means) re-applied to the new main
+   target, through the file's canonical pmLab/pmLab2Hex (labToRgb clamps).
+   A shadow zone stays exactly as much darker — and a highlight exactly as
+   much lighter — than the new color as it was than the old.
+   Suggestion only: nothing changes until the per-zone Apply or Apply All
+   is clicked; applying sets the zone's target and unticks Keep so the
+   recolor actually takes effect. */
+function pmMainZone(){return PM.zones.length?PM.zones[0]:null;}
+function pmSuggestedHexFor(z,main,mainTgtLab){
+  return pmLab2Hex(
+    mainTgtLab[0]+(z.mean[0]-main.mean[0]),
+    mainTgtLab[1]+(z.mean[1]-main.mean[1]),
+    mainTgtLab[2]+(z.mean[2]-main.mean[2]));
+}
+function pmUpdateSuggestions(){
+  const tb=pmEl('pmZoneBody'),bar=pmEl('pmSuggBar');if(!tb||!bar)return;
+  const main=pmMainZone();
+  const active=!!main&&PM.zones.length>1&&main.target!==main.hex;
+  let mainTgtLab=null;
+  if(active){const rgb=hexToRgb(main.target);mainTgtLab=pmLab(rgb[0],rgb[1],rgb[2]);}
+  let shown=0;
+  PM.zones.forEach(z=>{
+    if(!main||z.id===main.id)return;
+    const row=tb.querySelector('[data-pmsugg="'+z.id+'"]');if(!row)return;
+    if(!active){row.classList.add('hidden');delete row.dataset.suggHex;return;}
+    const sugg=pmSuggestedHexFor(z,main,mainTgtLab);
+    if(sugg===z.target){row.classList.add('hidden');delete row.dataset.suggHex;return;}  // already applied
+    row.querySelector('.pm-sugg-sw').style.background=sugg;
+    row.querySelector('.pm-sugg-hex').textContent=sugg;
+    row.dataset.suggHex=sugg;
+    row.classList.remove('hidden');shown++;
+  });
+  bar.classList.toggle('hidden',!shown);
+}
+function pmApplySuggestion(id){
+  const tb=pmEl('pmZoneBody');if(!tb)return;
+  const row=tb.querySelector('[data-pmsugg="'+id+'"]');
+  if(!row||!row.dataset.suggHex)return;
+  const z=PM.zones[id];if(!z)return;
+  z.target=row.dataset.suggHex;z.keep=false;z.result=null;
+  pmRenderZones();
+}
+function pmApplyAllSuggestions(){
+  const main=pmMainZone();
+  if(!main||PM.zones.length<2||main.target===main.hex)return;
+  const rgb=hexToRgb(main.target),mainTgtLab=pmLab(rgb[0],rgb[1],rgb[2]);
+  PM.zones.forEach(z=>{
+    if(z.id===main.id)return;
+    z.target=pmSuggestedHexFor(z,main,mainTgtLab);z.keep=false;z.result=null;});
+  pmRenderZones();
+}
+function pmUpdateSelButtons(){
+  const n=PM.sel.size;
+  pmEl('pmMergeBtn').disabled=n<2;
+  pmEl('pmSplitBtn').disabled=n!==1;
+  pmEl('pmSelNote').textContent=n?(n+' zone'+(n>1?'s':'')+' selected'):'Tick to merge (2+) / split (1)';
+}
+
+/* ---------- zone editing: merge & split (bench verbatim) ---------- */
+function pmRebuildZonesFromMask(){
+  const N=PM.W*PM.H,d=PM.base.data,stats={};
+  for(let p=0;p<N;p++){const z=PM.maskMap[p];if(z<0)continue;const i=p*4;if(d[i+3]<PM_CORE)continue;
+    const l=pmLab(d[i],d[i+1],d[i+2]);const st=stats[z]||(stats[z]={L:0,a:0,b:0,n:0});
+    st.L+=l[0];st.a+=l[1];st.b+=l[2];st.n++;}
+  let arr=Object.keys(stats).map(k=>{const st=stats[k];return {old:+k,mean:[st.L/st.n,st.a/st.n,st.b/st.n],count:st.n};});
+  arr.sort((a,b)=>b.count-a.count);
+  const remap={};arr.forEach((z,i)=>remap[z.old]=i);
+  const fm=new Int16Array(N).fill(-1);
+  for(let p=0;p<N;p++){const z=PM.maskMap[p];if(z>=0&&remap[z]!==undefined)fm[p]=remap[z];}
+  PM.maskMap=fm;
+  const tot=arr.reduce((t,z)=>t+z.count,0)||1;
+  PM.zones=arr.map((z,i)=>({id:i,mean:z.mean,hex:pmLab2Hex(z.mean[0],z.mean[1],z.mean[2]),
+    pct:100*z.count/tot,keep:true,target:pmLab2Hex(z.mean[0],z.mean[1],z.mean[2]),result:null}));
+}
+function pmAfterZoneEdit(msg){
+  pmHideZoneHighlight();  // v3.2.0 — masks about to change
+  PM.sel.clear();PM.outData=null;PM.outB64=null;PM.zoneB64=null;PM.applied=false;
+  pmEl('pmSaveBtn').disabled=true;pmEl('pmGates').innerHTML='';
+  pmRebuildZonesFromMask();pmRenderZones();
+  PM.view='zonemap';pmPaintView();
+  if(msg)pmEl('pmSegNote').textContent=msg;
+}
+function pmMergeSelected(){
+  if(PM.sel.size<2)return;
+  const sel=PM.sel,tgt=Math.min(...sel),N=PM.W*PM.H;
+  for(let p=0;p<N;p++){if(sel.has(PM.maskMap[p]))PM.maskMap[p]=tgt;}
+  pmAfterZoneEdit(PM.zones.length+' → '+(PM.zones.length-sel.size+1)+' zones (merged)');
+}
+function pmSplitSelected(){
+  if(PM.sel.size!==1)return;
+  const zid=[...PM.sel][0],wL=+pmEl('pmWL').value,N=PM.W*PM.H,d=PM.base.data;
+  const coreLabs=[];
+  for(let p=0;p<N;p++){if(PM.maskMap[p]!==zid)continue;const i=p*4;if(d[i+3]>=PM_CORE)coreLabs.push(pmLab(d[i],d[i+1],d[i+2]));}
+  if(coreLabs.length<2){pmAfterZoneEdit('zone too small to split');return;}
+  let c0=coreLabs[0].slice(),c1=coreLabs[0].slice(),far=-1;
+  for(const l of coreLabs){const e=pmWd(l,c0,wL);if(e>far){far=e;c1=l.slice();}}
+  for(let it=0;it<10;it++){
+    let a0=[0,0,0,0],a1=[0,0,0,0];
+    for(const l of coreLabs){const t=pmWd(l,c0,wL)<=pmWd(l,c1,wL)?a0:a1;t[0]+=l[0];t[1]+=l[1];t[2]+=l[2];t[3]++;}
+    if(a0[3])c0=[a0[0]/a0[3],a0[1]/a0[3],a0[2]/a0[3]];
+    if(a1[3])c1=[a1[0]/a1[3],a1[1]/a1[3],a1[2]/a1[3]];
+  }
+  let maxId=0;for(let p=0;p<N;p++)if(PM.maskMap[p]>maxId)maxId=PM.maskMap[p];
+  const newId=maxId+1;
+  for(let p=0;p<N;p++){if(PM.maskMap[p]!==zid)continue;const i=p*4;if(d[i+3]<PM_COVER)continue;
+    const l=pmLab(d[i],d[i+1],d[i+2]);PM.maskMap[p]=pmWd(l,c0,wL)<=pmWd(l,c1,wL)?zid:newId;}
+  pmAfterZoneEdit((PM.zones.length+1)+' zones (split)');
+}
+
+/* ---------- the engine core: masked mean-LAB shift per zone ----------
+   Zone generalization of enforceEyedropColor — same shift math, applied
+   under PM.maskMap instead of the whole-garment alpha mask. */
+function pmApplyLabLockToZone(data,maskMap,zoneId,targetHex,lumA){
+  const N=PM.W*PM.H,rgb=hexToRgb(targetHex),tgt=pmLab(rgb[0],rgb[1],rgb[2]);
+  let sL=0,sA=0,sB=0,n=0;
+  for(let p=0;p<N;p++){if(maskMap[p]!==zoneId)continue;const i=p*4;if(data[i+3]<PM_CORE)continue;
+    const l=pmLab(data[i],data[i+1],data[i+2]);sL+=l[0];sA+=l[1];sB+=l[2];n++;}
+  if(!n)return {mean:null,achieved:null,target:tgt};
+  const mL=sL/n,mA=sA/n,mB=sB/n;
+  const dL=(tgt[0]-mL)*lumA, dA=tgt[1]-mA, dB=tgt[2]-mB;
+  for(let p=0;p<N;p++){if(maskMap[p]!==zoneId)continue;const i=p*4;if(data[i+3]<PM_COVER)continue;
+    const l=pmLab(data[i],data[i+1],data[i+2]);const o=pmRgbArr(l[0]+dL,l[1]+dA,l[2]+dB);
+    data[i]=o[0];data[i+1]=o[1];data[i+2]=o[2];}
+  return {mean:[mL,mA,mB],target:tgt};
+}
+function pmFeatherBoundaries(data,maskMap){
+  const W=PM.W,H=PM.H,src=new Uint8ClampedArray(data);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const p=y*W+x,i=p*4;if(src[i+3]<PM_COVER)continue;const z=maskMap[p];
+    let diff=false;
+    if(x>0&&maskMap[p-1]>=0&&maskMap[p-1]!==z)diff=true;
+    else if(x<W-1&&maskMap[p+1]>=0&&maskMap[p+1]!==z)diff=true;
+    else if(y>0&&maskMap[p-W]>=0&&maskMap[p-W]!==z)diff=true;
+    else if(y<H-1&&maskMap[p+W]>=0&&maskMap[p+W]!==z)diff=true;
+    if(!diff)continue;
+    let r=src[i],g=src[i+1],b=src[i+2],c=1;
+    const ns=[p-1,p+1,p-W,p+W];
+    for(const q of ns){if(q<0||q>=W*H)continue;const j=q*4;if(src[j+3]<PM_COVER)continue;r+=src[j];g+=src[j+1];b+=src[j+2];c++;}
+    data[i]=r/c;data[i+1]=g/c;data[i+2]=b/c;
+  }
+}
+
+/* ---------- apply ---------- */
+function pmApplyRecolor(){
+  if(!PM.maskMap||!PM.base)return;
+  const out=new ImageData(new Uint8ClampedArray(PM.base.data),PM.W,PM.H);
+  const lumA=+pmEl('pmLumA').value;
+  PM.zones.forEach(z=>{
+    if(z.keep){z.result=0;return;}
+    pmApplyLabLockToZone(out.data,PM.maskMap,z.id,z.target,lumA);
+  });
+  if(pmEl('pmFeather').checked)pmFeatherBoundaries(out.data,PM.maskMap);
+  // recompute final means per zone -> ΔE readouts (post-feather, the honest number)
+  const N=PM.W*PM.H,acc={};
+  PM.zones.forEach(z=>acc[z.id]={L:0,a:0,b:0,n:0});
+  for(let p=0;p<N;p++){const zid=PM.maskMap[p];if(zid<0)continue;const i=p*4;if(out.data[i+3]<PM_CORE)continue;
+    const l=pmLab(out.data[i],out.data[i+1],out.data[i+2]);const a=acc[zid];if(!a)continue;a.L+=l[0];a.a+=l[1];a.b+=l[2];a.n++;}
+  PM.zones.forEach(z=>{const a=acc[z.id];if(!a||!a.n){z.result=null;return;}
+    const fin=[a.L/a.n,a.a/a.n,a.b/a.n];
+    if(z.keep){z.result=pmDE(fin,z.mean);}
+    else{const rgb=hexToRgb(z.target);z.result=pmDE(fin,pmLab(rgb[0],rgb[1],rgb[2]));}});
+  PM.outData=out;
+  const c=document.createElement('canvas');c.width=PM.W;c.height=PM.H;
+  c.getContext('2d').putImageData(out,0,0);
+  PM.outB64=c.toDataURL('image/png');
+  PM.applied=true;PM.zoneB64=null;
+  pmEl('pmSaveBtn').disabled=false;
+  pmRenderZones();
+  PM.view='render';pmPaintView();
+  pmRenderGates();
+}
+function pmRenderGates(){
+  const recol=PM.zones.filter(z=>!z.keep&&z.result!==null);
+  const kept=PM.zones.filter(z=>z.keep&&z.result!==null);
+  const maxT=recol.length?Math.max(...recol.map(z=>z.result)):null;
+  const maxD=kept.length?Math.max(...kept.map(z=>z.result)):null;
+  const g=(label,v,lim,warnLim)=>{
+    if(v==null)return '<span class="pm-de mut">'+label+' —</span>';
+    const cls=v<=lim?'ok':v<=warnLim?'warn':'bad';
+    return '<span class="pm-de '+cls+'">'+(v<=lim?'✓ ':'')+label+' ΔE '+v.toFixed(1)+' (gate ≤'+lim+')</span>';
+  };
+  // A large source→target lightness jump can't fully land while the
+  // luminance anchor preserves shading (<1.0): the residual L* gap reads
+  // back honestly as ΔE. Surface the fix instead of looking like a bug.
+  const lumA=+pmEl('pmLumA').value;
+  const hint=(maxT!=null&&maxT>3&&lumA<1)
+    ? '<span class="pm-de warn">large lightness jump — raise Lum. Anchor toward 1.0 to land closer to target (flattens shading)</span>' : '';
+  pmEl('pmGates').innerHTML=
+    g('max target',maxT,3,6)+g('max kept drift',maxD,1,3)+
+    '<span class="pm-de mut">'+recol.length+' zone'+(recol.length===1?'':'s')+' recolored · post-feather</span>'+hint;
+}
+
+/* ---------- pane painting ---------- */
+function pmZoneMapB64(){
+  if(PM.zoneB64)return PM.zoneB64;
+  if(!PM.maskMap||!PM.base)return null;
+  const N=PM.W*PM.H,img=new ImageData(PM.W,PM.H),d=img.data;
+  for(let p=0;p<N;p++){const z=PM.maskMap[p],i=p*4;
+    if(z<0||PM.base.data[i+3]<PM_COVER){d[i+3]=0;continue;}
+    const col=hexToRgb(PM_ZMAP[z%PM_ZMAP.length]);d[i]=col[0];d[i+1]=col[1];d[i+2]=col[2];d[i+3]=255;}
+  const c=document.createElement('canvas');c.width=PM.W;c.height=PM.H;
+  c.getContext('2d').putImageData(img,0,0);
+  PM.zoneB64=c.toDataURL('image/png');
+  return PM.zoneB64;
+}
+function pmResetOutputPane(){
+  pmEl('standbyState').classList.remove('hidden');
+  pmEl('processingState').classList.add('hidden');
+  pmEl('modImg').classList.add('hidden');
+  pmEl('aiBadge').classList.add('hidden');
+  pmEl('modLabelBadge').classList.add('hidden');
+  pmEl('pmViewSeg').classList.toggle('hidden',!PM.maskMap);
+}
+function pmPaintView(){
+  if(S.activeMode!=='pattern')return;
+  const src=PM.view==='zonemap'?pmZoneMapB64():(PM.outB64||PM.src);
+  if(!src){pmResetOutputPane();return;}
+  const mi=pmEl('modImg');mi.src=src;mi.classList.remove('hidden');
+  pmEl('standbyState').classList.add('hidden');
+  pmEl('processingState').classList.add('hidden');
+  pmEl('aiBadge').classList.add('hidden');
+  const lb=pmEl('modLabelBadge'),lt=pmEl('modLabelText');
+  if(PM.view==='zonemap'){lt.textContent='ZONE MAP';lb.classList.remove('hidden');}
+  else if(PM.outB64){lt.textContent='PATTERN — UNSAVED';lb.classList.remove('hidden');}
+  else{lt.textContent='SOURCE';lb.classList.remove('hidden');}
+  pmEl('pmViewSeg').classList.toggle('hidden',!PM.maskMap);
+  pmEl('pmViewRenderBtn').classList.toggle('on',PM.view==='render');
+  pmEl('pmViewZoneBtn').classList.toggle('on',PM.view==='zonemap');
+}
+function pmSetView(v){PM.view=v;pmPaintView();}
+
+/* ---------- v3.2.0 — zone hover highlight (table row ⇄ garment) ----------
+   Display-only linking so the user can be sure which color a detected zone
+   refers to. A pointer-events:none canvas sits over modImg; highlighting a
+   zone paints a translucent dim over every OTHER zone (garment pixels only),
+   leaving the hovered zone at full clarity in whichever view is showing.
+   Geometry mirrors the magnifier's object-fit:cover math exactly. Per-zone
+   dim masks are cached against PM.maskMap identity (detect/merge/split
+   always allocate a fresh maskMap, so the cache self-invalidates). */
+function pmHovMaskCanvas(zid){
+  if(!PM.maskMap||!PM.base)return null;
+  if(!PM._hov||PM._hov.map!==PM.maskMap)PM._hov={map:PM.maskMap,masks:{}};
+  if(PM._hov.masks[zid])return PM._hov.masks[zid];
+  const N=PM.W*PM.H,img=new ImageData(PM.W,PM.H),d=img.data,bd=PM.base.data;
+  for(let p=0;p<N;p++){const i=p*4;
+    if(bd[i+3]<PM_COVER||PM.maskMap[p]===zid)continue;  // off-garment + hovered zone stay clear
+    d[i]=20;d[i+1]=20;d[i+2]=20;d[i+3]=165;}            // dim every other zone
+  const c=document.createElement('canvas');c.width=PM.W;c.height=PM.H;
+  c.getContext('2d').putImageData(img,0,0);
+  PM._hov.masks[zid]=c;
+  return c;
+}
+function pmCoverGeom(){
+  const pane=pmEl('modPane'),rect=pane.getBoundingClientRect();
+  const s=Math.max(rect.width/PM.W,rect.height/PM.H);
+  return {rect,s,dispW:PM.W*s,dispH:PM.H*s,
+    offX:(rect.width-PM.W*s)/2,offY:(rect.height-PM.H*s)/2};
+}
+function pmShowZoneHighlight(zid){
+  if(S.activeMode!=='pattern'||!PM.maskMap)return;
+  const mi=pmEl('modImg'),cv=pmEl('pmHovCanvas');
+  if(!mi||mi.classList.contains('hidden')||!cv)return;
+  const src=pmHovMaskCanvas(zid);if(!src)return;
+  const g=pmCoverGeom();
+  cv.width=Math.max(1,Math.round(g.rect.width));cv.height=Math.max(1,Math.round(g.rect.height));
+  const x=cv.getContext('2d');
+  x.clearRect(0,0,cv.width,cv.height);
+  x.drawImage(src,g.offX,g.offY,g.dispW,g.dispH);
+  cv.classList.remove('hidden');
+  PM.hovZone=zid;
+}
+function pmHideZoneHighlight(){
+  const cv=pmEl('pmHovCanvas');if(cv)cv.classList.add('hidden');
+  const tip=pmEl('pmHovTip');if(tip)tip.classList.add('hidden');
+  const tb=pmEl('pmZoneBody');
+  if(tb)tb.querySelectorAll('tr.pm-hov').forEach(tr=>tr.classList.remove('pm-hov'));
+  PM.hovZone=-1;
+}
+function pmBindPaneHover(){
+  const pane=pmEl('modPane');
+  if(!pane||pane.dataset.pmHovBound)return;
+  pane.dataset.pmHovBound='1';
+  pane.addEventListener('mousemove',pmPaneHover);
+  pane.addEventListener('mouseleave',pmHideZoneHighlight);
+}
+function pmPaneHover(e){
+  if(S.activeMode!=='pattern'||!PM.maskMap){return;}
+  if(typeof magnifyActive!=='undefined'&&magnifyActive){pmHideZoneHighlight();return;}  // never fight the lens
+  const mi=pmEl('modImg');
+  if(!mi||mi.classList.contains('hidden')){return;}
+  const g=pmCoverGeom();
+  const cx=e.clientX-g.rect.left,cy=e.clientY-g.rect.top;
+  const px=Math.floor((cx-g.offX)/g.s),py=Math.floor((cy-g.offY)/g.s);
+  let zid=-1;
+  if(px>=0&&py>=0&&px<PM.W&&py<PM.H)zid=PM.maskMap[py*PM.W+px];
+  if(zid<0||!PM.zones[zid]){pmHideZoneHighlight();return;}
+  if(zid!==PM.hovZone)pmShowZoneHighlight(zid);
+  const tb=pmEl('pmZoneBody');
+  if(tb)tb.querySelectorAll('tr').forEach(tr=>tr.classList.toggle('pm-hov',+tr.dataset.pmzone===zid));
+  const z=PM.zones[zid],tip=pmEl('pmHovTip');
+  if(tip){
+    tip.innerHTML='<span class="sw" style="background:'+z.hex+'"></span>'+z.hex+' · '+z.pct.toFixed(1)+'%';
+    tip.style.left=Math.round(Math.min(cx+14,g.rect.width-120))+'px';
+    tip.style.top=Math.round(Math.max(cy-28,4))+'px';
+    tip.classList.remove('hidden');
+  }
+}
+
+/* ---------- mode enter/leave (pane handoff, fully reversible) ---------- */
+function pmEnter(){
+  pmBindPaneHover();  // v3.2.0 — idempotent
+  const ol=pmEl('origPaneLabel');if(ol)ol.textContent='Source Render';
+  // v3.2.1 — staleness check: never resurrect a previous style. A source that
+  // came from this session's render pipeline ('render' kind) must still BE the
+  // current render; if the app has moved on (new render, source swap with no
+  // render yet), reload or clear instead of re-showing the old garment. A
+  // 'history'-kind source survives only while its history item still exists.
+  // 'upload'-kind PNGs are an explicit user choice and are left alone.
+  if(PM.base&&PM.srcKind==='render'&&PM.src!==S.modImg){
+    if(S.modImg){pmUseCurrent();return;}  // newer render — reload + re-detect
+    pmReset();                            // session moved on, no render yet
+  }else if(PM.base&&PM.srcKind==='history'&&!(S.history||[]).some(h=>h&&h.image===PM.src)){
+    pmReset();                            // its history item is gone
+  }
+  if(!PM.base){
+    if(S.modImg){pmUseCurrent();}
+    else{
+      const sn=pmEl('pmSourceNote');
+      if(sn)sn.textContent='No render in this session yet — generate one, use a Session History item, or upload a PNG.';
+      pmResetOutputPane();
+    }
+  }else{
+    const oi=pmEl('origImg');if(oi)oi.src=PM.src;
+    const sn=pmEl('pmSourceNote');
+    if(sn)sn.textContent=(PM.srcTag?PM.srcTag+' · ':'')+PM.W+' × '+PM.H+' px';
+    pmPaintView();
+  }
+}
+function pmLeave(){
+  pmHideZoneHighlight();  // v3.2.0
+  const ol=pmEl('origPaneLabel');if(ol)ol.textContent='Front Reference';
+  const vs=pmEl('pmViewSeg');if(vs)vs.classList.add('hidden');
+  const oi=pmEl('origImg');if(oi&&S.origImg)oi.src=S.origImg;
+  if(S.modImg)showResult(S.modImg,S.currentLabel,S.currentMetadata,S.currentVersion);
+  else resetPreviewState();
+}
+function pmReset(){
+  pmHideZoneHighlight();PM._hov=null;  // v3.2.0
+  PM.src=null;PM.srcTag='';PM.srcKind='';PM.W=0;PM.H=0;PM.base=null;PM.maskMap=null;
+  PM.zones=[];PM.sel.clear();PM.view='render';PM.outData=null;PM.outB64=null;PM.zoneB64=null;PM.applied=false;
+  const zw=pmEl('pmZoneWrap');if(zw)zw.classList.add('hidden');
+  const sn=pmEl('pmSourceNote');if(sn)sn.textContent='Load a finished render — or use the pattern button on any Session History item.';
+  const sg=pmEl('pmSegNote');if(sg)sg.textContent='';
+  const ga=pmEl('pmGates');if(ga)ga.innerHTML='';
+  const sb=pmEl('pmSaveBtn');if(sb)sb.disabled=true;
+  const vs=pmEl('pmViewSeg');if(vs)vs.classList.add('hidden');
+}
+
+/* ---------- save to Session History (versioned PATTERN item) ---------- */
+function pmSaveToHistory(){
+  if(!PM.applied||!PM.outB64)return;
+  const label=(document.getElementById('styleNameInput').value||'').trim()||S.currentLabel||'PATTERN';
+  const colorName=(document.getElementById('colorNameInput').value||'').trim();
+  const colorCode=(document.getElementById('colorCodeInput').value||'').trim();
+  const fabricContent=(document.getElementById('fabricContentInput').value||'').trim();
+  const recol=PM.zones.filter(z=>!z.keep);
+  const zoneDesc=PM.zones.map(z=>'Z'+(z.id+1)+' '+z.hex+(z.keep?' kept':'→'+z.target+' (ΔE '+(z.result==null?'—':z.result.toFixed(1))+')')).join(' | ');
+  const md={colorName,colorCode,fabricContent,renderMode:'Pattern Recolor',
+            patternEngine:PATTERN_ENGINE,patternSource:PM.srcTag||'',patternZones:zoneDesc};
+  const newV=S.versionCounter+1;S.versionCounter=newV;
+  S.modImg=PM.outB64;S.currentVersion=newV;S.currentLabel=label;S.currentMetadata=md;
+  S.history=[{
+    prompt:'Pattern recolor — '+(recol.length||0)+' zone'+(recol.length===1?'':'s')+' ('+zoneDesc+')',
+    finalPrompt:'', image:PM.outB64, label, metadata:md, version:newV,
+    mode:'pattern', colorLockTarget:null, lockColor:false,
+    view:'front', guess:false, src:PM.src, formSuspect:false
+  },...S.history].slice(0,MAX_HISTORY);
+  { const _ne=S.history[0];
+    delete S.anglePick[ghCellKey(styleKeyOf(_ne),ghColorIdentity(_ne).ck,viewOf(_ne))]; }
+  S.selectedIndices=[];
+  // Decision log — pattern colorways are audited like renders
+  S.decisionLog.unshift({
+    id:newV, timestamp:new Date().toISOString(), version:newV,
+    styleName:label, mode:'Pattern Recolor',
+    renderAngle:'FRONT', angleGuess:'No',
+    mannequinType:'—', targetPart:'Zones: '+zoneDesc,
+    colorName, colorCode,
+    pantoneCode:'', hexColor:recol.map(z=>z.target).join(' '),
+    colorCompensation:'N/A', eyedropped:'No',
+    colorLockApplied:'Per-zone LAB lock', colorLockTarget:recol.map(z=>z.target).join(' '),
+    frameLock:'N/A (source geometry preserved)',
+    collectionAnchor:'', fabric:'', fabricContent,
+    presets:'Pattern Recolor',
+    promptSent:'PATTERN_ENGINE '+PATTERN_ENGINE+' — deterministic zone recolor, no API call. '+zoneDesc,
+    renderModel:'PATTERN_ENGINE '+PATTERN_ENGINE, claudeUsed:'No', referenceAttached:'No',
+    filename:buildFilename({label,metadata:md,version:newV},true),
+    notes:''
+  });
+  updateLogBadge();
+  // stamp the saved label onto the pane (no AI badge — this is deterministic output)
+  const lt=pmEl('modLabelText'),lb=pmEl('modLabelBadge');
+  if(lt&&lb){lt.textContent=buildLabel({label,metadata:md,version:newV})||('V'+newV);lb.classList.remove('hidden');}
+  renderHistory();
+  persistSession();
+}
+
 // ================================================================
 // START
 // ================================================================
