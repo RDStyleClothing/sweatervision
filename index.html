@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <!-- VERSION SURFACE: keep in sync with APP_VERSION (runtime re-sets document.title, but this is what shows before scripts run and in view-source) -->
-<title>SWEATERVISION V3.3.2 — RD Style</title>
+<title>SWEATERVISION V3.3.3 — RD Style</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -69,6 +69,14 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
 #modPane.magnify-on{cursor:crosshair}
 .magnify-lens{position:absolute;width:170px;height:170px;border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 8px 28px rgba(0,0,0,0.30);pointer-events:none;z-index:9;background-color:#fff;background-image:linear-gradient(45deg,#efefef 25%,transparent 25%),linear-gradient(-45deg,#efefef 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#efefef 75%),linear-gradient(-45deg,transparent 75%,#efefef 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
 .magnify-lens img{position:absolute;display:block;max-width:none;width:auto;height:auto;object-fit:fill;image-rendering:auto;border-radius:0}
+
+/* v3.3.3 — HOVER FULL-IMAGE PREVIEW (reference uploads) */
+.hover-full{cursor:zoom-in}
+.full-img-overlay{position:fixed;inset:0;z-index:105;background:rgba(20,20,20,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:36px;pointer-events:none;opacity:0;transition:opacity 0.12s}
+.full-img-overlay.show{opacity:1}
+.full-img-overlay img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;background:#fff;border:2px solid #fff;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.35)}
+.full-img-label{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.92);color:var(--ink);padding:5px 14px;border-radius:20px;font-family:var(--font-display);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap}
+.full-img-hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.55)}
 .standby{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px;height:100%;opacity:0.18}
 .standby-ring{width:48px;height:48px;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center}
 .standby p{font-family:var(--font-display);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em}
@@ -650,7 +658,7 @@ table.pm-zones tbody tr{cursor:default}
         <div id="previewView">
           <!-- Grid View -->
           <div id="gridView" class="preview-grid">
-            <div class="pane" id="origPane">
+            <div class="pane hover-full" id="origPane" data-full-label="Front Reference — Full Image" title="Hover to view the full uncropped image">
               <img id="origImg" src="" alt="Original"/>
               <div class="pane-label" id="origPaneLabel">Front Reference</div>
             </div>
@@ -926,7 +934,7 @@ table.pm-zones tbody tr{cursor:default}
                     <small>Drag &amp; Drop or Click</small>
                   </div>
                   <div id="sideRefAttached" class="ref-attached hidden">
-                    <img id="sideRefThumb" src="" alt=""/>
+                    <img id="sideRefThumb" class="hover-full" data-full-label="Side Reference — Full Image" src="" alt=""/>
                     <div class="ref-attached-info">
                       <span class="ref-attached-title">Side Reference Attached</span>
                       <span class="ref-attached-sub">The side render will be built from this photo.</span>
@@ -951,7 +959,7 @@ table.pm-zones tbody tr{cursor:default}
                     <small>Drag &amp; Drop or Click</small>
                   </div>
                   <div id="backRefAttached" class="ref-attached hidden">
-                    <img id="backRefThumb" src="" alt=""/>
+                    <img id="backRefThumb" class="hover-full" data-full-label="Back Reference — Full Image" src="" alt=""/>
                     <div class="ref-attached-info">
                       <span class="ref-attached-title">Back Reference Attached</span>
                       <span class="ref-attached-sub">The back render will be built from this photo.</span>
@@ -998,7 +1006,7 @@ table.pm-zones tbody tr{cursor:default}
               <small>Drag &amp; Drop or Click</small>
             </div>
             <div id="refAttached" class="ref-attached hidden">
-              <img id="refThumb" src="" alt=""/>
+              <img id="refThumb" class="hover-full" data-full-label="Design / Style Reference — Full Image" src="" alt=""/>
               <div class="ref-attached-info">
                 <span class="ref-attached-title">Reference Attached</span>
                 <span class="ref-attached-sub">The model will use this image's pattern, texture, or style details to guide the generation.</span>
@@ -1039,6 +1047,13 @@ table.pm-zones tbody tr{cursor:default}
 </footer>
 
 <!-- SETTINGS MODAL -->
+<!-- v3.3.3 — Hover full-image overlay (references) -->
+<div id="fullImgOverlay" class="full-img-overlay">
+  <span class="full-img-label" id="fullImgOverlayLabel">Full Image</span>
+  <img id="fullImgOverlayImg" src="" alt="Full reference image"/>
+  <span class="full-img-hint">Move cursor away to close</span>
+</div>
+
 <div id="settingsModal" class="modal-overlay hidden">
   <div class="modal-box">
     <h2 class="modal-title">Settings</h2>
@@ -1982,7 +1997,14 @@ function getDynamicColorDescriptor(hex){
 // is now a fourth version surface to bump with every release (filename,
 // badge/constant, decision-log strings, static <title>) — marked with a
 // sync comment in the head.
-const APP_VERSION = '3.3.2';
+// v3.3.3 — HOVER FULL-IMAGE PREVIEW (2026-09-10): reference previews crop
+// to fit (object-fit:cover on the Front Reference pane; 64px cover thumbs
+// for Side/Back/Style refs), so a tall or wide upload can hide part of the
+// garment. Hovering any element tagged .hover-full now shows the complete,
+// uncropped image in a fixed full-screen overlay (object-fit:contain,
+// z 105 < modals' 110, pointer-events:none, closes on mouse-out).
+// Pure UI — no state/pipeline changes. Engine unchanged.
+const APP_VERSION = '3.3.3';
 const PATTERN_ENGINE = '1.5';  // lineage: Tier-1 bench 1.0–1.3 → 1.4 (D1+D2) → 1.5 (D3 accent rescue)
 
 // v2.1.0-beta — MODEL PINS hoisted as top-level constants (model-agnosticism
@@ -6658,6 +6680,29 @@ function pmSaveToHistory(){
 // START
 // ================================================================
 init();
+
+// ================================================================
+// v3.3.3 — HOVER FULL-IMAGE PREVIEW (see changelog above APP_VERSION)
+// ================================================================
+function showFullImg(el){
+  const img = el.tagName==='IMG' ? el : el.querySelector('img');
+  const src = img && img.getAttribute('src');
+  if(!src) return; // nothing uploaded yet
+  document.getElementById('fullImgOverlayImg').src = src;
+  document.getElementById('fullImgOverlayLabel').textContent = el.dataset.fullLabel || 'Full Image';
+  document.getElementById('fullImgOverlay').classList.add('show');
+}
+function hideFullImg(){
+  document.getElementById('fullImgOverlay').classList.remove('show');
+}
+document.addEventListener('mouseover',e=>{
+  const t = e.target.closest && e.target.closest('.hover-full');
+  if(t) showFullImg(t);
+});
+document.addEventListener('mouseout',e=>{
+  const t = e.target.closest && e.target.closest('.hover-full');
+  if(t && !(e.relatedTarget && t.contains(e.relatedTarget))) hideFullImg();
+});
 </script>
 </body>
 </html>
