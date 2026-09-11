@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <!-- VERSION SURFACE: keep in sync with APP_VERSION (runtime re-sets document.title, but this is what shows before scripts run and in view-source) -->
-<title>SWEATERVISION V3.3.3 — RD Style</title>
+<title>SWEATERVISION V3.3.4 — RD Style</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -70,9 +70,10 @@ main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:24px}
 .magnify-lens{position:absolute;width:170px;height:170px;border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 8px 28px rgba(0,0,0,0.30);pointer-events:none;z-index:9;background-color:#fff;background-image:linear-gradient(45deg,#efefef 25%,transparent 25%),linear-gradient(-45deg,#efefef 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#efefef 75%),linear-gradient(-45deg,transparent 75%,#efefef 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
 .magnify-lens img{position:absolute;display:block;max-width:none;width:auto;height:auto;object-fit:fill;image-rendering:auto;border-radius:0}
 
-/* v3.3.3 — HOVER FULL-IMAGE PREVIEW (reference uploads) */
-.hover-full{cursor:zoom-in}
+/* v3.3.4 — CLICK FULL-IMAGE PREVIEW (reference uploads; hover in v3.3.3, click since v3.3.4) */
+.click-full{cursor:zoom-in}
 .full-img-overlay{position:fixed;inset:0;z-index:105;background:rgba(20,20,20,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:36px;pointer-events:none;opacity:0;transition:opacity 0.12s}
+.full-img-overlay.show{pointer-events:auto;cursor:zoom-out}
 .full-img-overlay.show{opacity:1}
 .full-img-overlay img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;background:#fff;border:2px solid #fff;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.35)}
 .full-img-label{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.92);color:var(--ink);padding:5px 14px;border-radius:20px;font-family:var(--font-display);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap}
@@ -658,7 +659,7 @@ table.pm-zones tbody tr{cursor:default}
         <div id="previewView">
           <!-- Grid View -->
           <div id="gridView" class="preview-grid">
-            <div class="pane hover-full" id="origPane" data-full-label="Front Reference — Full Image" title="Hover to view the full uncropped image">
+            <div class="pane click-full" id="origPane" data-full-label="Front Reference — Full Image" title="Click to view the full uncropped image">
               <img id="origImg" src="" alt="Original"/>
               <div class="pane-label" id="origPaneLabel">Front Reference</div>
             </div>
@@ -934,7 +935,7 @@ table.pm-zones tbody tr{cursor:default}
                     <small>Drag &amp; Drop or Click</small>
                   </div>
                   <div id="sideRefAttached" class="ref-attached hidden">
-                    <img id="sideRefThumb" class="hover-full" data-full-label="Side Reference — Full Image" src="" alt=""/>
+                    <img id="sideRefThumb" class="click-full" title="Click to view the full uncropped image" data-full-label="Side Reference — Full Image" src="" alt=""/>
                     <div class="ref-attached-info">
                       <span class="ref-attached-title">Side Reference Attached</span>
                       <span class="ref-attached-sub">The side render will be built from this photo.</span>
@@ -959,7 +960,7 @@ table.pm-zones tbody tr{cursor:default}
                     <small>Drag &amp; Drop or Click</small>
                   </div>
                   <div id="backRefAttached" class="ref-attached hidden">
-                    <img id="backRefThumb" class="hover-full" data-full-label="Back Reference — Full Image" src="" alt=""/>
+                    <img id="backRefThumb" class="click-full" title="Click to view the full uncropped image" data-full-label="Back Reference — Full Image" src="" alt=""/>
                     <div class="ref-attached-info">
                       <span class="ref-attached-title">Back Reference Attached</span>
                       <span class="ref-attached-sub">The back render will be built from this photo.</span>
@@ -1006,7 +1007,7 @@ table.pm-zones tbody tr{cursor:default}
               <small>Drag &amp; Drop or Click</small>
             </div>
             <div id="refAttached" class="ref-attached hidden">
-              <img id="refThumb" class="hover-full" data-full-label="Design / Style Reference — Full Image" src="" alt=""/>
+              <img id="refThumb" class="click-full" title="Click to view the full uncropped image" data-full-label="Design / Style Reference — Full Image" src="" alt=""/>
               <div class="ref-attached-info">
                 <span class="ref-attached-title">Reference Attached</span>
                 <span class="ref-attached-sub">The model will use this image's pattern, texture, or style details to guide the generation.</span>
@@ -1051,7 +1052,7 @@ table.pm-zones tbody tr{cursor:default}
 <div id="fullImgOverlay" class="full-img-overlay">
   <span class="full-img-label" id="fullImgOverlayLabel">Full Image</span>
   <img id="fullImgOverlayImg" src="" alt="Full reference image"/>
-  <span class="full-img-hint">Move cursor away to close</span>
+  <span class="full-img-hint">Click anywhere or press Esc to close</span>
 </div>
 
 <div id="settingsModal" class="modal-overlay hidden">
@@ -2004,7 +2005,13 @@ function getDynamicColorDescriptor(hex){
 // uncropped image in a fixed full-screen overlay (object-fit:contain,
 // z 105 < modals' 110, pointer-events:none, closes on mouse-out).
 // Pure UI — no state/pipeline changes. Engine unchanged.
-const APP_VERSION = '3.3.3';
+// v3.3.4 — CLICK FULL-IMAGE PREVIEW (2026-09-11): the v3.3.3 hover trigger
+// is replaced by click — clicking anywhere in a reference preview (Front
+// Reference pane or Side/Back/Style ref thumbnail) opens the full-image
+// overlay; clicking anywhere (or Esc) closes it. Overlay is now
+// pointer-events:auto so it can catch the closing click. Same overlay,
+// same targets, empty slots still inert. Pure UI — engine unchanged.
+const APP_VERSION = '3.3.4';
 const PATTERN_ENGINE = '1.5';  // lineage: Tier-1 bench 1.0–1.3 → 1.4 (D1+D2) → 1.5 (D3 accent rescue)
 
 // v2.1.0-beta — MODEL PINS hoisted as top-level constants (model-agnosticism
@@ -6682,7 +6689,9 @@ function pmSaveToHistory(){
 init();
 
 // ================================================================
-// v3.3.3 — HOVER FULL-IMAGE PREVIEW (see changelog above APP_VERSION)
+// v3.3.4 — CLICK FULL-IMAGE PREVIEW (see changelog above APP_VERSION)
+// Click a .click-full reference → overlay opens; click anywhere on the
+// overlay (it is pointer-events:auto while shown) or press Esc → closes.
 // ================================================================
 function showFullImg(el){
   const img = el.tagName==='IMG' ? el : el.querySelector('img');
@@ -6695,13 +6704,14 @@ function showFullImg(el){
 function hideFullImg(){
   document.getElementById('fullImgOverlay').classList.remove('show');
 }
-document.addEventListener('mouseover',e=>{
-  const t = e.target.closest && e.target.closest('.hover-full');
+document.addEventListener('click',e=>{
+  const ov = document.getElementById('fullImgOverlay');
+  if(ov.classList.contains('show')){ hideFullImg(); return; } // any click closes
+  const t = e.target.closest && e.target.closest('.click-full');
   if(t) showFullImg(t);
 });
-document.addEventListener('mouseout',e=>{
-  const t = e.target.closest && e.target.closest('.hover-full');
-  if(t && !(e.relatedTarget && t.contains(e.relatedTarget))) hideFullImg();
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') hideFullImg();
 });
 </script>
 </body>
