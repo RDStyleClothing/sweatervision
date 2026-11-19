@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <!-- VERSION SURFACE: keep in sync with APP_VERSION (runtime re-sets document.title, but this is what shows before scripts run and in view-source) -->
-<title>SWEATERVISION V3.4.0 — RD Style</title>
+<title>SWEATERVISION V3.5.1 — RD Style</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -569,7 +569,7 @@ table.pm-zones tbody tr{cursor:default}
     <div>
       <div style="display:flex;align-items:center">
         <span class="logo-title">SWEATERVISION</span>
-        <span class="version-badge" id="versionBadge">V3.4.0</span>
+        <span class="version-badge" id="versionBadge">V3.5.1</span>
       </div>
       <div class="logo-sub">Sweater AI Engine By RD Style</div>
     </div>
@@ -1654,7 +1654,11 @@ function tcxDerive(code){
 
 
 // Main lookup — database first, then algorithmic derivation
-function findPantoneByInput(input){
+// v3.4.0 — renamed from findPantoneByInput. Two hoisted declarations shared
+// that name, so the custom-library hook's `_origFindPantone` captured the HOOK
+// ITSELF → infinite recursion (RangeError) for any input not in the custom
+// library: typed Pantone codes/names silently failed to resolve.
+function _findPantoneBase(input){
   if(!input || !input.trim()) return null;
   const clean = input.trim().toUpperCase();
 
@@ -1740,6 +1744,176 @@ function getDynamicColorDescriptor(hex){
   // meaningless and the color should be described as neutral.
   if(s<12){if(l<15)return"solid flat jet black";if(l>85)return"ultra-clean, bright pure white-neutral";return`${ld} neutral ash gray`;}
   return`${sd} ${ld} ${hd}`;
+}
+
+// ================================================================
+// v3.4.0 — DESCRIBED COLORS (2026-11-03)
+// Users can type a plain-English apparel color into the Pantone field (or
+// the Color Name field) — e.g. "WASHED CHARCOAL GREY", "DUSTY ROSE",
+// "HEATHER OATMEAL", "DARK OLIVE". Resolution order:
+//   1. Exact Pantone code / exact Pantone name  → legacy Pantone path (wins)
+//   2. Parsable description (base color + modifiers) → local hex, shown as
+//      "Described", optional ✦ AI Refine (Claude) for a precise shade
+//   3. Plain partial Pantone-name hit with no modifiers ("Toffee") → legacy
+// The resolved hex drives the prompt AND the post-process LAB lock exactly
+// like a Pantone hex. Finish words (washed, heather, stonewash…) also add a
+// surface-finish clause to the prompt; the flat-area mean must still match.
+// ================================================================
+const COLOR_BASES = {
+  'JET BLACK':'#0E0E10','BLACK':'#1C1C1E','OPTIC WHITE':'#FAFAF8','WHITE':'#F4F4F2',
+  'OFF WHITE':'#EDEAE0','OFFWHITE':'#EDEAE0','IVORY':'#EFE8D6','CREAM':'#EADFC6','ECRU':'#DCD3BC',
+  'NATURAL':'#E3D9C3','BONE':'#DDD5C4','OATMEAL':'#CDBFA6','BEIGE':'#D4C2A4','SAND':'#CDB894',
+  'STONE':'#B7AD9A','KHAKI':'#B5A27A','CAMEL':'#B98A57','TAN':'#B48B62','NUDE':'#D9B79E',
+  'TAUPE':'#8E7F71','MUSHROOM':'#A39585','BROWN':'#6B4A33','CHOCOLATE':'#4A3024','COFFEE':'#5A3E2E',
+  'MOCHA':'#6F5141','ESPRESSO':'#3B2A22','COGNAC':'#9A4F2A','RUST':'#A4502D','TERRACOTTA':'#B65F43',
+  'BRICK':'#9B4436','RED':'#C02A2E','CHERRY':'#A3162C','SCARLET':'#C8202F','CRIMSON':'#A01C2E',
+  'BURGUNDY':'#6E1F2E','WINE':'#6A2234','MAROON':'#5E1D24','OXBLOOD':'#5A1F22','PINK':'#E7A2B4',
+  'BLUSH':'#E9C1BE','ROSE':'#C9707F','DUSTY ROSE':'#C08A8B','MAUVE':'#A57D8A','FUCHSIA':'#C42D7E',
+  'MAGENTA':'#B5267C','HOT PINK':'#E0457B','CORAL':'#E8735E','SALMON':'#E8907A','PEACH':'#F0B595',
+  'APRICOT':'#EFA676','ORANGE':'#E86A25','TANGERINE':'#EE7A2F','PUMPKIN':'#CD6727','MUSTARD':'#C99A2E',
+  'OCHRE':'#C08A2E','GOLD':'#C9A23A','YELLOW':'#F2D34A','LEMON':'#F3E17A','BUTTER':'#F2E3A2',
+  'OLIVE':'#6E6B3A','ARMY GREEN':'#4F5236','ARMY':'#4F5236','MOSS':'#6F7642','SAGE':'#9EA889',
+  'MINT':'#A9DCC4','GREEN':'#3E8E4F','KELLY GREEN':'#2E9A4E','EMERALD':'#1E7F5A',
+  'FOREST GREEN':'#2C4A35','FOREST':'#2C4A35','HUNTER GREEN':'#2F4D3A','HUNTER':'#2F4D3A',
+  'BOTTLE GREEN':'#1F4A37','TEAL':'#1F7A7A','TURQUOISE':'#3FB7B2','AQUA':'#7FD1CE',
+  'SKY BLUE':'#8EC1E3','LIGHT BLUE':'#A7C6E2','BABY BLUE':'#B4D1EA','POWDER BLUE':'#B5C7DE',
+  'BLUE':'#2F5FA8','COBALT':'#1F4FA8','ROYAL BLUE':'#2B4BAA','ROYAL':'#2B4BAA','DENIM':'#4A6582',
+  'CHAMBRAY':'#7F96AE','INDIGO':'#2E3A63','NAVY':'#1F2A44','MIDNIGHT':'#1B2236','LAVENDER':'#B6A6D1',
+  'LILAC':'#C2A9CF','PURPLE':'#6A3C8C','VIOLET':'#6E4AA0','PLUM':'#5E2F4D','EGGPLANT':'#3F2738',
+  'AUBERGINE':'#3E2236','GREY':'#8E8E8C','GRAY':'#8E8E8C','LIGHT GREY':'#BDBDBA','LIGHT GRAY':'#BDBDBA',
+  'CHARCOAL':'#4A4A4A','SILVER':'#B9BBBD','ASH':'#9B9A96','SLATE':'#5F6670','GRAPHITE':'#4B4D52',
+  'PEWTER':'#7A7B7C','SMOKE':'#8A8B8C','CEMENT':'#9C9A94','CONCRETE':'#9C9A94'
+};
+const COLOR_SPECIFIC_NEUTRALS = ['CHARCOAL','SLATE','GRAPHITE','PEWTER','ASH','SMOKE','SILVER','CEMENT','CONCRETE','LIGHT GREY','LIGHT GRAY'];
+const _hueToward=(h,t,amt)=>{let d=((t-h+540)%360)-180;return (h+Math.sign(d)*Math.min(Math.abs(d),amt)+360)%360;};
+const COLOR_MODS = {
+  'WASHED':   {f:c=>{c.l+=(100-c.l)*0.10;c.s*=0.75;}, finish:'washed, garment-dyed finish — softly faded with subtle tonal variation along seams, rib edges and fold crests'},
+  'WASH':     'WASHED', 'GARMENT-WASHED':'WASHED', 'ENZYME':'WASHED',
+  'GARMENT-DYED':{f:c=>{c.s*=0.9;}, finish:'garment-dyed finish — slightly deeper tone captured in seams and rib edges'},
+  'FADED':    {f:c=>{c.l+=(100-c.l)*0.2;c.s*=0.65;}, finish:'faded, sun-worn finish with gentle tonal variation'},
+  'STONEWASHED':{f:c=>{c.l+=(100-c.l)*0.18;c.s*=0.7;}, finish:'stonewashed finish — soft mottled fading, lighter at fold crests and edges'},
+  'STONEWASH':'STONEWASHED',
+  'ACID':     {f:c=>{c.l+=(100-c.l)*0.2;c.s*=0.6;}, finish:'acid-wash finish — marbled, mottled light/dark bleach pattern'},
+  'MINERAL':  {f:c=>{c.l+=(100-c.l)*0.18;c.s*=0.65;}, finish:'mineral-wash finish — cloudy, mottled tonal variation'},
+  'VINTAGE':  {f:c=>{c.l+=(100-c.l)*0.08;c.s*=0.75;if(c.s>=12)c.h=_hueToward(c.h,30,8);}, finish:'vintage, lived-in faded character'},
+  'ANTIQUE':'VINTAGE','AGED':'VINTAGE',
+  'HEATHER':  {f:c=>{c.l+=(100-c.l)*0.06;c.s*=0.8;}, finish:'heathered marl yarn — fine multi-tone fleck through the knit'},
+  'HEATHERED':'HEATHER','MARL':'HEATHER','MELANGE':'HEATHER',
+  'DARK':     {f:c=>{c.l*=0.75;}}, 'DK':'DARK', 'DEEP':'DARK',
+  'LIGHT':    {f:c=>{c.l+=(100-c.l)*0.3;}}, 'LT':'LIGHT',
+  'PALE':     {f:c=>{c.l+=(100-c.l)*0.4;c.s*=0.85;}},
+  'PASTEL':   {f:c=>{c.l=Math.max(c.l,80);c.s=Math.min(c.s*0.8,55);}},
+  'SOFT':     {f:c=>{c.l+=(100-c.l)*0.1;c.s*=0.85;}},
+  'DUSTY':    {f:c=>{c.s*=0.6;c.l*=0.97;}}, 'MUTED':'DUSTY','DUSKY':'DUSTY','SMOKY':'DUSTY','DIRTY':'DUSTY','GREYED':'DUSTY','GRAYED':'DUSTY',
+  'BRIGHT':   {f:c=>{c.s=Math.min(100,c.s*1.25+5);c.l+=(50-c.l)*0.15;}}, 'VIVID':'BRIGHT','ELECTRIC':'BRIGHT',
+  'NEON':     {f:c=>{c.s=100;c.l=Math.max(c.l,55);}},
+  'RICH':     {f:c=>{c.s=Math.min(100,c.s*1.1);c.l*=0.92;}},
+  'BURNT':    {f:c=>{c.l*=0.85;c.s*=0.95;}},
+  'WARM':     {f:c=>{if(c.s<12){c.h=35;c.s=Math.max(c.s,8);}else c.h=_hueToward(c.h,30,10);}},
+  'COOL':     {f:c=>{if(c.s<12){c.h=215;c.s=Math.max(c.s,7);}else c.h=_hueToward(c.h,220,10);}},
+  'ICY':      {f:c=>{c.l+=(100-c.l)*0.2;if(c.s<12){c.h=210;c.s=Math.max(c.s,8);}else c.h=_hueToward(c.h,210,10);}},
+  'TRUE':{f:()=>{}}, 'CLASSIC':'TRUE','MEDIUM':'TRUE','MID':'TRUE','SOLID':'TRUE','HEATHERS':'HEATHER'
+};
+const COLOR_MOD_PHRASES = {'STONE WASH':'STONEWASHED','STONE WASHED':'STONEWASHED','ACID WASH':'ACID','ACID WASHED':'ACID',
+  'MINERAL WASH':'MINERAL','MINERAL WASHED':'MINERAL','SUN FADED':'FADED','GARMENT DYED':'GARMENT-DYED','GARMENT WASHED':'WASHED','ENZYME WASHED':'WASHED','ENZYME WASH':'WASHED'};
+function _colorMod(word){ let m=COLOR_MODS[word]; let g=0; while(typeof m==='string' && g++<4) m=COLOR_MODS[m]; return (m && typeof m==='object')?m:null; }
+
+// Returns {hex, bases[], mods[], finish[], unknown[]} or null when no base color word is recognised.
+function parseColorDescription(input){
+  if(!input) return null;
+  let words = input.toUpperCase().replace(/[^A-Z\s\-\/,&]/g,' ').replace(/[\/,&]/g,' ').split(/\s+/).filter(Boolean);
+  // split hyphenated words unless the hyphenated form is itself a known token (OFF-WHITE → OFF WHITE)
+  words = words.flatMap(w=>{ if(!w.includes('-')) return [w]; if(COLOR_MODS[w]) return [w]; return w.split('-').filter(Boolean); });
+  const bases=[], mods=[], finish=[], unknown=[];
+  let intensify=1;
+  for(let i=0;i<words.length;){
+    const two = i+1<words.length ? words[i]+' '+words[i+1] : null;
+    if(two && COLOR_MOD_PHRASES[two]){ const key=COLOR_MOD_PHRASES[two], m=_colorMod(key); mods.push({word:key,m,k:intensify}); if(m.finish && !finish.includes(m.finish)) finish.push(m.finish); intensify=1; i+=2; continue; }
+    if(two && COLOR_BASES[two]){ bases.push({name:two,w:1}); i+=2; continue; }
+    let w=words[i];
+    if(w==='VERY'||w==='EXTRA'||w==='SUPER'){ intensify=1.5; i++; continue; }
+    if(w==='OFF' && words[i+1]==='WHITE'){ bases.push({name:'OFF WHITE',w:1}); i+=2; continue; }
+    if(/ISH$/.test(w)){                                   // GREYISH / BLUISH / GREENISH
+      const stem=w.replace(/ISH$/,''), cand=[stem, stem+'E', stem.replace(/I$/,'E'), stem.replace(/U$/,'UE')];
+      const hit=cand.find(c=>COLOR_BASES[c]); if(hit){ bases.push({name:hit,w:0.3}); i++; continue; }
+    }
+    if(COLOR_BASES[w]){ bases.push({name:w,w:1}); i++; continue; }
+    const m=_colorMod(w);
+    if(m){ mods.push({word:w,m,k:intensify}); if(m.finish && !finish.includes(m.finish)) finish.push(m.finish); intensify=1; i++; continue; }
+    if(!['AND','WITH','A','IN','OF','THE','TONE','TONED','SHADE','COLOR','COLOUR'].includes(w)) unknown.push(w);
+    i++;
+  }
+  if(!bases.length) return null;
+  // A specific neutral (charcoal, slate…) absorbs the generic GREY/GRAY: "CHARCOAL GREY" = charcoal.
+  let use = bases;
+  if(bases.some(b=>COLOR_SPECIFIC_NEUTRALS.includes(b.name))) use = bases.filter(b=>b.name!=='GREY'&&b.name!=='GRAY');
+  if(!use.length) use=bases;
+  // Blend: last full-weight word is the head noun (0.65), the rest share 0.35; -ISH words weigh 0.3.
+  const full=use.filter(b=>b.w===1), head=full.length?full[full.length-1]:use[use.length-1];
+  // head = 1, other full words share 0.54 (⇒ head ≈ 65% after normalising), -ISH words 0.3 each
+  const parts=use.map(b=>({hex:COLOR_BASES[b.name], w: b===head ? 1 : (b.w<1 ? 0.3 : 0.54/Math.max(1,full.length-1))}));
+  const tot=parts.reduce((a,p)=>a+p.w,0);
+  let r=0,g=0,b=0;
+  for(const p of parts){ const [pr,pg,pb]=hexToRgb(p.hex); r+=pr*p.w/tot; g+=pg*p.w/tot; b+=pb*p.w/tot; }
+  const toHex=v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0');
+  let c=hexToHsl('#'+toHex(r)+toHex(g)+toHex(b));
+  for(const {m,k} of mods){
+    const before={...c}; m.f(c);
+    if(k!==1){ c.h=before.h+(c.h-before.h)*k; c.s=before.s+(c.s-before.s)*k; c.l=before.l+(c.l-before.l)*k; }
+    c.h=((c.h%360)+360)%360; c.s=Math.max(0,Math.min(100,c.s)); c.l=Math.max(3,Math.min(97,c.l));
+  }
+  const hex=hslToHex(Math.round(c.h),Math.round(c.s),Math.round(c.l));
+  return {hex, bases:bases.map(b=>b.name), mods:mods.map(x=>x.word), finish, unknown};
+}
+
+// Description resolver — null when the text is (or should stay) a Pantone input.
+function resolveColorDescription(txt){
+  if(!txt || !txt.trim()) return null;
+  const clean=txt.trim().toUpperCase().replace(/\s+/g,' ');
+  if(/\d{2}-?\d{4}/.test(clean) || /^#?[0-9A-F]{6}$/.test(clean)) return null;
+  const m=findPantoneByInput(clean);
+  if(m && (m.name.toUpperCase()===clean || m.code.toUpperCase()===clean)) return null;   // exact Pantone wins
+  const p=parseColorDescription(clean);
+  if(!p) return null;
+  if(m && p.mods.length===0 && p.bases.length<2 && clean.split(' ').length<2) return null; // plain partial Pantone hit keeps legacy path
+  const ai=(S.colorDescAI && S.colorDescAI.key===clean) ? S.colorDescAI : null;
+  const hex=ai ? ai.hex : p.hex;
+  return Object.assign({}, p, {text:clean, hex, localHex:p.hex, ai, nearest:getNearestPantone(hex)});
+}
+function getActiveColorDesc(){
+  if(S.wasEyedropped || S.collectionAnchorSource) return null;
+  return resolveColorDescription(S.pantone||'');
+}
+
+// ✦ AI Refine — asks Claude for the industry-typical shade of the description.
+async function refineColorWithAI(){
+  const desc=getActiveColorDesc();
+  if(!desc) return;
+  if(!S.anthropicKey){ setError('Add an Anthropic key in Settings to use AI Refine.'); return; }
+  const btn=document.getElementById('aiRefineBtn'); if(btn){btn.disabled=true;btn.textContent='Refining…';}
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':S.anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:CLAUDE_MODEL, max_tokens:1024,
+        system:'You are a senior apparel colorist (knitwear and cut-and-sew). Convert a buyer\'s plain-English garment color description into the single most commercially typical sRGB hex for the finished fabric as it would appear in an e-commerce product photo, and the nearest Pantone Fashion, Home + Interiors TCX code. Respond with ONLY a JSON object, no markdown: {"hex":"#RRGGBB","tcx":"NN-NNNN TCX","tcx_name":"...","note":"<=15 words"}',
+        messages:[{role:'user',content:`Color description: ${desc.text}\nLocal estimate for reference: ${desc.localHex}`}]
+      })
+    });
+    if(!resp.ok){ const e=await resp.json().catch(()=>({})); throw new Error(`Claude API ${resp.status}: ${e?.error?.message||resp.statusText}`); }
+    const data=await resp.json();
+    const text=(data.content?.find(b=>b.type==='text')?.text||'').replace(/```json|```/g,'').trim();
+    const j=JSON.parse(text);
+    if(!/^#[0-9A-Fa-f]{6}$/.test(j.hex||'')) throw new Error('AI returned no valid hex');
+    S.colorDescAI={key:desc.text, hex:j.hex.toLowerCase(), tcx:j.tcx||'', tcxName:j.tcx_name||'', note:j.note||''};
+    S.selectedColor=S.colorDescAI.hex;
+    const sw=document.getElementById('colorSwatchInput'); if(sw) sw.value=S.selectedColor;
+    updateColorResolved();
+  }catch(e){
+    console.warn('[AI Refine]',e); setError('AI Refine failed: '+e.message);
+    if(btn){btn.disabled=false;btn.textContent='✦ AI Refine';}
+  }
 }
 
 // ================================================================
@@ -2032,27 +2206,50 @@ function getDynamicColorDescriptor(hex){
 // static #versionBadge literal still read "V2.1.1" (runtime corrected it at
 // boot) — synced, and it stays one of the FOUR static version surfaces to
 // bump every release: filename, <title>, #versionBadge, APP_VERSION.
-// v3.4.0 — PATTERN FIDELITY (Tier A + B, per PATTERN_FIDELITY_PROPOSAL
-// 2026-11-18). Problem: the same fabric swatch applied across multiple styles
-// re-synthesized at a different repeat scale / pattern structure per render
-// (prompt-only enforcement failure class — the model had no scale anchor and
-// each generation guessed the repeat independently).
-//   Tier A — PATTERN FIDELITY prompt block: fires ONLY when a Design/Style
-//     Reference is attached; positive+negative pairing; optional operator
-//     "repeat size (cm)" input anchors the repeat to a physical dimension.
-//   Tier B — PATTERN ANCHOR chaining: the first successful front render made
-//     with a given swatch becomes the fabric group's anchor (keyed by a
-//     content signature of the swatch); later renders with the SAME swatch
-//     send the anchor as a THIRD image + "same bolt of cloth" match rule.
-//     Anchor is session-memory only (never persisted — IndexedDB quota),
-//     auto-replaced when the swatch changes, clearable in the ref panel,
-//     wiped by Reset Session. Extra views (side/back), sketch, and sales
-//     sheet paths are untouched; renders with no reference attached send
-//     byte-identical prompts/inputs to v3.3.5 (zero regression surface).
-//   Rule-10 draft: this block is the RENDER_RULES v1.3 Rule 10 candidate;
-//     RULES_VERSION stays '1.2' until the spec amendment is ratified.
-const APP_VERSION = '3.4.0';
-const RULES_VERSION = '1.2';   // RENDER_RULES version this file implements AND canonically defines (v3.3.5; targets declare, the spec doc records)
+// v3.3.6 — WHITE-GARMENT RESCUE (2026-11-03, bug fix): white tee body
+// flood-eaten on an Adjust Fit edit. removeBg split into removeBgCore
+// (+ opts.thrScale, verbatim SVL v1.27 deviation) and an adaptive adapter:
+// SVL's <6% coverage trigger + NEW pale-garment trigger (partial collapse).
+// SVL v1.27 anti-blowout clause promoted into the base render bgRule and the
+// Render As Is prompt. See the WHITE-GARMENT RESCUE block above showResult.
+// v3.4.0 — DESCRIBED COLORS (2026-11-03, feature): type a plain-English
+// color ("WASHED CHARCOAL GREY") into the Pantone field or Color Name →
+// local parser resolves hex + nearest Pantone, optional ✦ AI Refine (Claude),
+// finish words (washed/heather/stonewash…) add a fabric-finish clause; the
+// hex drives the prompt and the LAB lock like a Pantone hex.
+// v3.5.0 — PATTERN FIDELITY (2026-11-18, Tier A + B per
+// PATTERN_FIDELITY_PROPOSAL; RENDER_RULES v1.3 Rule 10 + §2.5). Same plaid
+// swatch on three styles re-synthesized at three repeat scales (prompt-only
+// enforcement failure class — no physical anchor). Tier A: PATTERN FIDELITY
+// prompt block, fires ONLY with a Design/Style Reference attached
+// (positive+negative pairing; optional Pattern Repeat Size (cm) input
+// anchors the repeat physically; persisted in the form snapshot). Tier B:
+// fabric-group anchor chaining — first successful FRONT render of a swatch
+// (content-signature keyed, sampled djb2) becomes the group anchor, sent as
+// a THIRD image with the "same bolt of cloth" match rule; session-only
+// (never persisted), auto-reset on swatch change, Clear Anchor control,
+// wiped by Reset Session. Extra views / sketch / sales sheet untouched;
+// no-reference renders byte-identical to the previous version. CONSOLIDATION
+// NOTE: Pattern Fidelity was first built as "v3.4.0/v3.4.1" on a stale
+// v3.3.5 base (project knowledge lagged the deployed folder); this release
+// re-ports it verbatim onto the real 2026-11-03 v3.4.0 head (white-garment
+// rescue + described colors), which it supersedes. RULES_VERSION moves to
+// '1.3' here: RENDER_RULES v1.3 ratifies Rule 10, the §2.5 anchor input
+// contract, and records the v3.3.6 white-garment behaviors.
+// v3.5.1 — TRIM/BINDING LOCK (2026-11-19). Field failure: two
+// Illustrator-patterned CAD tanks rendered with the contrast neckline
+// binding flooded by the all-over print, plus invented ties/edge finish
+// (self-corrected only after later edit passes re-anchored on a surviving
+// roll). Root cause: the identity lock guarded only the OPPOSITE direction
+// ("never invent solid contrast trim") and the trim bullet's
+// "patterns continue into the trim" wording actively primed print spread.
+// Fix (prompt-only, RENDER_RULES v1.3.1): bidirectional trim bullet in
+// PRESERVE GARMENT IDENTITY; PATTERN COVERAGE BOUNDARY sentence in the
+// Rule 10 PATTERN FIDELITY block; binding clause in the lean extra-view
+// IDENTITY LOCK; "trims and bindings" named in the Render As Is base
+// prompt. No pipeline, engine, or anchor-logic changes.
+const APP_VERSION = '3.5.1';
+const RULES_VERSION = '1.3.1'; // RENDER_RULES version this file implements AND canonically defines (v3.5.1 trim/binding lock; targets declare, the spec doc records)
 const PATTERN_ENGINE = '1.5';  // lineage: Tier-1 bench 1.0–1.3 → 1.4 (D1+D2) → 1.5 (D3 accent rescue)
 
 // v2.1.0-beta — MODEL PINS hoisted as top-level constants (model-agnosticism
@@ -2109,7 +2306,7 @@ const S={
   // null lets renderHistory default the top/newest style open.
   anglePick:{}, histOpenStyle:null, histExpandCells:{},
   currentLabel:'',currentVersion:null,currentMetadata:{},
-  timerInterval:null,timerSeconds:0,appInitialized:false,pantoneNotFound:false,
+  timerInterval:null,timerSeconds:0,appInitialized:false,pantoneNotFound:false,colorDescAI:null,
   customPantones:[],
   // Decision log — persists across the session
   decisionLog:[],
@@ -2829,17 +3026,19 @@ function buildColorUI(){
   const div=document.createElement('div');
   div.className='field';
   const displayHex=S.useComp&&!S.wasEyedropped?getCompensatedColor(S.selectedColor):S.selectedColor;
-  const matched=findPantoneByInput(S.pantone);
+  const _desc=getActiveColorDesc();
+  const matched=_desc?null:findPantoneByInput(S.pantone);
   const nearest=matched||getNearestPantone(S.selectedColor);
-  const resolvedName=S.wasEyedropped?'Exact Match (No Pantone Variance)':(matched?matched.name:`Nearest: ${nearest.name}`);
-  const resolvedCode=S.wasEyedropped?'EXACT HEX':(matched?matched.code:nearest.code);
+  const resolvedName=S.wasEyedropped?'Exact Match (No Pantone Variance)':_desc?`Described: ${_desc.text}`:(matched?matched.name:`Nearest: ${nearest.name}`);
+  const resolvedCode=S.wasEyedropped?'EXACT HEX':(matched?matched.code:'≈ '+nearest.code);
+  setTimeout(()=>{ try{ updateColorResolved(); }catch(e){} },0);
   div.innerHTML=`
     <div class="color-settings">
       <label class="color-settings-label">Color Settings</label>
       <div class="color-row">
         <div class="pantone-field">
-          <label class="pantone-label">Pantone Code or Name</label>
-          <input type="text" id="pantoneInput" class="text-input" value="${S.pantone}" placeholder="e.g. 19-4052, Classic Blue, or Toffee" oninput="onPantoneInput(this.value)"/>
+          <label class="pantone-label">Pantone Code, Name or Description</label>
+          <input type="text" id="pantoneInput" class="text-input" value="${S.pantone}" placeholder="e.g. 19-4052, Classic Blue, or Washed Charcoal Grey" oninput="onPantoneInput(this.value)"/>
         </div>
         <span class="or-divider">OR</span>
         <div class="color-picker-group">
@@ -2853,7 +3052,7 @@ function buildColorUI(){
         </div>
       </div>
       <div style="margin-bottom:8px;padding:7px 10px;background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.15);border-radius:3px;font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);line-height:1.5">
-        💡 Set a color using Pantone code, color picker, or type a color name in the Color Name field above.
+        💡 Set a color using a Pantone code, the color picker, or DESCRIBE it in plain words (e.g. WASHED CHARCOAL GREY, DUSTY ROSE, HEATHER OATMEAL).
       </div>
       <div class="calibrate-row">
         <input type="checkbox" id="calibrateCheck" ${S.useComp?'checked':''} onchange="S.useComp=this.checked;renderPresetDetails()"/>
@@ -3127,7 +3326,7 @@ function importCustomPantones(input){
 
 // ── Hook custom pantones into main lookup ──────────────────────────────────
 // Patch findPantoneByInput to check custom library first
-const _origFindPantone = findPantoneByInput;
+const _origFindPantone = _findPantoneBase;   // v3.4.0 — was self-referential (hoisting), see _findPantoneBase
 function findPantoneByInput(input){
   if(!input || !input.trim()) return null;
   const clean = input.trim().toUpperCase();
@@ -3164,6 +3363,12 @@ function onPantoneInput(val){
     const sw=document.getElementById('colorSwatchInput');if(sw)sw.value=S.selectedColor;
     S.pantoneNotFound=false;
   }
+  // v3.4.0 — plain-English description ("WASHED CHARCOAL GREY")
+  const desc=getActiveColorDesc();
+  if(desc){
+    S.selectedColor=desc.hex;S.pantoneNotFound=false;
+    const sw=document.getElementById('colorSwatchInput');if(sw)sw.value=desc.hex;
+  }
   updateColorResolved();
 }
 
@@ -3190,6 +3395,30 @@ function updateColorResolved(){
   const code=document.querySelector('.resolved-code');const hexEl=document.querySelector('.resolved-hex');
   const warn=document.querySelector('.pantone-not-found-warn');
   if(dot)dot.style.background=displayHex;
+  const desc=getActiveColorDesc();
+  if(desc){
+    if(name)name.textContent='Described: '+desc.text+(desc.ai?' (AI refined)':'');
+    if(code){
+      code.textContent=(desc.ai&&desc.ai.tcx)?desc.ai.tcx:'≈ '+desc.nearest.code;
+      code.style.background='#2563eb';
+      code.title=desc.ai&&desc.ai.tcx?`AI-suggested TCX: ${desc.ai.tcx} ${desc.ai.tcxName}`:`Nearest Pantone in library: ${desc.nearest.code} ${desc.nearest.name}`;
+    }
+    if(hexEl)hexEl.textContent=S.selectedColor.toUpperCase();
+    if(warn){
+      warn.style.display='block';
+      warn.style.background='rgba(37,99,235,0.06)';
+      warn.style.borderColor='rgba(37,99,235,0.25)';
+      warn.style.color='#1e40af';
+      const unk=desc.unknown.length?` Unrecognised word(s): ${desc.unknown.join(', ')}.`:'';
+      const fin=desc.finish.length?' Finish: '+desc.mods.filter(w=>_colorMod(w)&&_colorMod(w).finish).join(' / ')+' (added to prompt).':'';
+      const body=desc.ai
+        ? `\u2726 AI refined: ${desc.ai.hex.toUpperCase()}${desc.ai.tcx?' \u2248 '+desc.ai.tcx+' '+desc.ai.tcxName:''}${desc.ai.note?' \u2014 '+desc.ai.note:''}.${fin}`
+        : `Color resolved from your description \u2014 approximate (local).${fin}${unk}`;
+      const btn=(!desc.ai && S.anthropicKey)?' <button id="aiRefineBtn" type="button" onclick="refineColorWithAI()" style="margin-left:6px;padding:2px 8px;border:1px solid #2563eb;background:#fff;color:#2563eb;font:inherit;cursor:pointer;border-radius:3px">\u2726 AI Refine</button>':'';
+      warn.innerHTML=body.replace(/</g,'&lt;')+btn;
+    }
+    return;
+  }
   if(S.pantoneNotFound && !matched){
     if(name)name.textContent='NOT FOUND \u2014 use Color Picker to set manually';
     if(code){code.textContent='?';code.style.background='#dc2626';}
@@ -3357,11 +3586,26 @@ function handleSubmit(forceAsIs=false){
     if(fabric.trim())promptParts.push(`using ${fabric} fabric throughout`);
   } else if(!forceAsIs){
     if(S.activePresets.includes('Change Color')){
+      // v3.4.0 — described color from the Pantone field, or from Color Name when nothing else is set
+      const descForRender = getActiveColorDesc() ||
+        ((!S.wasEyedropped && !S.pantone.trim() && S.selectedColor==='#000000' && colorName) ? resolveColorDescription(colorName) : null);
       if(S.wasEyedropped){
         const hex=S.selectedColor;const desc=getDynamicColorDescriptor(hex);
         colorLockTarget = hex;
         promptParts.push(`completely and strictly recolor the entire fabric of the ${target} to be exactly the hexadecimal color ${hex}, which is a ${desc}. Use ONLY this exact color code as reference to create the exact color shown in the color chip with 100% precision and zero variance. The colors must match 100% exactly. You must completely replace the original garment's old color, leaving absolutely no yellow, tan, sienna, grey, or other undertones/variance visible. The yarn and fabric of the ${target} must be dyed precisely as a uniform, solid, beautiful ${hex} shade. Ensure the garment is rendered in bright, clean, diffuse, high-exposure commercial studio front lighting to perfectly preserve this exact hex color ${hex} without heavy dark shadows. The flat areas of the garment must match this exact color.`);
         metadata.color=hex;metadata.colorName="Exact Color Chip (No Variance)";metadata.colorCode=hex;
+      } else if(descForRender){
+        const dd=descForRender;
+        const baseHex=dd.hex;
+        const targetHex=S.useComp?getCompensatedColor(baseHex):baseHex;
+        colorLockTarget=baseHex;
+        const dyn=getDynamicColorDescriptor(targetHex);
+        const pRef=(dd.ai&&dd.ai.tcx)?`Pantone ${dd.ai.tcx} ${dd.ai.tcxName}`:`nearest Pantone ${dd.nearest.code} ${dd.nearest.name}`;
+        const finishLine=dd.finish.length?` FABRIC FINISH: ${dd.finish.join('; ')}. The finish is surface character only — the overall average color of the flat fabric areas must still read as ${targetHex}.`:'';
+        promptParts.push(`completely and strictly recolor the entire fabric of the ${target} to be ${dd.text} — exact target hexadecimal color ${targetHex}, which is a ${dyn} (${pRef}).${finishLine} Replace 100% of the original garment color with no residual undertones. Render under bright, diffuse, high-exposure commercial studio front lighting. Flat surface areas must match ${targetHex} precisely.`);
+        metadata.color=dd.text;
+        if(!colorName) metadata.colorName=dd.text;
+        if(!colorCode && dd.ai && dd.ai.tcx){ const mm=dd.ai.tcx.match(/\d{2}-\d{4}/); if(mm) metadata.colorCode=mm[0]; }
       } else if(S.pantone.trim()){
         const baseHex=getHexFromPantone(S.pantone)||(()=>{const n=getNearestPantone(S.selectedColor);return n.hex;})();
         const targetHex=S.useComp?getCompensatedColor(baseHex):baseHex;
@@ -3541,10 +3785,12 @@ function handleRenderAsIs(){
     `The finished render color must match the original garment color exactly as photographed. ` +
     `${fabricLine} ` +
     `CONSTRUCTION RULE: Identify the closure by counting the buttons — a full-length button placket must be reproduced with the same button count; never convert a button-front garment into a polo, half-placket, or pullover. ` +
-    `Maintain all original design details, seams, stitching, and construction exactly as shown. ` +
+    `Maintain all original design details, seams, stitching, trims, and neckline/strap bindings — each trim or binding keeping its own exact color from the source — and construction exactly as shown. ` +
     `Place the garment on a strictly 100% PURE FLAT SOLID WHITE (#FFFFFF) background — exact RGB (255,255,255), zero gradients, zero shadows, zero vignette — so the background can be removed to full transparency after rendering. ` +
     `Render under bright, diffuse, high-exposure commercial studio front lighting that preserves true color without darkening. ` +
-    `Soft natural folds only — no heavy shadows that mute or shift the garment color.`;
+    `Soft natural folds only — no heavy shadows that mute or shift the garment color. ` +
+    // v3.3.6 — SVL v1.27 anti-blowout clause, promoted to the base prompt here.
+    `If the garment is white, cream, ivory, or any pale shade: render it with clearly visible fold shading, knit texture, and soft warm depth so every part of the fabric remains unmistakably distinct from the pure #FFFFFF background. Do NOT blow out highlights; no garment pixel may read as pure white (255,255,255).`;
 
   runRenderBatch(renderAsIsPrompt, styleName, metadata, 'render', null, true);
 }
@@ -3641,6 +3887,11 @@ function buildColorContext(){
     return `Color: exact hex ${S.selectedColor} (eyedropped — 100% precision, no Pantone variance, match this exactly).`;
   }
 
+  const _d = getActiveColorDesc();
+  if(_d){
+    const targetHex = S.useComp ? getCompensatedColor(_d.hex) : _d.hex;
+    return `Color: buyer description "${_d.text}" resolved to target hex ${targetHex} (${(_d.ai&&_d.ai.tcx)?'Pantone '+_d.ai.tcx+' '+_d.ai.tcxName:'nearest Pantone '+_d.nearest.code+' '+_d.nearest.name}), described as ${getDynamicColorDescriptor(targetHex)}.${_d.finish.length?' Fabric finish to show: '+_d.finish.join('; ')+' (surface character only; flat-area average must stay on the target hex).':''} Compensation applied: ${S.useComp ? 'yes' : 'no'}.`;
+  }
   if(S.pantone.trim()){
     const match = findPantoneByInput(S.pantone);
     const baseHex = match ? match.hex : (getHexFromPantone(S.pantone) || getNearestPantone(S.selectedColor).hex);
@@ -3786,6 +4037,34 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
           }
         }catch(e){console.warn('[formGate] gate error',e);}
       }
+      // v3.3.6 — PALE-FRAGMENT GATE. When Gemini blows a white/cream garment
+      // out to ≥251 the body is indistinguishable from #FFFFFF; no extraction
+      // threshold can recover it, the fill eats it, and 6c keeps only the
+      // largest surviving fragment (the H079S0347 white-tee V43 failure:
+      // neckband + sleeves left, body gone). Signature: survivors are
+      // pale-achromatic AND coverage collapsed vs the source silhouette
+      // (source with transparency) or < 12% (opaque photo source). Action:
+      // ONE automatic re-roll with the anti-blowout corrective, keep the
+      // higher-coverage result. Advisory, never loops.
+      if(mode!=='sketch'){
+        try{
+          const st1=await _svCoverageStats(processed);
+          const srcSt=await _svCoverageStats(viewSrc);
+          const srcCov = srcSt.cov < 0.95 ? srcSt.cov : null;
+          const fragment = st1.pale && (srcCov ? st1.cov < 0.6*srcCov : st1.cov < 0.12);
+          if(fragment){
+            console.warn('[paleGate] pale garment fragmented (cov '+(st1.cov*100).toFixed(1)+'%'+(srcCov?' vs source '+(srcCov*100).toFixed(1)+'%':'')+') — auto re-rolling once with anti-blowout corrective');
+            document.getElementById('procStep').textContent=batchPfx+'White garment lost in background — re-rendering once...';
+            const WHITE_RETRY='CRITICAL WHITE-GARMENT CORRECTION: the previous render blew the garment out to pure white so it vanished into the background. The garment fabric MUST read clearly darker than the #FFFFFF background everywhere: give it soft light-grey fold shading, visible knit/jersey texture, gently shaded side seams, hem, cuffs and neckband, and a soft continuous contour along the entire outer silhouette. No garment pixel may be pure white (255,255,255); the brightest fabric highlight must stay at or below RGB(244,244,244). The background stays pure flat #FFFFFF. ';
+            const retry=await callGemini(WHITE_RETRY+finalPrompt,mode,0,viewCtx);
+            let retryProcessed=retry;
+            try{retryProcessed=await removeBg(retry, priorAlpha, {sketchSafe:false});}catch(e2){console.warn('BG removal failed (pale retry)',e2);}
+            const st2=await _svCoverageStats(retryProcessed);
+            if(st2.cov > st1.cov && st2.cov < 0.80){ processed=retryProcessed; console.log('[paleGate] retry recovered garment ('+(st2.cov*100).toFixed(1)+'%) — using retry'); }
+            else { formSuspect=true; console.warn('[paleGate] retry did not recover ('+(st2.cov*100).toFixed(1)+'%) — keeping first, flagging entry'); }
+          }
+        }catch(e){console.warn('[paleGate] gate error',e);}
+      }
     }
     // Color lock (v5.6) — deterministic LAB anchor to the user-specified target hex.
     // Applies to eyedropper, Pantone, AND hex-picker paths. Skipped for sales_sheet
@@ -3890,7 +4169,7 @@ async function runGenerate(prompt,label,metadata,mode,colorLockTarget=null,rende
       targetPart: document.getElementById('targetInput')?.value || 'Full Garment',
       colorName: metadata.colorName || '',
       colorCode: metadata.colorCode || '',
-      pantoneCode: renderAsIs ? '' : (S.pantone || ''),
+      pantoneCode: renderAsIs ? '' : (getActiveColorDesc() ? ('DESC: '+getActiveColorDesc().text) : (S.pantone || '')),
       hexColor: renderAsIs ? '' : (S.selectedColor || ''),
       colorCompensation: renderAsIs ? 'N/A' : (S.useComp ? 'Yes' : 'No'),
       eyedropped: renderAsIs ? 'No' : (S.wasEyedropped ? 'Yes' : 'No'),
@@ -4043,7 +4322,7 @@ async function callGemini(prompt,mode,attempt=0,viewCtx=null){
     :`FOCUS: Only modify the "${document.getElementById('targetInput').value||'garment'}".`;
 
   const bgRule=isSales?"SALES SHEET: Maintain the overall layout of the page. Each garment should be rendered in place. The background of the sheet should be clean and professional."
-    :treatAsRender?"GHOST MANNEQUIN BACKGROUND: CRITICAL — The garment MUST float on a 100% PURE FLAT SOLID WHITE background, hex #FFFFFF. NOT off-white, NOT light gray, NOT cream. Exact RGB (255,255,255). ZERO shadows of any kind — no drop shadows, no floor shadows, no ambient occlusion, no vignette, no gradient. The background must be a single uniform flat #FFFFFF value so that automated background removal can extract the garment cleanly. Any deviation from pure white in the background will cause extraction failure. The background must NEVER be tinted with the garment color — keep it strictly pure white regardless of what color the garment is being changed to."
+    :treatAsRender?"GHOST MANNEQUIN BACKGROUND: CRITICAL — The garment MUST float on a 100% PURE FLAT SOLID WHITE background, hex #FFFFFF. NOT off-white, NOT light gray, NOT cream. Exact RGB (255,255,255). ZERO shadows of any kind — no drop shadows, no floor shadows, no ambient occlusion, no vignette, no gradient. The background must be a single uniform flat #FFFFFF value so that automated background removal can extract the garment cleanly. Any deviation from pure white in the background will cause extraction failure. The background must NEVER be tinted with the garment color — keep it strictly pure white regardless of what color the garment is being changed to. If the garment is white, cream, ivory, or any pale shade: render it with clearly visible fold shading, knit texture, and soft warm depth so every part of the fabric remains unmistakably distinct from the pure #FFFFFF background. Do NOT blow out highlights; no garment pixel may read as pure white (255,255,255)."
     :isSketch?"FLAT SKETCH BACKGROUND: Output on a strictly 100% SOLID PURE WHITE (#FFFFFF) background with zero shadows and zero background elements."
     :"EDIT MODE: PRESERVE the exact original background, environment, and model. Only modify the requested garment element. Do NOT alter the background.";
 
@@ -4164,11 +4443,17 @@ async function callGemini(prompt,mode,attempt=0,viewCtx=null){
         Do NOT remove, add, or relocate buttons, snaps, zips, or plackets.
         COUNT the buttons — more than 4 down the front is NOT a polo; buttons
         may be low-contrast (tonal, cream-on-cream) so look carefully.
-      • Hem, cuff, and collar trim — keep the input's EXACT colors and
-        pattern: stripes/patterns continue into the trim exactly as
-        photographed. NEVER invent solid contrast trim (e.g. white hem or
-        cuffs) that is not in the input, and NEVER add ties, drawstrings,
-        hanging strips, tabs, or panels that are not in the input.
+      • Hem, cuff, collar, and neckline/strap trim — keep the input's
+        EXACT colors and pattern, in BOTH directions: where stripes/patterns
+        continue into the trim in the input, they continue in the render
+        exactly as photographed; and where neckline binding, armhole
+        binding, strap edging, or any trim appears as its OWN solid or
+        contrast color/pattern in the input, it KEEPS that exact color —
+        the body's all-over print must NEVER spread over, replace, or
+        continue into such binding or trim. NEVER invent solid contrast
+        trim (e.g. white hem or cuffs) that is not in the input, and NEVER
+        add ties, drawstrings, hanging strips, tabs, or panels that are
+        not in the input.
       • Collar / neckline style (camp/Cuban, polo, crew, V-neck, etc.) —
         keep identical. Do NOT swap one collar type for another.
       • Pockets — same presence, count, and placement.
@@ -4209,7 +4494,7 @@ async function callGemini(prompt,mode,attempt=0,viewCtx=null){
     : '';
   const patternFidelityBlock=(S.referenceImage && !isSketch && !isSales) ? `
     PATTERN FIDELITY — THE FABRIC IS NOT YOURS TO REDESIGN:
-    The attached fabric/pattern reference defines the garment's fabric EXACTLY — its pattern geometry, line structure, line weights, and every one of its colors. Copy THIS pattern faithfully. Do NOT substitute a similar plaid, check, stripe, houndstooth, or print. Do NOT simplify, enlarge, shrink, or redesign the repeat. Do NOT shift, warm, cool, or swap any of the pattern's colors — secondary/overcheck line colors must match the reference exactly. ${repeatScaleLine}${anchorMatchLine} The pattern follows the fabric grain and drapes naturally with the garment, but its scale and structure never change.
+    The attached fabric/pattern reference defines the garment's fabric EXACTLY — its pattern geometry, line structure, line weights, and every one of its colors. Copy THIS pattern faithfully. Do NOT substitute a similar plaid, check, stripe, houndstooth, or print. Do NOT simplify, enlarge, shrink, or redesign the repeat. Do NOT shift, warm, cool, or swap any of the pattern's colors — secondary/overcheck line colors must match the reference exactly. ${repeatScaleLine}${anchorMatchLine} The pattern follows the fabric grain and drapes naturally with the garment, but its scale and structure never change. PATTERN COVERAGE BOUNDARY: the pattern covers ONLY the areas shown patterned on the garment itself — neckline/armhole binding, strap edging, plackets, and any trim shown as its own solid or contrast color in the garment image keep that exact color and are NEVER overprinted with the fabric pattern.
     ` : '';
   // ────────────────────────────────────────────────────────────────
   // v1.8.0 — LEAN EXTRA-VIEW PROMPT (Side/Back renders).
@@ -4249,7 +4534,7 @@ async function callGemini(prompt,mode,attempt=0,viewCtx=null){
 
     RULES:
     1. BACKGROUND: every pixel that is not garment fabric is flat pure white #FFFFFF (RGB 255,255,255). Zero shadows, gradients, vignettes, reflections, or floor contact of any kind.
-    2. IDENTITY LOCK: the output is the SAME garment as the input — same closure type and button count, same collar style, same pockets, same sleeve length, and the same stripe/pattern/colour layout continuing into the hem, cuffs, and collar exactly as in the input. Do not add trims, ties, tabs, or panels that are not in the input, and do not normalize the garment into a more typical style.
+    2. IDENTITY LOCK: the output is the SAME garment as the input — same closure type and button count, same collar style, same pockets, same sleeve length, and the same stripe/pattern/colour layout continuing into the hem, cuffs, and collar exactly as in the input. Binding or trim that is a solid or contrast colour in the input stays exactly that colour — the body print never spreads into it. Do not add trims, ties, tabs, or panels that are not in the input, and do not normalize the garment into a more typical style.
     3. CLEAN PLATE: remove every hanger, hook, wire, tag, and label. Where hair, a hand, or a body covered the knit in the source photo, rebuild the complete uninterrupted fabric underneath.
     4. COMPOSITION: strict 3:4 portrait, garment centered with a comfortable 15% margin on all sides.
     5. LIGHT & COLOUR: bright, diffuse, high-key commercial studio lighting; soft natural folds only; fabric colours match the input exactly — never lightened, greyed, or shifted.
@@ -4521,7 +4806,7 @@ async function extractAlphaMask(b64){
   });
 }
 
-async function removeBg(b64, priorAlpha=null, opts={}){
+async function removeBgCore(b64, priorAlpha=null, opts={}){
   // v2.0.8 — opts.aggressive: manual "Scrub BG" variant (user-invoked, never
   // automatic). Bypasses the two WHOLE-PASS skips only:
   //   • 6b runs even when whiteRatio ≥ 0.35 (white-garment carve-out off)
@@ -4596,7 +4881,11 @@ async function removeBg(b64, priorAlpha=null, opts={}){
       const bgBr=(bgR+bgG+bgB)/3;
 
       // ── Step 2: Threshold for "is this pixel bg-colored?" ────────────
-      const THR = bgBr > 200 ? 42 : bgBr > 128 ? 38 : 45;
+      // v1.27 — opts.thrScale: SOLE Light deviation from the verbatim web core.
+      // The adaptive white-rescue wrapper re-runs extraction at thrScale 0.5
+      // when the first pass collapses coverage (blown-out near-white garment
+      // pixels landing inside the bg threshold and being flood-eaten).
+      const THR = (bgBr > 200 ? 42 : bgBr > 128 ? 38 : 45) * (opts.thrScale || 1);
 
       function colorDistToBg(r,g,b){
         const dr=r-bgR, dg=g-bgG, db=b-bgB;
@@ -5109,6 +5398,73 @@ async function removeBg(b64, priorAlpha=null, opts={}){
     img.onerror=()=>res(b64);
     img.src=b64;
   });
+}
+
+// ================================================================
+// v3.3.6 — WHITE-GARMENT RESCUE (2026-11-03)
+// Bug: a white tee (H079S0347, Adjust Fit V43) came back with its body
+// flood-eaten — near-white garment pixels sit inside the THR=42 bg distance,
+// the edge-seeded fill walks straight through the pale side seams, and only
+// the neckband/sleeve shading survived. SVL Light fixed this in v1.27 and
+// svl-mcp carries the same adapter; the canonical web file never got it.
+//   (a) REVERSE PORT, verbatim from SVL v1.27: opts.thrScale hook in the core
+//       (marked above) + adaptive adapter — coverage < 6% ⇒ re-run at
+//       thrScale 0.5, keep the higher-coverage pass.
+//   (b) WEB ADDITION (deviation, to be ported back to SVL/MCP): the 6% floor
+//       misses PARTIAL collapse (body gone, sleeves/neck kept ≈ 10–20%). New
+//       trigger: if the pass-1 survivors are themselves pale-achromatic (the
+//       garment is white/cream), run the 0.5 pass and accept it only when it
+//       recovers ≥15% more garment AND stays < 80% frame (i.e. did not keep
+//       the background).
+// Skipped for sketchSafe (flat line art — white fill is bounded by outline)
+// and aggressive (manual Scrub BG wants LESS opacity, never more).
+// ================================================================
+function _svCoverageStats(dataUrl){
+  return new Promise(resolve=>{
+    if(!dataUrl){ resolve({cov:0,pale:false}); return; }
+    const img=new Image();
+    img.onload=()=>{
+      const S2=200, sc=Math.min(1,S2/Math.max(img.width,img.height));
+      const w=Math.max(1,Math.round(img.width*sc)), h=Math.max(1,Math.round(img.height*sc));
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      const cx=cv.getContext('2d',{willReadFrequently:true});
+      cx.drawImage(img,0,0,w,h);
+      const d=cx.getImageData(0,0,w,h).data;
+      let op=0, lum=0, chr=0;
+      for(let i=0;i<d.length;i+=4){
+        if(d[i+3]>32){
+          op++;
+          lum+=(d[i]+d[i+1]+d[i+2])/3;
+          chr+=Math.max(d[i],d[i+1],d[i+2])-Math.min(d[i],d[i+1],d[i+2]);
+        }
+      }
+      const cov=op/(w*h);
+      const mL=op?lum/op:0, mC=op?chr/op:0;
+      resolve({cov, meanLuma:mL, meanChroma:mC, pale: op>0 && mL>=205 && mC<=22});
+    };
+    img.onerror=()=>resolve({cov:0,pale:false});
+    img.src=dataUrl;
+  });
+}
+
+async function removeBg(b64, priorAlpha=null, opts={}){
+  const pass1=await removeBgCore(b64, priorAlpha, opts);
+  if(opts.sketchSafe || opts.aggressive) return pass1;
+  const st1=await _svCoverageStats(pass1);
+  const collapsed = st1.cov < 0.06;                 // SVL v1.27 trigger (verbatim)
+  const paleGarment = !collapsed && st1.pale;        // v3.3.6 web trigger
+  if(!collapsed && !paleGarment) return pass1;
+  console.warn('[removeBg] '+(collapsed
+      ? 'coverage collapsed ('+(st1.cov*100).toFixed(1)+'%)'
+      : 'pale garment (meanLuma '+st1.meanLuma.toFixed(0)+', chroma '+st1.meanChroma.toFixed(1)+', cov '+(st1.cov*100).toFixed(1)+'%)')
+    +' — white-rescue pass at thrScale 0.5');
+  const pass2=await removeBgCore(b64, priorAlpha, Object.assign({}, opts, {thrScale:0.5}));
+  const st2=await _svCoverageStats(pass2);
+  console.log('[removeBg] white-rescue coverage '+(st2.cov*100).toFixed(1)+'% vs '+(st1.cov*100).toFixed(1)+'%');
+  if(collapsed) return st2.cov > st1.cov ? pass2 : pass1;
+  const accept = st2.cov >= st1.cov*1.15 && st2.cov < 0.80;
+  console.log('[removeBg] pale-garment rescue '+(accept?'ACCEPTED':'rejected (no meaningful recovery or bg kept)'));
+  return accept ? pass2 : pass1;
 }
 
 // ================================================================
